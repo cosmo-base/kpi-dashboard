@@ -69,15 +69,29 @@ jobs:
       # ==========================================
       # ★ 追加：ビルド出力 (out) のHTMLをすべて暗号化する
       # ==========================================
+     # ==========================================
+      # ★ 修正版：確実な暗号化ステップ
+      # ==========================================
       - name: Encrypt HTML files with StatiCrypt
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
         run: |
-          # 毎回npxを実行すると重いため、一度グローバルインストールする
-          npm install -g staticrypt
-          # outフォルダ内のすべてのHTMLをパスワード付きHTMLに上書き
-          find ./out -type f -name "*.html" -exec staticrypt {} -p "$SITE_PASSWORD" -o {} -t "Cosmo Base 運営ダッシュボード" \;
+          # 1. パスワードがちゃんと設定されているかチェック（空ならエラーで止める）
+          if [ -z "$SITE_PASSWORD" ]; then
+            echo "❌ エラー: GitHub Secrets に SITE_PASSWORD が設定されていません！"
+            exit 1
+          fi
 
+          # 2. 暗号化ツールのインストール
+          npm install -g staticrypt
+
+          # 3. outフォルダ内の全HTMLを確実に暗号化（一度別名で保存してから上書きする安全策）
+          find ./out -type f -name "*.html" | while read -r file; do
+            echo "🔒 $file を暗号化中..."
+            staticrypt "$file" -p "$SITE_PASSWORD" -o "${file}.enc" -t "Cosmo Base 運営ダッシュボード"
+            mv "${file}.enc" "$file"
+          done
+          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
