@@ -66,9 +66,7 @@ jobs:
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
 
-      # ==========================================
-      # ★ 追加：ビルド出力 (out) のHTMLをすべて暗号化する
-      # ==========================================
+
      # ==========================================
       # ★ 修正版：確実な暗号化ステップ
       # ==========================================
@@ -85,10 +83,11 @@ jobs:
           # 2. 暗号化ツールのインストール
           npm install -g staticrypt
 
-          # 3. outフォルダ内の全HTMLを確実に暗号化（一度別名で保存してから上書きする安全策）
+          # 3. outフォルダ内の全HTMLを確実に暗号化
           find ./out -type f -name "*.html" | while read -r file; do
             echo "🔒 $file を暗号化中..."
-            staticrypt "$file" -p "$SITE_PASSWORD" -o "${file}.enc" -t "Cosmo Base 運営ダッシュボード"
+            # ここに --short を追加して、短いパスワードでも強制的に暗号化します
+            staticrypt "$file" -p "$SITE_PASSWORD" -o "${file}.enc" -t "Cosmo Base 運営ダッシュボード" --short
             mv "${file}.enc" "$file"
           done
           
