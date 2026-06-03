@@ -67,36 +67,49 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
 
       # ==========================================
-      # ★ パスワード暗号化ステップ（index.htmlと404.htmlを確実に上書き）
+      # ★ パスワード暗号化ステップ（最強の確実な上書き版）
       # ==========================================
       - name: Encrypt HTML files with StatiCrypt
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
         run: |
-          # 1. パスワードの存在チェック
           if [ -z "$SITE_PASSWORD" ]; then
             echo "❌ エラー: GitHub Secrets に SITE_PASSWORD が設定されていません！"
             exit 1
           fi
 
-          # 2. 暗号化ツールのインストール
-          npm install -g staticrypt
-
-          # 3. outフォルダの中にあるHTML（index.htmlと404.html）を確実に暗号化
-          find ./out -type f -name "*.html" | while read -r file; do
+          # 出来上がったサイトデータのフォルダ(out)に移動
+          cd out
+          
+          # フォルダ内にあるHTMLを1つずつ見つけて暗号化
+          find . -type f -name "*.html" | while read -r file; do
             echo "🔒 $file を暗号化しています..."
             
-            # 一旦 .enc という拡張子をつけて暗号化ファイルを生成
-            staticrypt "$file" -p "$SITE_PASSWORD" -o "${file}.enc" --short --template-title "Cosmo Base 運営ダッシュボード"
+            # パスのズレを防ぐため、対象ファイルがあるフォルダまで移動して実行する
+            dir=$(dirname "$file")
+            base=$(basename "$file")
             
-            # 生成に成功していれば、元のHTMLファイルに上書きする！
-            if [ -f "${file}.enc" ]; then
-              mv "${file}.enc" "$file"
-              echo "✅ 成功: $file にパスワードをかけました"
-            else
+            (
+              cd "$dir"
+              # 1. ツールを実行 (勝手に encrypted/ フォルダに出力されます)
+              npx --yes staticrypt@latest "$base" -p "$SITE_PASSWORD" --short --template-title "Cosmo Base 運営ダッシュボード"
+              
+              # 2. 生成された暗号化ファイルを、元のHTMLファイルに強制的に上書き！
+              if [ -f "encrypted/$base" ]; then
+                cp "encrypted/$base" "$base"
+                rm -rf encrypted
+              else
+                exit 1 # ファイルが見つからなければエラーにする
+              fi
+            )
+            
+            # エラーが起きた場合はビルド全体を止める
+            if [ $? -ne 0 ]; then
               echo "❌ 失敗: $file の暗号化に失敗しました"
               exit 1
             fi
+            
+            echo "✅ 成功: $file にパスワードをかけました"
           done
 
       - name: Upload artifact
