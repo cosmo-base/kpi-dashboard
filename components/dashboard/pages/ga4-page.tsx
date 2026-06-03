@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Papa from 'papaparse'; // スプレッドシート連携時に使用します
-import { MousePointerClick, Users, Eye, TrendingUp, Globe } from 'lucide-react';
+import Papa from 'papaparse'; 
+import { MousePointerClick, Users, Eye, TrendingUp, Globe, MapPin } from 'lucide-react';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
@@ -28,6 +28,13 @@ const MOCK_DATA = {
       { name: 'SNS (Social)', value: 1500, color: '#8B5CF6' },
       { name: '直接アクセス (Direct)', value: 900, color: '#22C55E' },
       { name: '外部サイト (Referral)', value: 620, color: '#F59E0B' },
+    ],
+    regionDistribution: [
+      { name: '東京都', value: 1850, color: '#38BDF8' },
+      { name: '神奈川県', value: 920, color: '#8B5CF6' },
+      { name: '大阪府', value: 680, color: '#22C55E' },
+      { name: '愛知県', value: 450, color: '#F59E0B' },
+      { name: 'その他', value: 1220, color: '#6B7280' },
     ]
   },
   tables: {
@@ -37,6 +44,15 @@ const MOCK_DATA = {
       { rank: 3, title: '参加者専用ページ', views: '2,100' },
       { rank: 4, title: 'CBL (Cosmo Base Library)', views: '1,450' },
       { rank: 5, title: 'イベント情報 (CBED)', views: '980' },
+    ],
+    regionData: [
+      { rank: 1, region: '東京都', users: '1,850' },
+      { rank: 2, region: '神奈川県', users: '920' },
+      { rank: 3, region: '大阪府', users: '680' },
+      { rank: 4, region: '愛知県', users: '450' },
+      { rank: 5, region: '埼玉県', users: '380' },
+      { rank: 6, region: '福岡県', users: '310' },
+      { rank: 7, region: '千葉県', users: '290' },
     ]
   }
 };
@@ -45,19 +61,20 @@ export function CBHPPage() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    // 💡 今後、ここにGA4のデータを出力したスプレッドシートの「CSV公開URL」を入れます。
-    // GA4のデータは「日別」「流入元」「ページ別」などで表の形が異なるため、3つのシートに分けて出力するのがおすすめです。
-    const urlTrend = '';  // 例: 日付, PV数, ユーザー数
-    const urlSource = ''; // 例: 流入元, ユーザー数
-    const urlPages = '';  // 例: ページタイトル, PV数
+    // 💡 1つのスプレッドシートファイルから、各シートの「CSV公開URL」を個別に取得してここに貼り付けます
+    const urlTrend  = ''; // シート1: 日別トレンド (date, screenPageViews, activeUsers)
+    const urlSource = ''; // シート2: 流入元 (sessionDefaultChannelGroup, activeUsers)
+    const urlPages  = ''; // シート3: ページ別 (pageTitle, screenPageViews)
+    const urlRegion = ''; // シート4: 都道府県別 (region, activeUsers)
 
-    if (!urlTrend || !urlSource || !urlPages) {
-      // URLが空の場合は、デザイン確認用のダミーデータを表示
+    if (!urlTrend || !urlSource || !urlPages || !urlRegion) {
+      // URLがすべて揃っていない場合はモックデータを表示
       setData(MOCK_DATA);
       return;
     }
 
-    // --- スプレッドシートの準備ができたら、ここにCSVを読み込む処理を追加します ---
+    // --- 今後、ここに4つのCSVを同時に読み込んで処理するコードを追加します ---
+    // 例: Promise.all([fetch(urlTrend), fetch(urlSource), ...])
 
   }, []);
 
@@ -89,7 +106,7 @@ export function CBHPPage() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-foreground">CBHP アクセス解析 (GA4)</h2>
         <p className="text-muted-foreground mt-1">
-          直近30日間のウェブサイトのアクセス状況・流入経路・人気ページを確認できます。
+          直近30日間のウェブサイトのアクセス状況・流入経路・人気ページ・アクセス地域を確認できます。
         </p>
       </div>
 
@@ -130,6 +147,26 @@ export function CBHPPage() {
           />
         </SectionCard>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SectionCard title="都道府県別 アクセス割合" icon={MapPin}>
+          <ChartContainer height="h-[350px]">
+            <DonutChart data={charts.regionDistribution} centerLabel="ユーザー" />
+          </ChartContainer>
+        </SectionCard>
+
+        <SectionCard title="地域(都道府県) ランキング" icon={MapPin}>
+          <ScrollableTable
+            columns={[
+              { key: 'rank', label: '順位', align: 'left' },
+              { key: 'region', label: '都道府県', align: 'left' },
+              { key: 'users', label: 'ユーザー数', align: 'right' },
+            ]}
+            data={tables.regionData}
+          />
+        </SectionCard>
+      </div>
+
     </div>
   );
 }
