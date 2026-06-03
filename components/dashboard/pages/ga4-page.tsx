@@ -41,7 +41,7 @@ const MOCK_DATA = {
   }
 };
 
-export function GA4Page() {
+export function CBHPPage() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
