@@ -66,26 +66,39 @@ jobs:
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
 
-
-     # ==========================================
-      # ★ 修正版：確実な暗号化ステップ
+      # ==========================================
+      # ★ パスワード暗号化ステップ（index.htmlと404.htmlを確実に上書き）
       # ==========================================
       - name: Encrypt HTML files with StatiCrypt
         env:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
         run: |
-          # 1. パスワードがちゃんと設定されているかチェック
+          # 1. パスワードの存在チェック
           if [ -z "$SITE_PASSWORD" ]; then
             echo "❌ エラー: GitHub Secrets に SITE_PASSWORD が設定されていません！"
             exit 1
           fi
 
-          # 2. 最新の暗号化ツールをインストール
+          # 2. 暗号化ツールのインストール
           npm install -g staticrypt
 
-          # 3. outフォルダの中身を丸ごと暗号化し、そのまま out フォルダに上書きする！
-          staticrypt out -r -p "$SITE_PASSWORD" --short --template-title "Cosmo Base 運営ダッシュボード" -o out
-          
+          # 3. outフォルダの中にあるHTML（index.htmlと404.html）を確実に暗号化
+          find ./out -type f -name "*.html" | while read -r file; do
+            echo "🔒 $file を暗号化しています..."
+            
+            # 一旦 .enc という拡張子をつけて暗号化ファイルを生成
+            staticrypt "$file" -p "$SITE_PASSWORD" -o "${file}.enc" --short --template-title "Cosmo Base 運営ダッシュボード"
+            
+            # 生成に成功していれば、元のHTMLファイルに上書きする！
+            if [ -f "${file}.enc" ]; then
+              mv "${file}.enc" "$file"
+              echo "✅ 成功: $file にパスワードをかけました"
+            else
+              echo "❌ 失敗: $file の暗号化に失敗しました"
+              exit 1
+            fi
+          done
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
