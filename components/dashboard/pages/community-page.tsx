@@ -14,7 +14,7 @@ import { DonutChart } from '../charts/donut-chart';
 // --- 数値の増減を綺麗にフォーマットする関数（+X, 0, -X） ---
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
-  if (num < 0) return num.toLocaleString(); // マイナスは自動で - が付く
+  if (num < 0) return num.toLocaleString(); 
   return '0';
 };
 
@@ -53,7 +53,7 @@ export function CommunityPage() {
         const latest = dailyRecords[dailyRecords.length - 1];
         const len = dailyRecords.length;
         
-        // --- P列, Q列 流入元データ ---
+        // --- S列(18), T列(19) 流入元データ ---
         const sourceColors: Record<string, string> = {
           '個別招待': '#38BDF8',
           'HP': '#8B5CF6',
@@ -74,9 +74,10 @@ export function CommunityPage() {
         });
 
         rawData.forEach(row => {
-          if (row.length > 16 && row[15] !== undefined && row[16] !== undefined) {
-            const name = String(row[15]).trim();
-            const valStr = String(row[16]).replace(/,/g, '').trim();
+          // S列はインデックス18、T列はインデックス19
+          if (row.length > 19 && row[18] !== undefined && row[19] !== undefined) {
+            const name = String(row[18]).trim();
+            const valStr = String(row[19]).replace(/,/g, '').trim();
             const val = parseInt(valStr, 10);
 
             if (name && !isNaN(val) && name !== '流入元' && name !== '項目') {
