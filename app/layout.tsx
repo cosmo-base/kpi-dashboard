@@ -20,19 +20,14 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/CB_icon.png',
+        url: '/kpi-dashboard/CB_icon.png',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: '/CB_icon.png',
+        url: '/kpi-dashboard/CB_icon.png',
         media: '(prefers-color-scheme: dark)',
       },
-      {
-        url: '/CB_icon.png',
-        type: 'image/svg+xml',
-      },
     ],
-    apple: '/apple-icon.png',
   },
 }
 
