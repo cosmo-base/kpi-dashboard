@@ -80,16 +80,11 @@ jobs:
             exit 1
           fi
 
-          # 2. 暗号化ツールのインストール
+          # 2. 最新の暗号化ツールをインストール
           npm install -g staticrypt
 
-          # 3. outフォルダ内の全HTMLを確実に暗号化
-          find ./out -type f -name "*.html" | while read -r file; do
-            echo "🔒 $file を暗号化中..."
-            # -t ではなく --template-title を使用します
-            staticrypt "$file" -p "$SITE_PASSWORD" -o "${file}.enc" --template-title "Cosmo Base 運営ダッシュボード" --short
-            mv "${file}.enc" "$file"
-          done
+          # 3. outフォルダの中身を丸ごと暗号化し、そのまま out フォルダに上書きする！
+          staticrypt out -r -p "$SITE_PASSWORD" --short --template-title "Cosmo Base 運営ダッシュボード" -o out
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
