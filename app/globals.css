@@ -1,0 +1,185 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Cosmic Dark Theme - Default */
+  --background: oklch(0.12 0.02 250);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.16 0.025 250 / 0.72);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.14 0.02 250);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.72 0.15 220);
+  --primary-foreground: oklch(0.12 0.02 250);
+  --secondary: oklch(0.25 0.03 250);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.22 0.025 250);
+  --muted-foreground: oklch(0.65 0.02 250);
+  --accent: oklch(0.62 0.2 290);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.98 0 0 / 0.08);
+  --input: oklch(0.22 0.025 250);
+  --ring: oklch(0.72 0.15 220);
+  --radius: 1rem;
+  
+  /* Chart Colors - Cosmic Palette */
+  --chart-1: oklch(0.72 0.15 220);
+  --chart-2: oklch(0.62 0.2 290);
+  --chart-3: oklch(0.65 0.18 175);
+  --chart-4: oklch(0.75 0.18 85);
+  --chart-5: oklch(0.6 0.22 25);
+  
+  /* Additional Cosmic Colors */
+  --success: oklch(0.65 0.2 145);
+  --warning: oklch(0.75 0.18 85);
+  --info: oklch(0.7 0.12 200);
+  
+  /* Glass Effect */
+  --glass-bg: oklch(0.15 0.025 250 / 0.72);
+  --glass-border: oklch(0.98 0 0 / 0.08);
+  --glass-highlight: oklch(0.98 0 0 / 0.04);
+}
+
+.dark {
+  --background: oklch(0.12 0.02 250);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.16 0.025 250 / 0.72);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.14 0.02 250);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.72 0.15 220);
+  --primary-foreground: oklch(0.12 0.02 250);
+  --secondary: oklch(0.25 0.03 250);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.22 0.025 250);
+  --muted-foreground: oklch(0.65 0.02 250);
+  --accent: oklch(0.62 0.2 290);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.98 0 0 / 0.08);
+  --input: oklch(0.22 0.025 250);
+  --ring: oklch(0.72 0.15 220);
+  --chart-1: oklch(0.72 0.15 220);
+  --chart-2: oklch(0.62 0.2 290);
+  --chart-3: oklch(0.65 0.18 175);
+  --chart-4: oklch(0.75 0.18 85);
+  --chart-5: oklch(0.6 0.22 25);
+}
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Cosmic Background Effects */
+.cosmic-bg {
+  background: 
+    radial-gradient(ellipse at 20% 0%, oklch(0.35 0.15 260 / 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, oklch(0.35 0.12 220 / 0.1) 0%, transparent 50%),
+    oklch(0.08 0.025 250);
+}
+
+.cosmic-stars {
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, oklch(0.98 0 0 / 0.15), transparent),
+    radial-gradient(2px 2px at 40px 70px, oklch(0.98 0 0 / 0.1), transparent),
+    radial-gradient(1px 1px at 90px 40px, oklch(0.98 0 0 / 0.12), transparent),
+    radial-gradient(2px 2px at 130px 80px, oklch(0.98 0 0 / 0.08), transparent),
+    radial-gradient(1px 1px at 160px 120px, oklch(0.98 0 0 / 0.15), transparent),
+    radial-gradient(1.5px 1.5px at 200px 50px, oklch(0.98 0 0 / 0.1), transparent),
+    radial-gradient(1px 1px at 250px 150px, oklch(0.98 0 0 / 0.12), transparent),
+    radial-gradient(2px 2px at 300px 90px, oklch(0.98 0 0 / 0.08), transparent);
+  background-size: 350px 200px;
+  background-position: 0 0;
+}
+
+/* Glass Card Effect */
+.glass-card {
+  background: oklch(0.15 0.025 250 / 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.98 0 0 / 0.08);
+}
+
+.glass-card:hover {
+  background: oklch(0.17 0.025 250 / 0.75);
+  border-color: oklch(0.98 0 0 / 0.12);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: oklch(0.15 0.02 250);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.03 250);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.04 250);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, oklch(0.72 0.15 220), oklch(0.62 0.2 290));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Tab Active Gradient */
+.tab-active {
+  background: linear-gradient(135deg, oklch(0.55 0.18 250), oklch(0.52 0.2 290));
+}
