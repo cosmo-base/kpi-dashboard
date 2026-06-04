@@ -11,6 +11,8 @@ import { LineChartComponent } from '../charts/line-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 import { DonutChart } from '../charts/donut-chart';
 
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -50,7 +52,6 @@ export function CommunityPage() {
 
         const latest = dailyRecords[dailyRecords.length - 1];
         
-        // --- S列(18), T列(19) 流入元データ ---
         const sourceColors: Record<string, string> = {
           '個別招待': '#38BDF8', 'HP': '#8B5CF6', 'X': '#1DA1F2', 'Instagram': '#E4405F',
           'note': '#41C9B4', 'YouTube': '#FF0000', 'ピーテックス(外部のイベント掲載)': '#F59E0B',
@@ -77,8 +78,7 @@ export function CommunityPage() {
           name: `${name} (${val})`, value: val, color: sourceColors[name] || defaultColors[colorIdx++ % defaultColors.length]
         }));
 
-        // --- ★ 期間ごとの集計ロジック（今月・今週・先月末比） ---
-        const now = new Date();
+        const now = getJSTDate();
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
         const currentDay = now.getDay() === 0 ? 7 : now.getDay();
@@ -119,7 +119,6 @@ export function CommunityPage() {
         const monthlyIncreaseRate = endOfPrevMonthTotal === 0 ? 100 : Math.round((latest.total / endOfPrevMonthTotal) * 100);
         const weeklyIncreaseRate = endOfPrevWeekTotal === 0 ? 100 : Math.round((latest.total / endOfPrevWeekTotal) * 100);
 
-        // --- 1. 月単位の集計 ---
         const monthlyMap = new Map<string, { increase: number; total: number }>();
         dailyRecords.forEach(record => {
           const monthLabel = record.date.split('/')[0] + '月';
@@ -142,7 +141,6 @@ export function CommunityPage() {
           return { month: item.month, increase: item.increase, rate: `${rate}%`, cumulative: item.cumulative };
         }).reverse(); 
 
-        // --- 2. 週単位の集計ロジック（月曜スタート・日曜終わり） ---
         const weeklyMap = new Map<string, { increase: number; cumulative: number; startStr: string; endStr: string }>();
         let currentYear = now.getFullYear();
         if (dailyRecords.length > 0 && parseInt(dailyRecords[0].date.split('/')[0], 10) > now.getMonth() + 2) currentYear--;
