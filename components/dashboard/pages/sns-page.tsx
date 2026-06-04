@@ -13,6 +13,8 @@ import { ScrollableTable } from '../scrollable-table';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -74,7 +76,7 @@ export function SNSPage() {
           };
         });
 
-        const now = new Date();
+        const now = getJSTDate();
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
         const currentDay = now.getDay() === 0 ? 7 : now.getDay();
@@ -126,7 +128,6 @@ export function SNSPage() {
 
         const latestRecord = dailyRecords[dailyRecords.length - 1];
 
-        // --- 1. 月別データの集計 ---
         const monthlyMap = new Map<string, { x: number; instagram: number; note: number; total: number }>();
         processedRecords.forEach(record => {
           const monthLabel = record.date.split('/')[0] + '月';
@@ -145,7 +146,6 @@ export function SNSPage() {
           name: item.month, X: item.x, Instagram: item.instagram, note: item.note,
         }));
 
-        // --- 2. 週別データの集計 ---
         const weeklyMap = new Map<string, { x: number; instagram: number; note: number; total: number; startStr: string; endStr: string }>();
         let currentYear = now.getFullYear();
         if (processedRecords.length > 0 && parseInt(processedRecords[0].date.split('/')[0], 10) > now.getMonth() + 2) currentYear--;
