@@ -12,6 +12,8 @@ import { DonutChart } from '../charts/donut-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 import { RankingList } from '../ranking-list';
 
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -38,7 +40,7 @@ export function CBLPage() {
         const validRows = rows.filter(row => row.title && String(row.title).trim() !== '');
         if (validRows.length === 0) return;
 
-        const now = new Date();
+        const now = getJSTDate();
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
         const currentMonthStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
