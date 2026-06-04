@@ -15,20 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Cosmo Base KPI Dashboard',
-  description: 'Community Growth Analytics for Cosmo Base - 宇宙コミュニティのKPI分析ダッシュボード',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/kpi-dashboard/CB_icon.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/kpi-dashboard/CB_icon.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-    ],
-  },
+  description: 'Community Growth Analytics for Cosmo Base - 宇宙コミュニティーCosmo BaseのKPI分析ダッシュボード',
+  generator: 'Cosmo Base',
 }
 
 export const viewport: Viewport = {
