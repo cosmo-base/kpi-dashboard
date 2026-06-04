@@ -11,6 +11,8 @@ import { LineChartComponent } from '../charts/line-chart';
 import { DonutChart } from '../charts/donut-chart';
 import { Button } from '@/components/ui/button';
 
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -90,18 +92,20 @@ export function SpaceQuizPage() {
         const trendData: any[] = [];
         const accuracyData: any[] = [];
 
-        const now = new Date();
+        const now = getJSTDate();
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
         const currentDay = now.getDay() === 0 ? 7 : now.getDay();
         const startOfThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - currentDay + 1);
         startOfThisWeek.setHours(0, 0, 0, 0);
         const endOfPrevWeek = new Date(startOfThisWeek.getTime() - 1);
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         let thisMonthAnswers = 0;
         let thisWeekAnswers = 0;
         let endOfPrevMonthCum = 0;
         let endOfPrevWeekCum = 0;
+        let todayAnswers = 0;
 
         dailyRecords.forEach(day => {
           cumulativeAnswers += day.answers;
@@ -113,6 +117,7 @@ export function SpaceQuizPage() {
           if (t <= endOfPrevMonth.getTime()) endOfPrevMonthCum = cumulativeAnswers;
           if (t >= startOfThisWeek.getTime()) thisWeekAnswers += day.answers;
           if (t <= endOfPrevWeek.getTime()) endOfPrevWeekCum = cumulativeAnswers;
+          if (t >= startOfToday.getTime()) todayAnswers += day.answers;
         });
 
         const monthlyRate = endOfPrevMonthCum === 0 ? 100 : Math.round((cumulativeAnswers / endOfPrevMonthCum) * 100);
@@ -129,6 +134,7 @@ export function SpaceQuizPage() {
             totalParticipants: totalAnswers,
             monthlyParticipants: thisMonthAnswers, monthlyParticipantsRate: monthlyRate,
             weeklyParticipants: thisWeekAnswers, weeklyParticipantsRate: weeklyRate,
+            todayParticipants: todayAnswers,
             averageAccuracy: averageAccuracy,
           },
           charts: { participantsTrend: trendData, accuracyTrend: accuracyData, platformDistribution },
@@ -171,9 +177,10 @@ export function SpaceQuizPage() {
         <KpiCard title="平均正答率" value={summary.averageAccuracy} unit="%" icon={Target} accentColor="primary" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard title="今週の参加者数" value={`+${summary.weeklyParticipants.toLocaleString()}`} unit="人" icon={CalendarDays} accentColor="primary" />
         <KpiCard title="参加者数の先週末比" value={summary.weeklyParticipantsRate} unit="%" icon={TrendingUp} accentColor="success" trendValue={`先週末比`} trendType="up" />
+        <KpiCard title="今日の参加者数" value={`+${summary.todayParticipants.toLocaleString()}`} unit="人" icon={Clock} accentColor="warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
