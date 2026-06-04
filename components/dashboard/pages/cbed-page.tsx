@@ -12,10 +12,8 @@ import { DonutChart } from '../charts/donut-chart';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// --- 都道府県から地方を自動判定するためのマップ ---
 const REGION_MAP: Record<string, string> = {
-  北海道: '北海道',
-  青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
+  北海道: '北海道', 青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
   茨城: '関東', 栃木: '関東', 群馬: '関東', 埼玉: '関東', 千葉: '関東', 東京: '関東', 神奈川: '関東',
   新潟: '中部', 富山: '中部', 石川: '中部', 福井: '中部', 山梨: '中部', 長野: '中部', 岐阜: '中部', 静岡: '中部', 愛知: '中部',
   三重: '近畿', 滋賀: '近畿', 京都: '近畿', 大阪: '近畿', 兵庫: '近畿', 奈良: '近畿', 和歌山: '近畿',
@@ -24,15 +22,10 @@ const REGION_MAP: Record<string, string> = {
   福岡: '九州・沖縄', 佐賀: '九州・沖縄', 長崎: '九州・沖縄', 熊本: '九州・沖縄', 大分: '九州・沖縄', 宮崎: '九州・沖縄', 鹿児島: '九州・沖縄', 沖縄: '九州・沖縄'
 };
 
-// 47都道府県の北からの標準的な並び順
 const PREFECTURES_FULL = [
-  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
-  '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
-  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県',
-  '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
-  '鳥取県', '島根県', '岡山県', '広島県', '山口県',
-  '徳島県', '香川県', '愛媛県', '高知県',
-  '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+  '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
 ];
 
 type SortMode = 'listings' | 'upcoming' | 'completed' | 'north';
@@ -58,7 +51,6 @@ export function CBEDPage() {
         const dateIdx = headers.indexOf('date') !== -1 ? headers.indexOf('date') : 2;
         const latIdx = headers.indexOf('lat') !== -1 ? headers.indexOf('lat') : 6;
         const lngIdx = headers.indexOf('lng') !== -1 ? headers.indexOf('lng') : 7;
-        
         let prefIdx = headers.indexOf('都道府県');
         if (prefIdx === -1) prefIdx = 16; 
 
@@ -67,15 +59,12 @@ export function CBEDPage() {
         if (validRows.length === 0) return;
 
         const now = new Date();
-        let upcomingCount = 0;
-        let onlineCount = 0;
-        let offlineCount = 0;
+        let upcomingCount = 0, onlineCount = 0, offlineCount = 0;
         
         const regionCounts = new Map<string, number>();
         const prefCounts = new Map<string, { total: number, upcoming: number, completed: number, region: string }>();
         const monthCounts = new Map<string, number>();
 
-        // 47都道府県の0件データをあらかじめセット
         PREFECTURES_FULL.forEach(pref => {
           let cleanPref = pref.replace(/(都|府|県)$/, '');
           if (cleanPref === '北海') cleanPref = '北海道';
@@ -89,7 +78,6 @@ export function CBEDPage() {
         const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
 
         validRows.forEach(row => {
-          // --- 日付処理 ---
           const eventDateStr = String(row[dateIdx] || '').replace(/\//g, '-');
           let isUpcoming = false;
           let monthLabel = '未定';
@@ -100,7 +88,6 @@ export function CBEDPage() {
               isUpcoming = eventDate >= now;
               const ym = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
               monthLabel = `${eventDate.getMonth() + 1}月`;
-              
               if (ym === currentMonthStr) currentMonthCount++;
               if (ym === prevMonthStr) prevMonthCount++;
             }
@@ -108,40 +95,27 @@ export function CBEDPage() {
           if (isUpcoming) upcomingCount++;
           monthCounts.set(monthLabel, (monthCounts.get(monthLabel) || 0) + 1);
 
-          // --- オンライン・オフライン処理 ---
-          const latStr = String(row[latIdx] || '').trim();
-          const lngStr = String(row[lngIdx] || '').trim();
-          const isOnline = latStr === '' && lngStr === ''; 
-          
+          const isOnline = String(row[latIdx] || '').trim() === '' && String(row[lngIdx] || '').trim() === ''; 
           if (isOnline) {
             onlineCount++;
             regionCounts.set('オンライン', (regionCounts.get('オンライン') || 0) + 1);
           } else {
             offlineCount++;
-            
             const rawPref = String(row[prefIdx] || '').trim();
             let cleanPref = rawPref.replace(/(都|府|県)$/, '');
             if (cleanPref === '北海') cleanPref = '北海道';
-
             const region = REGION_MAP[cleanPref] || 'その他';
-            let fullPref = PREFECTURES_FULL.find(p => p.startsWith(cleanPref));
-            const displayPref = fullPref || (rawPref ? rawPref : '未設定');
+            const displayPref = PREFECTURES_FULL.find(p => p.startsWith(cleanPref)) || (rawPref ? rawPref : '未設定');
 
             regionCounts.set(region, (regionCounts.get(region) || 0) + 1);
-
-            if (!prefCounts.has(displayPref)) {
-              prefCounts.set(displayPref, { total: 0, upcoming: 0, completed: 0, region });
-            }
+            if (!prefCounts.has(displayPref)) prefCounts.set(displayPref, { total: 0, upcoming: 0, completed: 0, region });
             const pData = prefCounts.get(displayPref)!;
             pData.total++;
-            if (isUpcoming) pData.upcoming++;
-            else pData.completed++;
+            if (isUpcoming) pData.upcoming++; else pData.completed++;
           }
         });
 
-        // --- データ整形 ---
         const regionColors = ['#38BDF8', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444', '#EC4899', '#10B981', '#6B7280'];
-        
         const regionDistribution = Array.from(regionCounts.entries())
           .map(([name, value], i) => ({ name, value, color: name === 'オンライン' ? '#06B6D4' : regionColors[i % regionColors.length] }))
           .sort((a, b) => b.value - a.value);
@@ -157,19 +131,12 @@ export function CBEDPage() {
 
         const prefectureRanking = Array.from(prefCounts.entries())
           .filter(([name, data]) => name !== '未設定' && data.total > 0)
-          .sort((a, b) => b[1].total - a[1].total)
-          .slice(0, 10)
+          .sort((a, b) => b[1].total - a[1].total).slice(0, 10)
           .map(([name, data], i) => ({ rank: i + 1, name, count: data.total, percentage: Math.round((data.total / offlineCount) * 100) || 0 }));
 
-        // テーブル用の生データ
-        const prefectureTableRaw = Array.from(prefCounts.entries())
-          .map(([prefecture, data]) => ({
-            prefecture,
-            region: data.region,
-            listings: data.total,
-            upcoming: data.upcoming,
-            completed: data.completed
-          }));
+        const prefectureTableRaw = Array.from(prefCounts.entries()).map(([prefecture, data]) => ({
+            prefecture, region: data.region, listings: data.total, upcoming: data.upcoming, completed: data.completed
+        }));
 
         const onlineTable = [{
           category: 'オンラインイベント全体',
@@ -179,194 +146,69 @@ export function CBEDPage() {
         }];
 
         setData({
-          summary: {
-            totalListings: validRows.length,
-            upcomingListings: upcomingCount,
-            offlineListings: offlineCount,
-            onlineListings: onlineCount,
-            monthlyIncrease: currentMonthCount - prevMonthCount,
-          },
-          charts: {
-            regionDistribution,
-            monthlyDistribution
-          },
-          rankings: {
-            regionRanking,
-            prefectureRanking
-          },
-          tables: {
-            prefectureTableRaw, 
-            onlineTable
-          }
+          summary: { totalListings: validRows.length, upcomingListings: upcomingCount, offlineListings: offlineCount, onlineListings: onlineCount, monthlyIncrease: currentMonthCount - prevMonthCount },
+          charts: { regionDistribution, monthlyDistribution },
+          rankings: { regionRanking, prefectureRanking },
+          tables: { prefectureTableRaw, onlineTable }
         });
       })
       .catch(err => console.error('CSV Fetch Error:', err));
   }, []);
 
-  // ★ 各種項目のソートロジック
   const sortedPrefectureTable = useMemo(() => {
     if (!data || !data.tables.prefectureTableRaw) return [];
     const table = [...data.tables.prefectureTableRaw];
-    
-    // 47都道府県以外のデータ（「未設定」などで件数があるもの）
     const undefinedItems = table.filter(t => !PREFECTURES_FULL.includes(t.prefecture) && t.listings > 0);
-    // 47都道府県のデータ
     const validItems = table.filter(t => PREFECTURES_FULL.includes(t.prefecture));
-
     if (prefSortMode === 'north') {
-      // 北から南へ
-      validItems.sort((a, b) => {
-        return PREFECTURES_FULL.indexOf(a.prefecture) - PREFECTURES_FULL.indexOf(b.prefecture);
-      });
+      validItems.sort((a, b) => PREFECTURES_FULL.indexOf(a.prefecture) - PREFECTURES_FULL.indexOf(b.prefecture));
     } else {
-      // 選択された項目（listings, upcoming, completed）で降順ソート
       validItems.sort((a, b) => {
-        if (b[prefSortMode] !== a[prefSortMode]) {
-          return b[prefSortMode] - a[prefSortMode]; 
-        }
-        // 件数が同じ場合は北から南へ
+        if (b[prefSortMode] !== a[prefSortMode]) return b[prefSortMode] - a[prefSortMode]; 
         return PREFECTURES_FULL.indexOf(a.prefecture) - PREFECTURES_FULL.indexOf(b.prefecture);
       });
     }
-    
     return [...validItems, ...undefinedItems];
   }, [data, prefSortMode]);
 
-  if (!data) {
-    return (
-      <div className="flex h-[400px] items-center justify-center text-muted-foreground">
-        <div className="animate-pulse flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          <span>CBEDデータを集計中...</span>
-        </div>
-      </div>
-    );
-  }
+  if (!data) return (<div className="flex h-[400px] items-center justify-center text-muted-foreground"><div className="animate-pulse flex items-center gap-2"><Calendar className="h-5 w-5" /><span>CBEDデータを集計中...</span></div></div>);
 
   const { summary, charts, rankings, tables } = data;
 
   return (
     <div className="space-y-6">
-      <style dangerouslySetInnerHTML={{ __html: `
-        .recharts-default-tooltip {
-          background-color: rgba(15, 23, 42, 0.95) !important;
-          border: 1px solid rgba(255,255,255,0.1) !important;
-        }
-        .recharts-tooltip-item-name, .recharts-tooltip-item-value, .recharts-tooltip-item {
-          color: #ffffff !important;
-        }
-      `}} />
-
-      {/* Page Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-foreground">CBED分析</h2>
-        <p className="text-muted-foreground mt-1">
-          掲載イベントの件数、開催形式、地域別分布を確認できます。
-        </p>
-      </div>
-
-      {/* KPI Cards */}
+      <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBED分析</h2><p className="text-muted-foreground mt-1">掲載イベントの件数、開催形式、地域別分布を確認できます。</p></div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <KpiCard title="掲載件数" value={summary.totalListings.toLocaleString()} unit="件" icon={Calendar} accentColor="primary" />
         <KpiCard title="未開催の掲載件数" value={summary.upcomingListings} unit="件" icon={CalendarOff} accentColor="warning" />
         <KpiCard title="リアル会場の掲載件数" value={summary.offlineListings} unit="件" icon={MapPin} accentColor="accent" />
         <KpiCard title="オンライン掲載件数" value={summary.onlineListings} unit="件" icon={Globe} accentColor="success" />
-        <KpiCard 
-          title="今月のイベント増減" 
-          value={summary.monthlyIncrease >= 0 ? `+${summary.monthlyIncrease}` : summary.monthlyIncrease} 
-          unit="件" 
-          description="先月開催数との差"
-          icon={TrendingUp} 
-          accentColor={summary.monthlyIncrease >= 0 ? "success" : "danger"} 
-        />
+        <KpiCard title="今月のイベント増減" value={summary.monthlyIncrease >= 0 ? `+${summary.monthlyIncrease}` : summary.monthlyIncrease} unit="件" description="先月開催数との差" icon={TrendingUp} accentColor={summary.monthlyIncrease >= 0 ? "success" : "danger"} />
       </div>
 
-      {/* Distribution Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="地方別＋オンラインイベント割合">
-          <ChartContainer height="h-[320px]">
-            {charts?.regionDistribution?.length > 0 ? (
-              <DonutChart data={charts.regionDistribution} centerLabel="イベント" />
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>
-            )}
-          </ChartContainer>
-        </SectionCard>
-
-        <SectionCard title="開催月ごとの掲載件数割合">
-          <ChartContainer height="h-[320px]">
-            {charts?.monthlyDistribution?.length > 0 ? (
-              <DonutChart data={charts.monthlyDistribution} centerLabel="イベント" />
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>
-            )}
-          </ChartContainer>
-        </SectionCard>
+        <SectionCard title="地方別＋オンラインイベント割合"><ChartContainer height="h-[320px]">{charts?.regionDistribution?.length > 0 ? (<DonutChart data={charts.regionDistribution} centerLabel="イベント" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
+        <SectionCard title="開催月ごとの掲載件数割合"><ChartContainer height="h-[320px]">{charts?.monthlyDistribution?.length > 0 ? (<DonutChart data={charts.monthlyDistribution} centerLabel="イベント" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
       </div>
 
-      {/* Rankings */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="地方別掲載件数ランキング">
-          <RankingList items={rankings?.regionRanking || []} />
-        </SectionCard>
-
-        <SectionCard title="都道府県別掲載件数ランキング">
-          <RankingList items={rankings?.prefectureRanking || []} />
-        </SectionCard>
+        <SectionCard title="地方別掲載件数ランキング"><RankingList items={rankings?.regionRanking || []} /></SectionCard>
+        <SectionCard title="都道府県別掲載件数ランキング"><RankingList items={rankings?.prefectureRanking || []} /></SectionCard>
       </div>
 
-      {/* Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SectionCard title="都道府県別 イベント掲載件数">
-          {/* 並び替え用ボタンUI */}
           <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
             <span className="text-sm text-muted-foreground mr-1">並び順:</span>
-            {[
-              { mode: 'north', label: '北から' },
-              { mode: 'listings', label: '総件数' },
-              { mode: 'upcoming', label: '未開催' },
-              { mode: 'completed', label: '開催済' },
-            ].map((btn) => (
-              <Button
-                key={btn.mode}
-                variant="outline"
-                size="sm"
-                onClick={() => setPrefSortMode(btn.mode as SortMode)}
-                className={cn(
-                  'transition-all duration-200',
-                  prefSortMode === btn.mode
-                    ? 'bg-primary text-primary-foreground border-transparent'
-                    : 'bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground'
-                )}
-              >
-                {btn.mode !== 'north' && <ArrowUpDown className="h-3 w-3 mr-1" />}
-                {btn.label}
+            {[{ mode: 'north', label: '北から' }, { mode: 'listings', label: '総件数' }, { mode: 'upcoming', label: '未開催' }, { mode: 'completed', label: '開催済' }].map((btn) => (
+              <Button key={btn.mode} variant="outline" size="sm" onClick={() => setPrefSortMode(btn.mode as SortMode)} className={cn('transition-all duration-200', prefSortMode === btn.mode ? 'bg-primary text-primary-foreground border-transparent' : 'bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground')}>
+                {btn.mode !== 'north' && <ArrowUpDown className="h-3 w-3 mr-1" />}{btn.label}
               </Button>
             ))}
           </div>
-          <ScrollableTable
-            columns={[
-              { key: 'prefecture', label: '都道府県', align: 'left' },
-              { key: 'region', label: '地方', align: 'left' },
-              { key: 'listings', label: '掲載件数', align: 'right' },
-              { key: 'upcoming', label: '未開催', align: 'right' },
-              { key: 'completed', label: '開催済み', align: 'right' },
-            ]}
-            data={sortedPrefectureTable}
-          />
+          <ScrollableTable columns={[{ key: 'prefecture', label: '都道府県', align: 'left' }, { key: 'region', label: '地方', align: 'left' }, { key: 'listings', label: '掲載件数', align: 'right' }, { key: 'upcoming', label: '未開催', align: 'right' }, { key: 'completed', label: '開催済み', align: 'right' }]} data={sortedPrefectureTable} />
         </SectionCard>
-
-        <SectionCard title="オンラインイベント掲載件数">
-          <ScrollableTable
-            columns={[
-              { key: 'category', label: '区分', align: 'left' },
-              { key: 'listings', label: '掲載件数', align: 'right' },
-              { key: 'upcoming', label: '未開催', align: 'right' },
-              { key: 'completed', label: '開催済み', align: 'right' },
-            ]}
-            data={tables?.onlineTable || []}
-          />
-        </SectionCard>
+        <SectionCard title="オンラインイベント掲載件数"><ScrollableTable columns={[{ key: 'category', label: '区分', align: 'left' }, { key: 'listings', label: '掲載件数', align: 'right' }, { key: 'upcoming', label: '未開催', align: 'right' }, { key: 'completed', label: '開催済み', align: 'right' }]} data={tables?.onlineTable || []} /></SectionCard>
       </div>
     </div>
   );
