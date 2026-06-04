@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { MousePointerClick, Users, Eye, TrendingUp, Globe, MapPin, MessageCircle } from 'lucide-react';
+import { MousePointerClick, Users, Eye, Globe, MapPin, MessageCircle } from 'lucide-react';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
@@ -11,7 +11,7 @@ import { DonutChart } from '../charts/donut-chart';
 import { ScrollableTable } from '../scrollable-table';
 
 // ==========================================
-// スプレッドシートのCSV公開URL
+// スプレッドシートのCSV公開URL (5シート全て組み込み済)
 // ==========================================
 const CSV_URLS = {
   trend: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSBX8EEqFoTdtvrQ32gTdwF1_vsT1_2yfZaVUzzHOH7RBaHDTcTKjB7rxL8f3zkF29DmwKwazp6q3r/pub?gid=0&single=true&output=csv',
@@ -74,19 +74,18 @@ export function CBHPPage() {
       fetch(CSV_URLS.source).then(res => res.text()),
       fetch(CSV_URLS.pages).then(res => res.text()),
       fetch(CSV_URLS.region).then(res => res.text()),
-      fetch(CSV_URLS.conversions).then(res => res.text()) // 追加！
+      fetch(CSV_URLS.conversions).then(res => res.text())
     ]).then(([trendTxt, sourceTxt, pagesTxt, regionTxt, convTxt]) => {
       
-      // --- 1. 日別トレンドの処理 ---
+      // --- 1. 日別トレンドの処理 (全期間の累計を計算) ---
       const trendRows = Papa.parse(trendTxt, { header: true, skipEmptyLines: true }).data as any[];
-      let thirtyDaysPVs = 0;
-      let thirtyDaysUsers = 0;
-      let thirtyDaysNewUsers = 0;
+      let totalPVs = 0;
+      let totalUsers = 0;
+      let totalNewUsers = 0;
       let sumEngagementRate = 0;
       let sumSessionDuration = 0;
-      let count30Days = 0;
 
-      const trendData = trendRows.map((row, i) => {
+      const trendData = trendRows.map((row) => {
         const pv = parseInt(row.screenPageViews, 10) || 0;
         const users = parseInt(row.activeUsers, 10) || 0;
         const newUsers = parseInt(row.newUsers, 10) || 0;
@@ -96,15 +95,12 @@ export function CBHPPage() {
         const dateStr = String(row.date || '');
         const shortDate = dateStr.length > 5 ? dateStr.substring(5) : dateStr;
 
-        // 直近30日の集計
-        if (i >= trendRows.length - 30) {
-          thirtyDaysPVs += pv;
-          thirtyDaysUsers += users;
-          thirtyDaysNewUsers += newUsers;
-          sumEngagementRate += engRate;
-          sumSessionDuration += avgDuration;
-          count30Days++;
-        }
+        // 全ての行を加算して累計にする
+        totalPVs += pv;
+        totalUsers += users;
+        totalNewUsers += newUsers;
+        sumEngagementRate += engRate;
+        sumSessionDuration += avgDuration;
 
         return {
           name: shortDate,
@@ -114,10 +110,11 @@ export function CBHPPage() {
         };
       });
 
-      const avgEngRate = count30Days > 0 ? (sumEngagementRate / count30Days) * 100 : 0;
-      const avgDuration = count30Days > 0 ? (sumSessionDuration / count30Days) : 0;
+      const totalDays = trendRows.length;
+      const avgEngRate = totalDays > 0 ? (sumEngagementRate / totalDays) * 100 : 0;
+      const avgDuration = totalDays > 0 ? (sumSessionDuration / totalDays) : 0;
 
-      // --- 2. 詳細な流入元の処理 ---
+      // --- 2. 詳細な流入元の処理 (累計) ---
       const sourceRows = Papa.parse(sourceTxt, { header: true, skipEmptyLines: true }).data as any[];
       const sourceMap = new Map<string, number>();
       
@@ -132,9 +129,10 @@ export function CBHPPage() {
         .map(([name, value], i) => ({ name, value, color: SOURCE_COLORS[i % SOURCE_COLORS.length] }))
         .sort((a, b) => b.value - a.value);
 
-      // --- 3. ページランキング ---
+      // --- 3. ページランキング (累計) ---
       const pagesRows = Papa.parse(pagesTxt, { header: true, skipEmptyLines: true }).data as any[];
       const pathMap = new Map<string, { title: string, path: string, views: number }>();
+      
       pagesRows.forEach((row) => {
         const path = row.pagePath || '不明';
         const views = parseInt(row.screenPageViews, 10) || 0;
@@ -152,7 +150,7 @@ export function CBHPPage() {
           views: item.views.toLocaleString(),
         }));
 
-      // --- 4. 都道府県 ---
+      // --- 4. 都道府県 (累計) ---
       const regionRows = Papa.parse(regionTxt, { header: true, skipEmptyLines: true }).data as any[];
       const regionDistribution: any[] = [];
       const regionData: any[] = [];
@@ -178,30 +176,23 @@ export function CBHPPage() {
         }
       });
 
-      // --- 5. コンバージョン（Discord参加）---
+      // --- 5. コンバージョン（Discord参加・累計）---
       const convRows = Papa.parse(convTxt, { header: true, skipEmptyLines: true }).data as any[];
       let totalDiscordJoins = 0;
-      let thirtyDaysDiscordJoins = 0;
       
-      convRows.forEach((row, i) => {
+      convRows.forEach((row) => {
         const evName = row.eventName || '';
         const count = parseInt(row.eventCount, 10) || 0;
-        
-        // GA4で設定したイベント名（discord_join）をカウント
         if (evName === 'discord_join') {
           totalDiscordJoins += count;
-          // 直近30日かどうかの簡易判定 (行の後ろの方にあるかで判定)
-          if (i >= convRows.length - 30) {
-            thirtyDaysDiscordJoins += count;
-          }
         }
       });
 
       setData({
         summary: { 
-          thirtyDaysPVs, 
-          thirtyDaysUsers, 
-          thirtyDaysNewUsers,
+          totalPVs, 
+          totalUsers, 
+          totalNewUsers,
           avgEngRate: avgEngRate.toFixed(1),
           avgDuration: formatSeconds(avgDuration),
           totalDiscordJoins,
@@ -225,7 +216,7 @@ export function CBHPPage() {
       <div className="flex h-[400px] items-center justify-center text-muted-foreground">
         <div className="animate-pulse flex items-center gap-2">
           <Globe className="h-5 w-5" />
-          <span>GA4アクセスデータを取得・集計中...</span>
+          <span>GA4全期間のアクセスデータを集計中...</span>
         </div>
       </div>
     );
@@ -238,24 +229,23 @@ export function CBHPPage() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-foreground">CBHP アクセス解析 (GA4)</h2>
         <p className="text-muted-foreground mt-1">
-          ウェブサイトのアクセス状況・エンゲージメント・流入経路・コンバージョンを確認できます。
+          ウェブサイトのアクセス状況・エンゲージメント・流入経路・コンバージョンの累計データを確認できます。
         </p>
       </div>
 
-      {/* 超強化されたKPIカード */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
-          title="総ページビュー (直近30日)" 
-          value={summary.thirtyDaysPVs.toLocaleString()} 
+          title="総ページビュー (累計)" 
+          value={summary.totalPVs.toLocaleString()} 
           unit="PV" 
           icon={Eye} 
           accentColor="primary" 
         />
         <KpiCard 
-          title="アクティブユーザー (直近30日)" 
-          value={summary.thirtyDaysUsers.toLocaleString()} 
+          title="のべユーザー数 (累計)" 
+          value={summary.totalUsers.toLocaleString()} 
           unit="人" 
-          trendValue={`うち新規: ${summary.thirtyDaysNewUsers.toLocaleString()}人`}
+          trendValue={`うち新規: ${summary.totalNewUsers.toLocaleString()}人`}
           trendType="up"
           icon={Users} 
           accentColor="success" 
@@ -292,7 +282,7 @@ export function CBHPPage() {
       </SectionCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="流入元メディア 割合 (直近30日)">
+        <SectionCard title="流入元メディア 割合 (累計)">
           <ChartContainer height="h-[350px]">
             {charts.sourceData.length > 0 ? (
               <DonutChart data={charts.sourceData} centerLabel="ユーザー" />
@@ -302,7 +292,7 @@ export function CBHPPage() {
           </ChartContainer>
         </SectionCard>
 
-        <SectionCard title="人気ページランキング (直近30日)">
+        <SectionCard title="人気ページランキング (累計)">
           <ScrollableTable
             columns={[
               { key: 'rank', label: '順位', align: 'center' },
@@ -316,7 +306,7 @@ export function CBHPPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="都道府県別 アクセス割合 (直近30日)" icon={MapPin}>
+        <SectionCard title="都道府県別 アクセス割合 (累計)" icon={MapPin}>
           <ChartContainer height="h-[350px]">
             {charts.regionDistribution.length > 0 ? (
               <DonutChart data={charts.regionDistribution} centerLabel="ユーザー" />
@@ -326,7 +316,7 @@ export function CBHPPage() {
           </ChartContainer>
         </SectionCard>
 
-        <SectionCard title="地域(都道府県) ランキング" icon={MapPin}>
+        <SectionCard title="地域(都道府県) ランキング (累計)" icon={MapPin}>
           <ScrollableTable
             columns={[
               { key: 'rank', label: '順位', align: 'center' },
