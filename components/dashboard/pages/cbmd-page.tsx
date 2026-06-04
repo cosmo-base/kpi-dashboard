@@ -9,6 +9,8 @@ import { ChartContainer } from '../chart-container';
 import { RankingList } from '../ranking-list';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+
 const REGION_MAP: Record<string, string> = {
   北海道: '北海道', 青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
   茨城: '関東', 栃木: '関東', 群馬: '関東', 埼玉: '関東', 千葉: '関東', 東京: '関東', 神奈川: '関東',
@@ -42,15 +44,17 @@ export function CBMDPage() {
         const validRows = rawData.slice(headerRowIndex + 1).filter(row => row[nameIdx] && String(row[nameIdx]).trim() !== '');
         if (validRows.length === 0) return;
 
-        const now = new Date();
+        const now = getJSTDate();
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
         const currentDay = now.getDay() === 0 ? 7 : now.getDay();
         const startOfThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - currentDay + 1);
         startOfThisWeek.setHours(0, 0, 0, 0);
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
         let thisMonthChange = 0;
         let thisWeekChange = 0;
+        let todayChange = 0;
         let endOfPrevMonthListings = 0;
 
         const regionCounts = new Map<string, number>();
@@ -65,6 +69,7 @@ export function CBMDPage() {
               if (t >= startOfThisMonth.getTime()) thisMonthChange++;
               if (t <= endOfPrevMonth.getTime()) endOfPrevMonthListings++;
               if (t >= startOfThisWeek.getTime()) thisWeekChange++;
+              if (t >= startOfToday.getTime()) todayChange++;
             }
           }
 
@@ -102,7 +107,7 @@ export function CBMDPage() {
           .map(([name, count], i) => ({ rank: i + 1, name, count, percentage: Math.round((count / totalListings) * 100) || 0 }));
 
         setData({
-          summary: { totalListings, thisMonthChange, monthlyChangeRate, thisWeekChange },
+          summary: { totalListings, thisMonthChange, monthlyChangeRate, thisWeekChange, todayChange },
           charts: { regionData: regionChartData },
           rankings: { regionRanking, prefectureRanking }
         });
@@ -118,11 +123,12 @@ export function CBMDPage() {
     <div className="space-y-6">
       <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBMD分析</h2><p className="text-muted-foreground mt-1">CBMD掲載情報（ミュージアム・施設）の地域別・都道府県別の分布を確認できます。</p></div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KpiCard title="掲載件数" value={summary.totalListings.toLocaleString()} unit="件" icon={FileText} accentColor="primary" />
         <KpiCard title="今月の追加数" value={`+${summary.thisMonthChange}`} unit="件" icon={TrendingUp} accentColor="success" />
         <KpiCard title="先月末比" value={summary.monthlyChangeRate} unit="%" trendValue="先月末比" trendType="up" icon={TrendingUp} accentColor="success" />
         <KpiCard title="今週の追加数" value={`+${summary.thisWeekChange}`} unit="件" icon={Calendar} accentColor="accent" />
+        <KpiCard title="今日の追加数" value={`+${summary.todayChange}`} unit="件" icon={TrendingUp} accentColor="warning" />
       </div>
 
       <SectionCard title="地方別掲載件数" description="各地方のCBMD掲載数（北から南へ並び順）">
