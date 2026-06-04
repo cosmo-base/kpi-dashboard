@@ -253,7 +253,14 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://analytics.google.com/analytics/web/?utm_source=marketingplatform.google.com&utm_medium=et&utm_campaign=marketingplatform.google.com%2Fabout%2Fanalytics%2F#/a385612556p525984972/reports/intelligenthome?params=_u..nav%3Dmaui',
         description: 'GA4解析ツール',
         icon: ChartSpline ,
-      }
+      },
+      {
+        id: 'admin2-5',
+        title: 'パートナーロゴ格納箱',
+        url: 'https://supabase.com/dashboard/project/oqomwuhrvqoozfujgtsj/storage/files/buckets/library',
+        description: '',
+        icon: FolderGit,
+      },
     ],
   },
   {
