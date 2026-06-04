@@ -12,6 +12,8 @@ import { DonutChart } from '../charts/donut-chart';
 import { LineChartComponent } from '../charts/line-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -63,7 +65,7 @@ export function SpaceDiagnosisPage() {
 
       if (allRows.length === 0) return;
 
-      const now = new Date();
+      const now = getJSTDate();
       const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
       const currentDay = now.getDay() === 0 ? 7 : now.getDay();
