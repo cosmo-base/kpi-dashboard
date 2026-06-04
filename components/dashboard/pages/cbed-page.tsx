@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Papa from 'papaparse';
-import { Calendar, CalendarOff, MapPin, Globe, TrendingUp, ArrowUpDown } from 'lucide-react';
+import { Calendar, CalendarOff, MapPin, Globe, TrendingUp, ArrowUpDown, Clock } from 'lucide-react';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
@@ -12,6 +12,7 @@ import { DonutChart } from '../charts/donut-chart';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+// 日本時間を取得する関数
 const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
 
 const REGION_MAP: Record<string, string> = {
@@ -55,13 +56,21 @@ export function CBEDPage() {
         const lngIdx = headers.indexOf('lng') !== -1 ? headers.indexOf('lng') : 7;
         let prefIdx = headers.indexOf('都道府県');
         if (prefIdx === -1) prefIdx = 16; 
+        
+        // R列（更新日時）のインデックスを取得
+        let updateIdx = headers.indexOf('更新日時');
+        if (updateIdx === -1) updateIdx = headers.indexOf('updatedAt');
+        if (updateIdx === -1) updateIdx = 17; // R列
 
         const validRows = rawData.slice(headerRowIndex + 1).filter(row => row[titleIdx] && String(row[titleIdx]).trim() !== '');
 
         if (validRows.length === 0) return;
 
         const now = getJSTDate();
-        let upcomingCount = 0, onlineCount = 0, offlineCount = 0;
+        // 今日の0:00(JST)のタイムスタンプ
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+        let upcomingCount = 0, onlineCount = 0, offlineCount = 0, todayUpdateCount = 0;
         
         const regionCounts = new Map<string, number>();
         const prefCounts = new Map<string, { total: number, upcoming: number, completed: number, region: string }>();
@@ -80,6 +89,19 @@ export function CBEDPage() {
         const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
 
         validRows.forEach(row => {
+          // --- 更新日時の処理（R列） ---
+          const updateStr = String(row[updateIdx] || '').trim();
+          if (updateStr) {
+            const updateDate = new Date(updateStr.replace(/\//g, '-'));
+            if (!isNaN(updateDate.getTime())) {
+              // 更新日時が今日の0:00以降であればカウント
+              if (updateDate.getTime() >= startOfToday.getTime()) {
+                todayUpdateCount++;
+              }
+            }
+          }
+
+          // --- イベント開催日の処理 ---
           const eventDateStr = String(row[dateIdx] || '').replace(/\//g, '-');
           let isUpcoming = false;
           let monthLabel = '未定';
@@ -148,7 +170,14 @@ export function CBEDPage() {
         }];
 
         setData({
-          summary: { totalListings: validRows.length, upcomingListings: upcomingCount, offlineListings: offlineCount, onlineListings: onlineCount, monthlyIncrease: currentMonthCount - prevMonthCount },
+          summary: { 
+            totalListings: validRows.length, 
+            upcomingListings: upcomingCount, 
+            offlineListings: offlineCount, 
+            onlineListings: onlineCount, 
+            monthlyIncrease: currentMonthCount - prevMonthCount,
+            todayUpdateCount: todayUpdateCount // 追加
+          },
           charts: { regionDistribution, monthlyDistribution },
           rankings: { regionRanking, prefectureRanking },
           tables: { prefectureTableRaw, onlineTable }
@@ -180,12 +209,15 @@ export function CBEDPage() {
   return (
     <div className="space-y-6">
       <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBED分析</h2><p className="text-muted-foreground mt-1">掲載イベントの件数、開催形式、地域別分布を確認できます。</p></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      
+      {/* 6カラムに変更して「今日の更新数」を追加 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <KpiCard title="掲載件数" value={summary.totalListings.toLocaleString()} unit="件" icon={Calendar} accentColor="primary" />
         <KpiCard title="未開催の掲載件数" value={summary.upcomingListings} unit="件" icon={CalendarOff} accentColor="warning" />
         <KpiCard title="リアル会場の掲載件数" value={summary.offlineListings} unit="件" icon={MapPin} accentColor="accent" />
         <KpiCard title="オンライン掲載件数" value={summary.onlineListings} unit="件" icon={Globe} accentColor="success" />
         <KpiCard title="今月のイベント増減" value={summary.monthlyIncrease >= 0 ? `+${summary.monthlyIncrease}` : summary.monthlyIncrease} unit="件" description="先月開催数との差" icon={TrendingUp} accentColor={summary.monthlyIncrease >= 0 ? "success" : "danger"} />
+        <KpiCard title="今日の更新数" value={`+${summary.todayUpdateCount}`} unit="件" icon={Clock} accentColor="warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
