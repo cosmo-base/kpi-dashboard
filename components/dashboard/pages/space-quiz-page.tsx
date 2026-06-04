@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { Users, Calendar, TrendingUp, Clock, Target, ArrowUpDown, CalendarDays, Smartphone } from 'lucide-react';
+import { Users, Calendar, TrendingUp, Clock, Target, ArrowUpDown, CalendarDays } from 'lucide-react';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
@@ -10,6 +10,7 @@ import { ScrollableTable } from '../scrollable-table';
 import { LineChartComponent } from '../charts/line-chart';
 import { DonutChart } from '../charts/donut-chart';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
 
@@ -19,9 +20,12 @@ const formatDiff = (num: number) => {
   return '0';
 };
 
+// 並び替えモードの型を拡張
+type SortMode = 'date_desc' | 'answers_desc' | 'accuracy_desc' | 'accuracy_asc';
+
 export function SpaceQuizPage() {
   const [data, setData] = useState<any>(null);
-  const [sortMode, setSortMode] = useState<'date' | 'asc' | 'desc'>('date');
+  const [sortMode, setSortMode] = useState<SortMode>('date_desc');
 
   useEffect(() => {
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVq2TSYbOibnTUUyYqHJmrEfspQ1KQn8JpaTsvkrC8oekSogURY1N9yqocitnAbEXewzPIQVyj59rf/pub?gid=0&single=true&output=csv';
@@ -148,23 +152,13 @@ export function SpaceQuizPage() {
 
   const { summary, charts, tables } = data;
 
+  // ボタンによってソート処理を分岐
   const sortedQuestions = [...tables.questionRanking].sort((a, b) => {
-    if (sortMode === 'asc') return a.accuracy - b.accuracy;
-    if (sortMode === 'desc') return b.accuracy - a.accuracy;
-    return b.timestamp - a.timestamp; 
+    if (sortMode === 'accuracy_desc') return b.accuracy - a.accuracy; // 正答率高い順
+    if (sortMode === 'accuracy_asc') return a.accuracy - b.accuracy;  // 正答率低い順
+    if (sortMode === 'answers_desc') return b.answers - a.answers;    // 回答数多い順
+    return b.timestamp - a.timestamp;                                 // デフォルト: 新着順
   });
-
-  const handleSortChange = () => {
-    if (sortMode === 'date') setSortMode('asc');
-    else if (sortMode === 'asc') setSortMode('desc');
-    else setSortMode('date');
-  };
-
-  const getSortLabel = () => {
-    if (sortMode === 'asc') return '正答率が低い順';
-    if (sortMode === 'desc') return '正答率が高い順';
-    return '出題日が新しい順';
-  };
 
   return (
     <div className="space-y-6">
@@ -190,9 +184,49 @@ export function SpaceQuizPage() {
 
       <SectionCard title="宇宙クイズ 日別 平均正答率推移"><ChartContainer height="h-[300px]"><LineChartComponent data={charts.accuracyTrend.slice(-90)} lines={[{ dataKey: '正答率', name: '平均正答率', color: '#8B5CF6' }]} yAxisUnit="%" /></ChartContainer></SectionCard>
 
-      <SectionCard title="問題別 正答率ランキング" description="各問題の回答数と正答率（ヘッダーのボタンで並び替え可能）">
-        <div className="flex justify-end mb-4"><Button variant="outline" size="sm" onClick={handleSortChange} className="gap-2 bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-[160px]"><ArrowUpDown className="h-4 w-4" />{getSortLabel()}</Button></div>
-        <ScrollableTable columns={[{ key: 'rank', label: '順位', align: 'center' }, { key: 'question', label: '問題名', align: 'left' }, { key: 'answers', label: '回答数', align: 'right' }, { key: 'correct', label: '正解数', align: 'right' }, { key: 'accuracyStr', label: '正答率', align: 'right' }]} data={sortedQuestions.map((q, i) => ({ ...q, rank: sortMode === 'date' ? '-' : i + 1, answers: q.answers.toLocaleString(), correct: q.correct.toLocaleString(), accuracyStr: `${Math.round(q.accuracy * 10) / 10}%` }))} />
+      {/* セクション名を変更・並び替えボタンUIを追加 */}
+      <SectionCard title="問題別 回答データ一覧" description="各問題の回答数と正答率（ボタンで並び替え可能）">
+        <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
+          <span className="text-sm text-muted-foreground mr-1">並び順:</span>
+          {[
+            { mode: 'date_desc', label: '新着順' },
+            { mode: 'answers_desc', label: '回答数順' },
+            { mode: 'accuracy_desc', label: '正答率 (高)' },
+            { mode: 'accuracy_asc', label: '正答率 (低)' },
+          ].map((btn) => (
+            <Button
+              key={btn.mode}
+              variant="outline"
+              size="sm"
+              onClick={() => setSortMode(btn.mode as SortMode)}
+              className={cn(
+                'transition-all duration-200',
+                sortMode === btn.mode
+                  ? 'bg-primary text-primary-foreground border-transparent'
+                  : 'bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground'
+              )}
+            >
+              {btn.mode !== 'date_desc' && <ArrowUpDown className="h-3 w-3 mr-1" />}
+              {btn.label}
+            </Button>
+          ))}
+        </div>
+        <ScrollableTable 
+          columns={[
+            { key: 'rank', label: '順位', align: 'center' }, 
+            { key: 'question', label: '問題名', align: 'left' }, 
+            { key: 'answers', label: '回答数', align: 'right' }, 
+            { key: 'correct', label: '正解数', align: 'right' }, 
+            { key: 'accuracyStr', label: '正答率', align: 'right' }
+          ]} 
+          data={sortedQuestions.map((q, i) => ({ 
+            ...q, 
+            rank: sortMode === 'date_desc' ? '-' : i + 1, 
+            answers: q.answers.toLocaleString(), 
+            correct: q.correct.toLocaleString(), 
+            accuracyStr: `${Math.round(q.accuracy * 10) / 10}%` 
+          }))} 
+        />
       </SectionCard>
     </div>
   );
