@@ -326,4 +326,373 @@ const initialLinkCategories: LinkCategory[] = [
       },
       {
         id: 'manage-10',
-        title: '宇宙タイプ
+        title: '宇宙タイプ診断詳細版診断データ',
+        url: 'https://docs.google.com/spreadsheets/d/13yFYKDVm0g09Vw6cyHN9Hr4H2n66CL9SpPDJ-mytLb0/edit?',
+        description: '宇宙タイプ診断詳細版診断データ',
+        icon: Sparkles ,
+      },
+    ]
+  },
+  {
+    id: 'design',
+    label: 'デザイン',
+    icon: Image,
+    links: [
+      {
+        id: 'design-1',
+        title: 'Instagram＿イベント投稿＿デザイン',
+        url: 'https://canva.link/6ohgqrezzrde9dj',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-2',
+        title: '宇宙知っトク＿座談会用当日＿資料',
+        url: 'https://canva.link/sygrarpb5f0osz4',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-3',
+        title: 'Instagram＿汎用投稿＿デザイン',
+        url: 'https://canva.link/ac3ep7ya04p7ff0',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-4',
+        title: 'Instagram＿クイズ投稿＿デザイン',
+        url: 'https://canva.link/k9rtx04myz9upf5',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-5',
+        title: 'CB＿メイン背景＿デザイン',
+        url: 'https://canva.link/t4cehf79ym5swmz',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-6',
+        title: 'FSIF&CB＿新歓＿資料',
+        url: 'https://canva.link/lyl255ilb5p40mm',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-7',
+        title: 'パートナー締結＿メインデザイン',
+        url: 'https://canva.link/1aakw2t0bjl906i',
+        description: '',
+        icon: Handshake,
+      },
+      {
+        id: 'design-8',
+        title: 'CBMDコンテンツ紹介＿投稿用デザイン',
+        url: 'https://canva.link/foa4xfbsrjn5lbp',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-9',
+        title: '週間宇宙ニュース＿表紙デザイン',
+        url: 'https://canva.link/wyjmvia38dzv2cu',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-10',
+        title: 'note＿コンテンツ紹介＿デザイン',
+        url: 'https://canva.link/h8fsg4d8ielshsv',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-11',
+        title: '宇宙クイズ＿問題&回答＿デザイン',
+        url: 'https://canva.link/v9q69e1cmw5xc8v',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-12',
+        title: 'プレスリリース＿表紙＿デザイン',
+        url: 'https://canva.link/ql3kf2fnhktw0l8',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-13',
+        title: '宇宙知っトク＿表紙＿デザイン',
+        url: 'https://canva.link/3oqqw9yl2iqbew8',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-14',
+        title: 'パートナー締結＿サブ(Instagram)デザイン',
+        url: 'https://canva.link/dcgka4ivmcz80tg',
+        description: '',
+        icon: Handshake,
+      },
+    ],
+  },
+  {
+    id: 'external',
+    label: '外部資料',
+    icon: Building,
+    links: [
+      {
+        id: 'external-1',
+        title: '宇宙システム株式会社＿宇宙関連のイベント',
+        url: 'https://space-sd.co.jp/symposium/symposium.html',
+        description: '',
+        icon: Building,
+      },
+      {
+        id: 'external-2',
+        title: '空畑',
+        url: 'https://sorabatake.jp/',
+        description: '',
+        icon: Building,
+      },
+      {
+        id: 'external-3',
+        title: 'sorae',
+        url: 'https://sorae.info/',
+        description: '',
+        icon: Building,
+      },
+      {
+        id: 'external-4',
+        title: 'SpaceMedia',
+        url: 'https://spacemedia.jp/',
+        description: '',
+        icon: Building,
+      },
+      {
+        id: 'external-5',
+        title: 'SPACE CONNECT',
+        url: 'https://space-connect.jp/',
+        description: '',
+        icon: Building,
+      },
+    ],
+  },
+];
+
+function LinkCard({ 
+  link, 
+  delay 
+}: { 
+  link: LinkItem; 
+  delay: number;
+}) {
+  const [copied, setCopied] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const Icon = link.icon;
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(link.url);
+    setCopied(true);
+    setShowToast(true);
+    setTimeout(() => {
+      setCopied(false);
+      setShowToast(false);
+    }, 2000);
+  };
+
+  const handleOpen = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    window.open(link.url, '_blank', 'noopener,noreferrer');
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, delay: delay * 0.05 }}
+      className={cn(
+        "glass-card rounded-2xl p-5 cursor-pointer group transition-all duration-300",
+        "hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1"
+      )}
+      onClick={handleOpen}
+    >
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-2 right-2 bg-success/90 text-white text-xs px-3 py-1.5 rounded-lg z-10"
+          >
+            URLをコピーしました
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex items-start gap-4">
+        <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+            {link.title}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">{link.description}</p>
+          <p className="text-xs text-muted-foreground/60 mt-2 truncate font-mono">
+            {link.url}
+          </p>
+        </div>
+      </div>
+      
+      <div className="flex gap-2 mt-4 pt-4 border-t border-border/30">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCopy}
+          className="flex-1 gap-2 bg-secondary/30 hover:bg-secondary/50 border-border/50"
+        >
+          {copied ? (
+            <>
+              <Check className="h-4 w-4 text-success" />
+              <span className="text-xs">コピー完了</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4" />
+              <span className="text-xs">Copy</span>
+            </>
+          )}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpen();
+          }}
+          className="flex-1 gap-2 bg-primary/10 hover:bg-primary/20 border-primary/20 text-primary"
+        >
+          <ExternalLink className="h-4 w-4" />
+          <span className="text-xs">Open</span>
+        </Button>
+      </div>
+    </motion.div>
+  );
+}
+
+export function LinksPage() {
+  const [activeCategory, setActiveCategory] = useState('member');
+  const currentCategory = initialLinkCategories.find((cat) => cat.id === activeCategory);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-8"
+    >
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-accent/20 to-primary/20 border border-accent/20">
+            <LinkIcon className="h-6 w-6 text-accent" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">リンク管理</h2>
+            <p className="text-sm text-muted-foreground">Cosmo Base運営で利用するリンクを一元管理</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sub-tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {initialLinkCategories.map((category) => {
+          const Icon = category.icon;
+          const isActive = activeCategory === category.id;
+          
+          return (
+            <motion.button
+              key={category.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveCategory(category.id)}
+              className={cn(
+                'relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300',
+                isActive
+                  ? 'text-white'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50 glass-card'
+              )}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="activeLinkTab"
+                  className="absolute inset-0 tab-active rounded-xl"
+                  transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <Icon className="h-4 w-4" />
+                {category.label}
+                <span className="text-xs opacity-70">({category.links.length})</span>
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Link Cards Grid */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeCategory}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
+        >
+          {currentCategory && currentCategory.links.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {currentCategory.links.map((link, index) => (
+                <LinkCard 
+                  key={link.id}
+                  link={link} 
+                  delay={index}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="glass-card rounded-2xl p-12 text-center">
+              <LinkIcon className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+              <p className="text-muted-foreground">このカテゴリにはまだリンクがありません</p>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Quick Stats */}
+      <div className="glass-card rounded-2xl p-6">
+        <h3 className="font-semibold text-foreground mb-4">リンク統計</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          {initialLinkCategories.map((cat) => {
+            const Icon = cat.icon;
+            return (
+              <div key={cat.id} className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
+                  <Icon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{cat.links.length}</p>
+                  <p className="text-xs text-muted-foreground">{cat.label}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
