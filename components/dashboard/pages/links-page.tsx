@@ -1,33 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Link as LinkIcon,ChartSpline,ExternalLink,Sparkles,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Plus,Pencil,  Trash2,  GripVertical,  Wrench,X,Focus,Notebook,SquarePlay,FolderGit,
+  Link as LinkIcon,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,
   type LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { title } from 'process';
 
 interface LinkItem {
   id: string;
@@ -84,6 +64,20 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://www.youtube.com/channel/UC3bcWCM6ccvsyQyiXLIwhkQ',
         description: 'CB YouTube',
         icon: SquarePlay,
+      },
+      {
+        id: 'general-6',
+        title: 'Peatix',
+        url: 'https://peatix.com/user/29355410/dashboard',
+        description: '',
+        icon: Users,
+      },
+      {
+        id: 'general-7',
+        title: 'FSIF HP',
+        url: 'https://fsifofficial.wixsite.com/future-space-industr',
+        description: '',
+        icon: Home,
       },
     ],
   },
@@ -178,23 +172,86 @@ const initialLinkCategories: LinkCategory[] = [
       },
       {
         id: 'admin-5',
+        title: 'Union',
+        url: 'https://campus-union-connect.base44.app/Home',
+        description: '',
+        icon: ,
+      },
+      {
+        id: 'admin-6',
+        title: 'パートナー営業',
+        url: 'https://docs.google.com/spreadsheets/d/1Nbq6rD_PfF1-KdIXqlq4wCVPA6SWITvDroO5eKe42Q4/edit',
+        description: '',
+        icon: ,
+      },
+      {
+        id: 'admin-7',
+        title: 'パートナー公開チェックリスト',
+        url: 'https://docs.google.com/spreadsheets/d/1SoZ2O92aYnMXRBuFU7-vV7gX4vItVbxnIoKhGVxpo4s/edit',
+        description: '',
+        icon: ,
+      },
+      {
+        id: 'admin-8',
+        title: 'Instagramビジネス投稿(Cosmo Base)',
+        url: 'https://business.facebook.com/latest/home?asset_id=922321694307649&business_id=2338074866656029',
+        description: '',
+        icon: ,
+      },
+      {
+        id: 'admin-9',
+        title: 'Instagramビジネス投稿(FSIF)',
+        url: 'https://business.facebook.com/latest/home?asset_id=416684408195963&business_id=1693962128107258',
+        description: '',
+        icon: ,
+      },
+      {
+        id: 'admin-10',
+        title: 'パートナー営業資料',
+        url: 'https://drive.google.com/drive/u/0/folders/1g-u-D4AWqQQeO7SheKx7m0bgiaGvQ326',
+        description: '',
+        icon: ,
+      },
+      {
+        id: 'admin-11',
+        title: '初期のブランディング',
+        url: 'https://docs.google.com/spreadsheets/d/1BRjUW9K0S7OVqKs4oN4zEPPFnGQnF89KoqDq0a1CY-k/edit',
+        description: '',
+        icon: ,
+      },
+    ],
+  },
+  {
+    id: 'admin2',
+    label: '運営ページ(開発)',
+    icon: Settings,
+    links: [
+      {
+        id: 'admin2-1',
         title: 'FSIF Github',
         url: 'https://github.com/FSIFofficial',
         description: 'CBHP,AIBot',
         icon: FolderGit ,
       },
       {
-        id: 'admin-6',
+        id: 'admin2-2',
         title: 'CB Github',
         url: 'https://github.com/cosmo-base/',
         description: '参加者、CBL、KPI,CBBot',
         icon: FolderGit ,
       },
       {
-        id: 'admin-7',
-        title: `CBHP analytics`,
+        id: 'admin2-3',
+        title: 'FSIF HP 編集',
+        url: 'https://manage.wix.com/dashboard/5676783d-ee0f-4707-a11d-e960efead3e1/setup?referralInfo=my-sites',
+        description: '',
+        icon: ,
+      },
+      {
+        id: 'admin2-4',
+        title: 'CBHP analytics',
         url: 'https://analytics.google.com/analytics/web/?utm_source=marketingplatform.google.com&utm_medium=et&utm_campaign=marketingplatform.google.com%2Fabout%2Fanalytics%2F#/a385612556p525984972/reports/intelligenthome?params=_u..nav%3Dmaui',
-        description: '参加者、CBL、KPI,CBBot',
+        description: 'GA4解析ツール',
         icon: ChartSpline ,
       }
     ],
@@ -255,16 +312,16 @@ const initialLinkCategories: LinkCategory[] = [
       },
       {
         id: 'manage-8',
-        title: '宇宙タイプ診断簡易版診断データCBHP',
+        title: '宇宙タイプ診断簡易版データ(CBHP)',
         url: 'https://docs.google.com/spreadsheets/d/1LcbLG6GYqNZXlx38ZXqgLZ0OlLBLavd8VSJZEayfXYs/edit',
-        description: '宇宙タイプ診断簡易版診断データCBHP',
+        description: '宇宙タイプ診断簡易版診断データ',
         icon: Sparkles ,
       },
       {
         id: 'manage-9',
-        title: '宇宙タイプ診断簡易版診断データ参加者ページ',
+        title: '宇宙タイプ診断簡易版データ(参加者)',
         url: 'https://docs.google.com/spreadsheets/d/1LiOtm3NW4NGMQuchAjnSj_26rK3K9AaxSo4Autphi8Y/edit',
-        description: '宇宙タイプ診断簡易版診断データ参加者ページ',
+        description: '宇宙タイプ診断簡易版診断データ',
         icon: Sparkles ,
       },
       {
@@ -283,10 +340,143 @@ const initialLinkCategories: LinkCategory[] = [
     links: [
       {
         id: 'design-1',
-        title: 'Cosmo Baseで宇宙知っトク表紙',
-        url: 'https://canva.link/3oqqw9yl2iqbew8',
-        description: '宇宙知っトクの表紙デザイン',
+        title: 'Instagram＿イベント投稿＿デザイン',
+        url: 'https://canva.link/6ohgqrezzrde9dj',
+        description: '',
         icon: Image,
+      },
+      {
+        id: 'design-2',
+        title: '宇宙知っトク＿座談会用当日＿資料',
+        url: 'https://canva.link/sygrarpb5f0osz4',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-3',
+        title: 'Instagram＿汎用投稿＿デザイン',
+        url: 'https://canva.link/ac3ep7ya04p7ff0',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-4',
+        title: 'Instagram＿クイズ投稿＿デザイン',
+        url: 'https://canva.link/k9rtx04myz9upf5',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-5',
+        title: 'CB＿メイン背景＿デザイン',
+        url: 'https://canva.link/t4cehf79ym5swmz',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-6',
+        title: 'FSIF&CB＿新歓＿資料',
+        url: 'https://canva.link/lyl255ilb5p40mm',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-7',
+        title: 'パートナー締結＿メインデザイン',
+        url: 'https://canva.link/1aakw2t0bjl906i',
+        description: '',
+        icon: Handshake,
+      },
+      {
+        id: 'design-8',
+        title: 'CBMDコンテンツ紹介＿投稿用デザイン',
+        url: 'https://canva.link/foa4xfbsrjn5lbp',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-9',
+        title: '週間宇宙ニュース＿表紙デザイン',
+        url: 'https://canva.link/wyjmvia38dzv2cu',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-10',
+        title: 'note＿コンテンツ紹介＿デザイン',
+        url: 'https://canva.link/h8fsg4d8ielshsv',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-11',
+        title: '宇宙クイズ＿問題&回答＿デザイン',
+        url: 'https://canva.link/v9q69e1cmw5xc8v',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-12',
+        title: 'プレスリリース＿表紙＿デザイン',
+        url: 'https://canva.link/ql3kf2fnhktw0l8',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-13',
+        title: '宇宙知っトク＿表紙＿デザイン',
+        url: 'https://canva.link/3oqqw9yl2iqbew8',
+        description: '',
+        icon: Image,
+      },
+      {
+        id: 'design-14',
+        title: 'パートナー締結＿サブ(Instagram)デザイン',
+        url: 'https://canva.link/dcgka4ivmcz80tg',
+        description: '',
+        icon: Handshake,
+      },
+    ],
+  },
+  {
+    id: 'external',
+    label: '外部資料',
+    icon: Building,
+    links: [
+      {
+        id: 'external-1',
+        title: '宇宙システム株式会社＿宇宙関連のイベント',
+        url: 'https://space-sd.co.jp/symposium/symposium.html',
+        description: '',
+        icon: Building,
+      },
+      {
+        id: 'external-2',
+        title: '空畑',
+        url: 'https://sorabatake.jp/',
+        description: '',
+        icon: Building,
+      },
+      {
+        id: 'external-3',
+        title: 'sorae',
+        url: 'https://sorae.info/',
+        description: '',
+        icon: Building,
+      },
+      {
+        id: 'external-4',
+        title: 'SpaceMedia',
+        url: 'https://spacemedia.jp/',
+        description: '',
+        icon: Building,
+      },
+      {
+        id: 'external-5',
+        title: 'SPACE CONNECT',
+        url: 'https://space-connect.jp/',
+        description: '',
+        icon: Building,
       },
     ],
   },
@@ -294,14 +484,10 @@ const initialLinkCategories: LinkCategory[] = [
 
 function LinkCard({ 
   link, 
-  delay, 
-  onEdit, 
-  isDragging 
+  delay 
 }: { 
   link: LinkItem; 
   delay: number;
-  onEdit: (link: LinkItem) => void;
-  isDragging?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -326,12 +512,11 @@ function LinkCard({
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: isDragging ? 0.8 : 1, y: 0, scale: isDragging ? 1.02 : 1 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3, delay: delay * 0.05 }}
       className={cn(
         "glass-card rounded-2xl p-5 cursor-pointer group transition-all duration-300",
-        "hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1",
-        isDragging && "shadow-2xl shadow-primary/20 border-primary/40"
+        "hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1"
       )}
       onClick={handleOpen}
     >
@@ -350,11 +535,6 @@ function LinkCard({
       </AnimatePresence>
 
       <div className="flex items-start gap-4">
-        {/* Drag Handle */}
-        <div className="p-1 cursor-grab active:cursor-grabbing opacity-40 hover:opacity-100 transition-opacity">
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </div>
-        
         <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
           <Icon className="h-5 w-5 text-primary" />
         </div>
@@ -400,104 +580,14 @@ function LinkCard({
           <ExternalLink className="h-4 w-4" />
           <span className="text-xs">Open</span>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(link);
-          }}
-          className="gap-2 bg-accent/10 hover:bg-accent/20 border-accent/20 text-accent"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
       </div>
     </motion.div>
   );
 }
 
 export function LinksPage() {
-  const [categories, setCategories] = useState<LinkCategory[]>(initialLinkCategories);
   const [activeCategory, setActiveCategory] = useState('member');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingLink, setEditingLink] = useState<LinkItem | null>(null);
-  const [deletingLink, setDeletingLink] = useState<LinkItem | null>(null);
-  const [formData, setFormData] = useState({ title: '', description: '', url: '' });
-
-  const currentCategory = categories.find((cat) => cat.id === activeCategory);
-
-  const handleAddLink = useCallback(() => {
-    if (!formData.title || !formData.url) return;
-    
-    const newLink: LinkItem = {
-      id: `${activeCategory}-${Date.now()}`,
-      title: formData.title,
-      description: formData.description,
-      url: formData.url,
-      icon: LinkIcon,
-    };
-
-    setCategories(prev => prev.map(cat => {
-      if (cat.id === activeCategory) {
-        return { ...cat, links: [...cat.links, newLink] };
-      }
-      return cat;
-    }));
-
-    setFormData({ title: '', description: '', url: '' });
-    setIsAddDialogOpen(false);
-  }, [activeCategory, formData]);
-
-  const handleEditLink = useCallback(() => {
-    if (!editingLink || !formData.title || !formData.url) return;
-
-    setCategories(prev => prev.map(cat => ({
-      ...cat,
-      links: cat.links.map(link => 
-        link.id === editingLink.id 
-          ? { ...link, title: formData.title, description: formData.description, url: formData.url }
-          : link
-      )
-    })));
-
-    setEditingLink(null);
-    setFormData({ title: '', description: '', url: '' });
-    setIsEditDialogOpen(false);
-  }, [editingLink, formData]);
-
-  const handleDeleteLink = useCallback(() => {
-    if (!deletingLink) return;
-
-    setCategories(prev => prev.map(cat => ({
-      ...cat,
-      links: cat.links.filter(link => link.id !== deletingLink.id)
-    })));
-
-    setDeletingLink(null);
-    setIsDeleteDialogOpen(false);
-  }, [deletingLink]);
-
-  const openEditDialog = (link: LinkItem) => {
-    setEditingLink(link);
-    setFormData({ title: link.title, description: link.description, url: link.url });
-    setIsEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (link: LinkItem) => {
-    setDeletingLink(link);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleReorder = (newOrder: LinkItem[]) => {
-    setCategories(prev => prev.map(cat => {
-      if (cat.id === activeCategory) {
-        return { ...cat, links: newOrder };
-      }
-      return cat;
-    }));
-  };
+  const currentCategory = initialLinkCategories.find((cat) => cat.id === activeCategory);
 
   return (
     <motion.div
@@ -517,21 +607,11 @@ export function LinksPage() {
             <p className="text-sm text-muted-foreground">Cosmo Base運営で利用するリンクを一元管理</p>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            setFormData({ title: '', description: '', url: '' });
-            setIsAddDialogOpen(true);
-          }}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          リンクを追加
-        </Button>
       </div>
 
       {/* Sub-tabs */}
       <div className="flex gap-2 flex-wrap">
-        {categories.map((category) => {
+        {initialLinkCategories.map((category) => {
           const Icon = category.icon;
           const isActive = activeCategory === category.id;
           
@@ -565,7 +645,7 @@ export function LinksPage() {
         })}
       </div>
 
-      {/* Link Cards Grid with Drag & Drop */}
+      {/* Link Cards Grid */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeCategory}
@@ -575,41 +655,19 @@ export function LinksPage() {
           transition={{ duration: 0.3 }}
         >
           {currentCategory && currentCategory.links.length > 0 ? (
-            <Reorder.Group
-              axis="y"
-              values={currentCategory.links}
-              onReorder={handleReorder}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {currentCategory.links.map((link, index) => (
-                <Reorder.Item
+                <LinkCard 
                   key={link.id}
-                  value={link}
-                  className="list-none"
-                >
-                  <LinkCard 
-                    link={link} 
-                    delay={index}
-                    onEdit={openEditDialog}
-                  />
-                </Reorder.Item>
+                  link={link} 
+                  delay={index}
+                />
               ))}
-            </Reorder.Group>
+            </div>
           ) : (
             <div className="glass-card rounded-2xl p-12 text-center">
               <LinkIcon className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
               <p className="text-muted-foreground">このカテゴリにはまだリンクがありません</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => {
-                  setFormData({ title: '', description: '', url: '' });
-                  setIsAddDialogOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                リンクを追加
-              </Button>
             </div>
           )}
         </motion.div>
@@ -619,7 +677,7 @@ export function LinksPage() {
       <div className="glass-card rounded-2xl p-6">
         <h3 className="font-semibold text-foreground mb-4">リンク統計</h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          {categories.map((cat) => {
+          {initialLinkCategories.map((cat) => {
             const Icon = cat.icon;
             return (
               <div key={cat.id} className="flex items-center gap-3">
@@ -635,132 +693,6 @@ export function LinksPage() {
           })}
         </div>
       </div>
-
-      {/* Add Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="glass-card border-border/50">
-          <DialogHeader>
-            <DialogTitle>新しいリンクを追加</DialogTitle>
-            <DialogDescription>
-              {currentCategory?.label}に新しいリンクを追加します
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">タイトル *</label>
-              <Input
-                placeholder="リンクのタイトル"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">説明</label>
-              <Input
-                placeholder="リンクの説明"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">URL *</label>
-              <Input
-                placeholder="https://..."
-                value={formData.url}
-                onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              キャンセル
-            </Button>
-            <Button onClick={handleAddLink} disabled={!formData.title || !formData.url}>
-              追加
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="glass-card border-border/50">
-          <DialogHeader>
-            <DialogTitle>リンクを編集</DialogTitle>
-            <DialogDescription>
-              リンクの情報を編集します
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">タイトル *</label>
-              <Input
-                placeholder="リンクのタイトル"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">説明</label>
-              <Input
-                placeholder="リンクの説明"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">URL *</label>
-              <Input
-                placeholder="https://..."
-                value={formData.url}
-                onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                openDeleteDialog(editingLink!);
-                setIsEditDialogOpen(false);
-              }}
-              className="text-destructive hover:bg-destructive/10 border-destructive/30"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              削除
-            </Button>
-            <div className="flex gap-2 flex-1 justify-end">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                キャンセル
-              </Button>
-              <Button onClick={handleEditLink} disabled={!formData.title || !formData.url}>
-                保存
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="glass-card border-border/50">
-          <AlertDialogHeader>
-            <AlertDialogTitle>リンクを削除しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
-              「{deletingLink?.title}」を削除します。この操作は取り消せません。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteLink}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              削除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </motion.div>
   );
 }
