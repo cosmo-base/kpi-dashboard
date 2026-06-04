@@ -12,6 +12,8 @@ import { DonutChart } from '../charts/donut-chart';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+
 const REGION_MAP: Record<string, string> = {
   北海道: '北海道', 青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
   茨城: '関東', 栃木: '関東', 群馬: '関東', 埼玉: '関東', 千葉: '関東', 東京: '関東', 神奈川: '関東',
@@ -58,7 +60,7 @@ export function CBEDPage() {
 
         if (validRows.length === 0) return;
 
-        const now = new Date();
+        const now = getJSTDate();
         let upcomingCount = 0, onlineCount = 0, offlineCount = 0;
         
         const regionCounts = new Map<string, number>();
