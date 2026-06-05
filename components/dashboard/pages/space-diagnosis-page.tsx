@@ -12,8 +12,6 @@ import { DonutChart } from '../charts/donut-chart';
 import { LineChartComponent } from '../charts/line-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 
-const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -60,17 +58,35 @@ export function SpaceDiagnosisPage() {
       const parseCSV = (csv: string, source: string, version: string) => { return Papa.parse(csv, { header: true, skipEmptyLines: true }).data.map((row: any) => ({ ...row, _source: source, _version: version })); };
       
       const allRows = [...parseCSV(csv1, 'CBHP', 'simple'), ...parseCSV(csv2, '参加者ページ', 'simple'), ...parseCSV(csv3, '詳細版', 'detailed')]
-        .map(row => { const dateStr = String(row.date || '').replace(/\//g, '-'); const timestamp = new Date(dateStr).getTime(); return { ...row, timestamp, dateObj: new Date(dateStr) }; })
-        .filter(row => !isNaN(row.timestamp)).sort((a, b) => a.timestamp - b.timestamp);
+        .map(row => { 
+           const dStr = String(row.date || '').trim();
+           const parts = dStr.split(/[\/\- :]/);
+           if (parts.length >= 3) {
+              const y = parseInt(parts[0], 10);
+              const m = parseInt(parts[1], 10);
+              const d = parseInt(parts[2], 10);
+              const num = y * 10000 + m * 100 + d;
+              const dateKey = `${y}/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}`;
+              return { ...row, num, dateKey, y, m, d };
+           }
+           return { ...row, num: NaN };
+        }).filter(row => !isNaN(row.num)).sort((a, b) => a.num - b.num);
 
       if (allRows.length === 0) return;
 
-      const now = getJSTDate();
-      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-      const currentDay = now.getDay() === 0 ? 7 : now.getDay();
-      const startOfThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - currentDay + 1);
-      startOfThisWeek.setHours(0, 0, 0, 0);
+      const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+      const currentY = nowJst.getFullYear();
+      const currentM = nowJst.getMonth() + 1;
+      const currentD = nowJst.getDate();
+      const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
+
+      const endOfPrevMonthJst = new Date(nowJst.getTime());
+      endOfPrevMonthJst.setDate(0);
+      const endOfPrevMonthNum = endOfPrevMonthJst.getFullYear() * 10000 + (endOfPrevMonthJst.getMonth() + 1) * 100 + endOfPrevMonthJst.getDate();
+
+      const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
+      const startOfWeekJst = new Date(nowJst.getTime());
+      startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
 
       const axisCounts = { R: 0, P: 0, V: 0, A: 0, M: 0, X: 0, I: 0, S: 0 };
       const simpleAxisCounts = { R: 0, D: 0, I: 0, O: 0, P: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<number, number> };
@@ -80,8 +96,8 @@ export function SpaceDiagnosisPage() {
 
       allRows.forEach(row => {
         const type = String(row.type || '').trim();
-        const dateKey = `${row.dateObj.getFullYear()}/${String(row.dateObj.getMonth() + 1).padStart(2, '0')}/${String(row.dateObj.getDate()).padStart(2, '0')}`;
-        if (!dailyMap.has(dateKey)) dailyMap.set(dateKey, { incTotal: 0, incSimpleTotal: 0, incSimpleCbhp: 0, incSimplePart: 0, incDetailed: 0, dateKey });
+        const dateKey = row.dateKey;
+        if (!dailyMap.has(dateKey)) dailyMap.set(dateKey, { incTotal: 0, incSimpleTotal: 0, incSimpleCbhp: 0, incSimplePart: 0, incDetailed: 0, dateKey, num: row.num });
         const daily = dailyMap.get(dateKey)!;
         daily.incTotal++;
 
@@ -103,7 +119,7 @@ export function SpaceDiagnosisPage() {
         }
       });
 
-      const dailyRecords = Array.from(dailyMap.values()).sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime());
+      const dailyRecords = Array.from(dailyMap.values()).sort((a, b) => a.num - b.num);
       
       let cumTotal = 0, cumSimple = 0, cumSimpleCbhp = 0, cumSimplePart = 0, cumDetailed = 0;
       dailyRecords.forEach(d => {
@@ -120,9 +136,9 @@ export function SpaceDiagnosisPage() {
       let endOfPrevMonthTotal = 0, endOfPrevMonthSimple = 0, endOfPrevMonthDetailed = 0;
 
       dailyRecords.forEach(d => {
-        const t = new Date(d.dateKey).getTime();
-        if (t >= startOfThisMonth.getTime()) { thisMonthTotal += d.incTotal; thisMonthSimple += d.incSimpleTotal; thisMonthDetailed += d.incDetailed; }
-        if (t <= endOfPrevMonth.getTime()) { endOfPrevMonthTotal = d.total; endOfPrevMonthSimple = d.simpleTotal; endOfPrevMonthDetailed = d.detailedTotal; }
+        const num = d.num;
+        if (num >= startOfThisMonthNum) { thisMonthTotal += d.incTotal; thisMonthSimple += d.incSimpleTotal; thisMonthDetailed += d.incDetailed; }
+        if (num <= endOfPrevMonthNum) { endOfPrevMonthTotal = d.total; endOfPrevMonthSimple = d.simpleTotal; endOfPrevMonthDetailed = d.detailedTotal; }
       });
 
       const monthlyRate = endOfPrevMonthTotal === 0 ? 100 : Math.round((latest.total / endOfPrevMonthTotal) * 100);
@@ -133,8 +149,8 @@ export function SpaceDiagnosisPage() {
       const weeklyAgg = new Map<string, any>();
       
       let prevMonth = -1;
-      let currentYear = now.getFullYear();
-      if (dailyRecords.length > 0 && parseInt(dailyRecords[0].dateKey.split('/')[0], 10) > now.getMonth() + 2) currentYear--;
+      let currentYear = currentY;
+      if (dailyRecords.length > 0 && parseInt(dailyRecords[0].dateKey.split('/')[0], 10) > currentM + 1) currentYear--;
 
       dailyRecords.forEach(d => {
         const mLabel = parseInt(d.dateKey.split('/')[1], 10) + '月';
@@ -149,9 +165,9 @@ export function SpaceDiagnosisPage() {
         prevMonth = monthNum;
         
         const dateObj = new Date(currentYear, monthNum - 1, dayNum);
-        const dayOfWeek = dateObj.getDay() === 0 ? 7 : dateObj.getDay(); 
-        const endOfWeek = new Date(dateObj); endOfWeek.setDate(dateObj.getDate() + (7 - dayOfWeek));
-        const startOfWeek = new Date(endOfWeek); startOfWeek.setDate(endOfWeek.getDate() - 6);
+        const dw = dateObj.getDay() === 0 ? 7 : dateObj.getDay(); 
+        const endOfWeek = new Date(dateObj.getTime()); endOfWeek.setDate(dateObj.getDate() + (7 - dw));
+        const startOfWeek = new Date(endOfWeek.getTime()); startOfWeek.setDate(endOfWeek.getDate() - 6);
         
         const wKey = `${endOfWeek.getFullYear()}-${endOfWeek.getMonth() + 1}-${endOfWeek.getDate()}`;
         if (!weeklyAgg.has(wKey)) {
