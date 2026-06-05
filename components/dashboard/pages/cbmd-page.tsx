@@ -9,8 +9,6 @@ import { ChartContainer } from '../chart-container';
 import { RankingList } from '../ranking-list';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 
-const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-
 const REGION_MAP: Record<string, string> = {
   北海道: '北海道', 青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
   茨城: '関東', 栃木: '関東', 群馬: '関東', 埼玉: '関東', 千葉: '関東', 東京: '関東', 神奈川: '関東',
@@ -44,32 +42,36 @@ export function CBMDPage() {
         const validRows = rawData.slice(headerRowIndex + 1).filter(row => row[nameIdx] && String(row[nameIdx]).trim() !== '');
         if (validRows.length === 0) return;
 
-        const now = getJSTDate();
-        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-        const currentDay = now.getDay() === 0 ? 7 : now.getDay();
-        const startOfThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - currentDay + 1);
-        startOfThisWeek.setHours(0, 0, 0, 0);
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+        const currentY = nowJst.getFullYear();
+        const currentM = nowJst.getMonth() + 1;
+        const currentD = nowJst.getDate();
+        const todayNum = currentY * 10000 + currentM * 100 + currentD;
+        const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
 
-        let thisMonthChange = 0;
-        let thisWeekChange = 0;
-        let todayChange = 0;
-        let endOfPrevMonthListings = 0;
+        const endOfPrevMonthJst = new Date(nowJst.getTime());
+        endOfPrevMonthJst.setDate(0);
+        const endOfPrevMonthNum = endOfPrevMonthJst.getFullYear() * 10000 + (endOfPrevMonthJst.getMonth() + 1) * 100 + endOfPrevMonthJst.getDate();
 
+        const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
+        const startOfWeekJst = new Date(nowJst.getTime());
+        startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
+        const startOfWeekNum = startOfWeekJst.getFullYear() * 10000 + (startOfWeekJst.getMonth() + 1) * 100 + startOfWeekJst.getDate();
+
+        let thisMonthChange = 0, thisWeekChange = 0, todayChange = 0, endOfPrevMonthListings = 0;
         const regionCounts = new Map<string, number>();
         const prefCounts = new Map<string, number>();
 
         validRows.forEach(row => {
-          const dateStr = String(row[updateIdx] || '').trim();
-          if (dateStr) {
-            const updateDate = new Date(dateStr.replace(/\//g, '-'));
-            if (!isNaN(updateDate.getTime())) {
-              const t = updateDate.getTime();
-              if (t >= startOfThisMonth.getTime()) thisMonthChange++;
-              if (t <= endOfPrevMonth.getTime()) endOfPrevMonthListings++;
-              if (t >= startOfThisWeek.getTime()) thisWeekChange++;
-              if (t >= startOfToday.getTime()) todayChange++;
+          const updateStr = String(row[updateIdx] || '').trim();
+          if (updateStr) {
+            const parts = updateStr.split(/[\/\- :]/);
+            if (parts.length >= 3) {
+              const uNum = parseInt(parts[0], 10) * 10000 + parseInt(parts[1], 10) * 100 + parseInt(parts[2], 10);
+              if (uNum >= startOfThisMonthNum) thisMonthChange++;
+              if (uNum <= endOfPrevMonthNum) endOfPrevMonthListings++;
+              if (uNum >= startOfWeekNum) thisWeekChange++;
+              if (uNum === todayNum) todayChange++;
             }
           }
 
