@@ -12,9 +12,6 @@ import { DonutChart } from '../charts/donut-chart';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// 日本時間を取得する関数
-const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-
 const REGION_MAP: Record<string, string> = {
   北海道: '北海道', 青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
   茨城: '関東', 栃木: '関東', 群馬: '関東', 埼玉: '関東', 千葉: '関東', 東京: '関東', 神奈川: '関東',
@@ -57,20 +54,26 @@ export function CBEDPage() {
         let prefIdx = headers.indexOf('都道府県');
         if (prefIdx === -1) prefIdx = 16; 
         
-        // R列（更新日時）のインデックスを取得
         let updateIdx = headers.indexOf('更新日時');
         if (updateIdx === -1) updateIdx = headers.indexOf('updatedAt');
-        if (updateIdx === -1) updateIdx = 17; // R列
+        if (updateIdx === -1) updateIdx = 17;
 
         const validRows = rawData.slice(headerRowIndex + 1).filter(row => row[titleIdx] && String(row[titleIdx]).trim() !== '');
-
         if (validRows.length === 0) return;
 
-        const now = getJSTDate();
-        // 今日の0:00(JST)のタイムスタンプ
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+        const currentY = nowJst.getFullYear();
+        const currentM = nowJst.getMonth() + 1;
+        const currentD = nowJst.getDate();
+        const todayNum = currentY * 10000 + currentM * 100 + currentD;
+        const currentMonthStr = `${currentY}-${String(currentM).padStart(2, '0')}`;
+
+        const endOfPrevMonthJst = new Date(nowJst.getTime());
+        endOfPrevMonthJst.setDate(0);
+        const prevMonthStr = `${endOfPrevMonthJst.getFullYear()}-${String(endOfPrevMonthJst.getMonth() + 1).padStart(2, '0')}`;
 
         let upcomingCount = 0, onlineCount = 0, offlineCount = 0, todayUpdateCount = 0;
+        let currentMonthCount = 0, prevMonthCount = 0;
         
         const regionCounts = new Map<string, number>();
         const prefCounts = new Map<string, { total: number, upcoming: number, completed: number, region: string }>();
@@ -81,37 +84,28 @@ export function CBEDPage() {
           if (cleanPref === '北海') cleanPref = '北海道';
           prefCounts.set(pref, { total: 0, upcoming: 0, completed: 0, region: REGION_MAP[cleanPref] });
         });
-        
-        let currentMonthCount = 0;
-        let prevMonthCount = 0;
-        const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
 
         validRows.forEach(row => {
-          // --- 更新日時の処理（R列） ---
           const updateStr = String(row[updateIdx] || '').trim();
           if (updateStr) {
-            const updateDate = new Date(updateStr.replace(/\//g, '-'));
-            if (!isNaN(updateDate.getTime())) {
-              // 更新日時が今日の0:00以降であればカウント
-              if (updateDate.getTime() >= startOfToday.getTime()) {
-                todayUpdateCount++;
-              }
+            const parts = updateStr.split(/[\/\- :]/);
+            if (parts.length >= 3) {
+              const uNum = parseInt(parts[0], 10) * 10000 + parseInt(parts[1], 10) * 100 + parseInt(parts[2], 10);
+              if (uNum === todayNum) todayUpdateCount++;
             }
           }
 
-          // --- イベント開催日の処理 ---
           const eventDateStr = String(row[dateIdx] || '').replace(/\//g, '-');
           let isUpcoming = false;
           let monthLabel = '未定';
           
           if (eventDateStr) {
-            const eventDate = new Date(eventDateStr);
-            if (!isNaN(eventDate.getTime())) {
-              isUpcoming = eventDate >= now;
-              const ym = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
-              monthLabel = `${eventDate.getMonth() + 1}月`;
+            const eParts = eventDateStr.split('-');
+            if (eParts.length >= 3) {
+              const eNum = parseInt(eParts[0], 10) * 10000 + parseInt(eParts[1], 10) * 100 + parseInt(eParts[2], 10);
+              isUpcoming = eNum >= todayNum;
+              const ym = `${eParts[0]}-${String(parseInt(eParts[1], 10)).padStart(2, '0')}`;
+              monthLabel = `${parseInt(eParts[1], 10)}月`;
               if (ym === currentMonthStr) currentMonthCount++;
               if (ym === prevMonthStr) prevMonthCount++;
             }
@@ -165,19 +159,26 @@ export function CBEDPage() {
         const onlineTable = [{
           category: 'オンラインイベント全体',
           listings: onlineCount,
-          upcoming: validRows.filter(r => String(r[latIdx]).trim() === '' && String(r[lngIdx]).trim() === '' && new Date(String(r[dateIdx]).replace(/\//g, '-')) >= now).length,
-          completed: validRows.filter(r => String(r[latIdx]).trim() === '' && String(r[lngIdx]).trim() === '' && new Date(String(r[dateIdx]).replace(/\//g, '-')) < now).length,
+          upcoming: validRows.filter(r => {
+             const dStr = String(r[dateIdx]).replace(/\//g, '-');
+             if(!dStr) return false;
+             const eParts = dStr.split('-');
+             if (eParts.length < 3) return false;
+             const eNum = parseInt(eParts[0],10)*10000 + parseInt(eParts[1],10)*100 + parseInt(eParts[2],10);
+             return String(r[latIdx]).trim() === '' && String(r[lngIdx]).trim() === '' && eNum >= todayNum;
+          }).length,
+          completed: validRows.filter(r => {
+             const dStr = String(r[dateIdx]).replace(/\//g, '-');
+             if(!dStr) return false;
+             const eParts = dStr.split('-');
+             if (eParts.length < 3) return false;
+             const eNum = parseInt(eParts[0],10)*10000 + parseInt(eParts[1],10)*100 + parseInt(eParts[2],10);
+             return String(r[latIdx]).trim() === '' && String(r[lngIdx]).trim() === '' && eNum < todayNum;
+          }).length,
         }];
 
         setData({
-          summary: { 
-            totalListings: validRows.length, 
-            upcomingListings: upcomingCount, 
-            offlineListings: offlineCount, 
-            onlineListings: onlineCount, 
-            monthlyIncrease: currentMonthCount - prevMonthCount,
-            todayUpdateCount: todayUpdateCount // 追加
-          },
+          summary: { totalListings: validRows.length, upcomingListings: upcomingCount, offlineListings: offlineCount, onlineListings: onlineCount, monthlyIncrease: currentMonthCount - prevMonthCount, todayUpdateCount },
           charts: { regionDistribution, monthlyDistribution },
           rankings: { regionRanking, prefectureRanking },
           tables: { prefectureTableRaw, onlineTable }
@@ -209,8 +210,6 @@ export function CBEDPage() {
   return (
     <div className="space-y-6">
       <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBED分析</h2><p className="text-muted-foreground mt-1">掲載イベントの件数、開催形式、地域別分布を確認できます。</p></div>
-      
-      {/* 6カラムに変更して「今日の更新数」を追加 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <KpiCard title="掲載件数" value={summary.totalListings.toLocaleString()} unit="件" icon={Calendar} accentColor="primary" />
         <KpiCard title="未開催の掲載件数" value={summary.upcomingListings} unit="件" icon={CalendarOff} accentColor="warning" />
