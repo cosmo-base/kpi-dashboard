@@ -12,8 +12,6 @@ import { DonutChart } from '../charts/donut-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 import { RankingList } from '../ranking-list';
 
-const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -40,15 +38,16 @@ export function CBLPage() {
         const validRows = rows.filter(row => row.title && String(row.title).trim() !== '');
         if (validRows.length === 0) return;
 
-        const now = getJSTDate();
-        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-        const currentMonthStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+        const currentY = nowJst.getFullYear();
+        const currentM = nowJst.getMonth() + 1;
+        const currentMonthStr = `${currentY}/${String(currentM).padStart(2, '0')}`;
 
-        let totalViews = 0;
-        let recommendCount = 0;
-        let currentMonthCount = 0;
-        let endOfPrevMonthArticles = 0;
+        const endOfPrevMonthJst = new Date(nowJst.getTime());
+        endOfPrevMonthJst.setDate(0);
+        const endOfPrevMonthNum = endOfPrevMonthJst.getFullYear() * 10000 + (endOfPrevMonthJst.getMonth() + 1) * 100 + endOfPrevMonthJst.getDate();
+
+        let totalViews = 0, recommendCount = 0, currentMonthCount = 0, endOfPrevMonthArticles = 0;
 
         const categoryCounts = new Map<string, number>();
         const typeCounts = new Map<string, number>();
@@ -67,12 +66,13 @@ export function CBLPage() {
           const dateStr = String(row.date || '').replace(/\-/g, '/').trim();
           let monthLabel = '未定';
           if (dateStr) {
-            const dateObj = new Date(dateStr);
-            if (!isNaN(dateObj.getTime())) {
-              const ym = `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+            const parts = dateStr.split('/');
+            if (parts.length >= 3) {
+              const dNum = parseInt(parts[0], 10) * 10000 + parseInt(parts[1], 10) * 100 + parseInt(parts[2], 10);
+              const ym = `${parts[0]}/${String(parseInt(parts[1], 10)).padStart(2, '0')}`;
               monthLabel = ym;
               if (ym === currentMonthStr) currentMonthCount++;
-              if (dateObj.getTime() <= endOfPrevMonth.getTime()) endOfPrevMonthArticles++;
+              if (dNum <= endOfPrevMonthNum) endOfPrevMonthArticles++;
             }
           }
           monthlyCounts.set(monthLabel, (monthlyCounts.get(monthLabel) || 0) + 1);
