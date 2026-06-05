@@ -20,7 +20,6 @@ const formatDiff = (num: number) => {
   return '0';
 };
 
-// 並び替えモードの型を拡張
 type SortMode = 'date_desc' | 'answers_desc' | 'accuracy_desc' | 'accuracy_asc';
 
 export function SpaceQuizPage() {
@@ -40,8 +39,7 @@ export function SpaceQuizPage() {
         const validRows = rows.filter(row => row['問題'] && String(row['問題']).trim() !== '');
         if (validRows.length === 0) return;
 
-        let totalAnswers = 0;
-        let totalCorrects = 0;
+        let totalAnswers = 0, totalCorrects = 0;
         let sumDiscord = 0, sumX = 0, sumInstagram = 0, sumMyCommu = 0;
 
         const tableDataRaw: any[] = [];
@@ -49,13 +47,16 @@ export function SpaceQuizPage() {
 
         validRows.forEach((row) => {
           const dateStrRaw = String(row['出題日'] || '').replace(/\-/g, '/').split(' ')[0];
-          const dateObj = new Date(dateStrRaw);
-          dateObj.setHours(0, 0, 0, 0);
-          const timestamp = dateObj.getTime();
-          if (isNaN(timestamp)) return; 
+          const parts = dateStrRaw.split('/');
+          if (parts.length < 3) return;
 
-          const dateKey = `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${String(dateObj.getDate()).padStart(2, '0')}`;
-          const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10);
+          const d = parseInt(parts[2], 10);
+          const num = y * 10000 + m * 100 + d;
+          
+          const dateKey = `${y}/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}`;
+          const formattedDate = `${m}/${d}`;
 
           const answers = parseInt(String(row['回答数'] || '0').replace(/,/g, ''), 10) || 0;
           const ansDiscord = parseInt(String(row['回答数(Discord)'] || '0').replace(/,/g, ''), 10) || 0;
@@ -81,47 +82,55 @@ export function SpaceQuizPage() {
           totalCorrects += calculatedCorrect;
 
           if (!dailyAgg.has(dateKey)) {
-            dailyAgg.set(dateKey, { timestamp, formattedDate, answers: 0, corrects: 0 });
+            dailyAgg.set(dateKey, { num, formattedDate, answers: 0, corrects: 0 });
           }
           const dayData = dailyAgg.get(dateKey);
           dayData.answers += answers;
           dayData.corrects += calculatedCorrect;
 
-          tableDataRaw.push({ id: row['番号'], question: String(row['問題']), answers: answers, correct: calculatedCorrect, accuracy: accNum, timestamp: timestamp });
+          tableDataRaw.push({ id: row['番号'], question: String(row['問題']), answers: answers, correct: calculatedCorrect, accuracy: accNum, num: num });
         });
 
-        const dailyRecords = Array.from(dailyAgg.values()).sort((a, b) => a.timestamp - b.timestamp);
+        const dailyRecords = Array.from(dailyAgg.values()).sort((a, b) => a.num - b.num);
 
         let cumulativeAnswers = 0;
         const trendData: any[] = [];
         const accuracyData: any[] = [];
 
-        const now = getJSTDate();
-        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-        const currentDay = now.getDay() === 0 ? 7 : now.getDay();
-        const startOfThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - currentDay + 1);
-        startOfThisWeek.setHours(0, 0, 0, 0);
-        const endOfPrevWeek = new Date(startOfThisWeek.getTime() - 1);
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const nowJst = getJSTDate();
+        const currentY = nowJst.getFullYear();
+        const currentM = nowJst.getMonth() + 1;
+        const currentD = nowJst.getDate();
+        const todayNum = currentY * 10000 + currentM * 100 + currentD;
+        const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
 
-        let thisMonthAnswers = 0;
-        let thisWeekAnswers = 0;
-        let endOfPrevMonthCum = 0;
-        let endOfPrevWeekCum = 0;
-        let todayAnswers = 0;
+        const endOfPrevMonthJst = new Date(nowJst.getTime());
+        endOfPrevMonthJst.setDate(0);
+        const endOfPrevMonthNum = endOfPrevMonthJst.getFullYear() * 10000 + (endOfPrevMonthJst.getMonth() + 1) * 100 + endOfPrevMonthJst.getDate();
+
+        const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
+        const startOfWeekJst = new Date(nowJst.getTime());
+        startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
+        const startOfWeekNum = startOfWeekJst.getFullYear() * 10000 + (startOfWeekJst.getMonth() + 1) * 100 + startOfWeekJst.getDate();
+
+        const endOfPrevWeekJst = new Date(startOfWeekJst.getTime());
+        endOfPrevWeekJst.setDate(startOfWeekJst.getDate() - 1);
+        const endOfPrevWeekNum = endOfPrevWeekJst.getFullYear() * 10000 + (endOfPrevWeekJst.getMonth() + 1) * 100 + endOfPrevWeekJst.getDate();
+
+        let thisMonthAnswers = 0, thisWeekAnswers = 0, todayAnswers = 0;
+        let endOfPrevMonthCum = 0, endOfPrevWeekCum = 0;
 
         dailyRecords.forEach(day => {
           cumulativeAnswers += day.answers;
           trendData.push({ name: day.formattedDate, 参加者数: cumulativeAnswers });
           accuracyData.push({ name: day.formattedDate, 正答率: day.answers > 0 ? Math.round((day.corrects / day.answers) * 1000) / 10 : 0 });
 
-          const t = day.timestamp;
-          if (t >= startOfThisMonth.getTime()) thisMonthAnswers += day.answers;
-          if (t <= endOfPrevMonth.getTime()) endOfPrevMonthCum = cumulativeAnswers;
-          if (t >= startOfThisWeek.getTime()) thisWeekAnswers += day.answers;
-          if (t <= endOfPrevWeek.getTime()) endOfPrevWeekCum = cumulativeAnswers;
-          if (t >= startOfToday.getTime()) todayAnswers += day.answers;
+          const num = day.num;
+          if (num >= startOfThisMonthNum) thisMonthAnswers += day.answers;
+          if (num <= endOfPrevMonthNum) endOfPrevMonthCum = cumulativeAnswers;
+          if (num >= startOfWeekNum) thisWeekAnswers += day.answers;
+          if (num <= endOfPrevWeekNum) endOfPrevWeekCum = cumulativeAnswers;
+          if (num === todayNum) todayAnswers += day.answers;
         });
 
         const monthlyRate = endOfPrevMonthCum === 0 ? 100 : Math.round((cumulativeAnswers / endOfPrevMonthCum) * 100);
@@ -138,8 +147,7 @@ export function SpaceQuizPage() {
             totalParticipants: totalAnswers,
             monthlyParticipants: thisMonthAnswers, monthlyParticipantsRate: monthlyRate,
             weeklyParticipants: thisWeekAnswers, weeklyParticipantsRate: weeklyRate,
-            todayParticipants: todayAnswers,
-            averageAccuracy: averageAccuracy,
+            todayParticipants: todayAnswers, averageAccuracy: averageAccuracy,
           },
           charts: { participantsTrend: trendData, accuracyTrend: accuracyData, platformDistribution },
           tables: { questionRanking: tableDataRaw }
@@ -152,12 +160,11 @@ export function SpaceQuizPage() {
 
   const { summary, charts, tables } = data;
 
-  // ボタンによってソート処理を分岐
   const sortedQuestions = [...tables.questionRanking].sort((a, b) => {
-    if (sortMode === 'accuracy_desc') return b.accuracy - a.accuracy; // 正答率高い順
-    if (sortMode === 'accuracy_asc') return a.accuracy - b.accuracy;  // 正答率低い順
-    if (sortMode === 'answers_desc') return b.answers - a.answers;    // 回答数多い順
-    return b.timestamp - a.timestamp;                                 // デフォルト: 新着順
+    if (sortMode === 'accuracy_desc') return b.accuracy - a.accuracy; 
+    if (sortMode === 'accuracy_asc') return a.accuracy - b.accuracy;  
+    if (sortMode === 'answers_desc') return b.answers - a.answers;    
+    return b.num - a.num; 
   });
 
   return (
@@ -184,7 +191,6 @@ export function SpaceQuizPage() {
 
       <SectionCard title="宇宙クイズ 日別 平均正答率推移"><ChartContainer height="h-[300px]"><LineChartComponent data={charts.accuracyTrend.slice(-90)} lines={[{ dataKey: '正答率', name: '平均正答率', color: '#8B5CF6' }]} yAxisUnit="%" /></ChartContainer></SectionCard>
 
-      {/* セクション名を変更・並び替えボタンUIを追加 */}
       <SectionCard title="問題別 回答データ一覧" description="各問題の回答数と正答率（ボタンで並び替え可能）">
         <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
           <span className="text-sm text-muted-foreground mr-1">並び順:</span>
@@ -211,22 +217,7 @@ export function SpaceQuizPage() {
             </Button>
           ))}
         </div>
-        <ScrollableTable 
-          columns={[
-            { key: 'rank', label: '順位', align: 'center' }, 
-            { key: 'question', label: '問題名', align: 'left' }, 
-            { key: 'answers', label: '回答数', align: 'right' }, 
-            { key: 'correct', label: '正解数', align: 'right' }, 
-            { key: 'accuracyStr', label: '正答率', align: 'right' }
-          ]} 
-          data={sortedQuestions.map((q, i) => ({ 
-            ...q, 
-            rank: sortMode === 'date_desc' ? '-' : i + 1, 
-            answers: q.answers.toLocaleString(), 
-            correct: q.correct.toLocaleString(), 
-            accuracyStr: `${Math.round(q.accuracy * 10) / 10}%` 
-          }))} 
-        />
+        <ScrollableTable columns={[{ key: 'rank', label: '順位', align: 'center' }, { key: 'question', label: '問題名', align: 'left' }, { key: 'answers', label: '回答数', align: 'right' }, { key: 'correct', label: '正解数', align: 'right' }, { key: 'accuracyStr', label: '正答率', align: 'right' }]} data={sortedQuestions.map((q, i) => ({ ...q, rank: sortMode === 'date_desc' ? '-' : i + 1, answers: q.answers.toLocaleString(), correct: q.correct.toLocaleString(), accuracyStr: `${Math.round(q.accuracy * 10) / 10}%` }))} />
       </SectionCard>
     </div>
   );
