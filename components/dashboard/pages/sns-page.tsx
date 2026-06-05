@@ -13,8 +13,6 @@ import { ScrollableTable } from '../scrollable-table';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -67,62 +65,62 @@ export function SNSPage() {
 
         const processedRecords = dailyRecords.map((record, i) => {
           const prev = i > 0 ? dailyRecords[i - 1] : record;
-          return {
-            ...record,
-            incX: record.x - prev.x,
-            incInsta: record.instagram - prev.instagram,
-            incNote: record.note - prev.note,
-            total: record.x + record.instagram + record.note,
-          };
+          return { ...record, incX: record.x - prev.x, incInsta: record.instagram - prev.instagram, incNote: record.note - prev.note, total: record.x + record.instagram + record.note };
         });
 
-        const now = getJSTDate();
-        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-        const currentDay = now.getDay() === 0 ? 7 : now.getDay();
-        const startOfThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - currentDay + 1);
-        startOfThisWeek.setHours(0, 0, 0, 0);
-        const endOfPrevWeek = new Date(startOfThisWeek.getTime() - 1);
+        const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+        const currentY = nowJst.getFullYear();
+        const currentM = nowJst.getMonth() + 1;
+        const currentD = nowJst.getDate();
+        const todayNum = currentY * 10000 + currentM * 100 + currentD;
+        const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
 
-        let currentYearForDate = now.getFullYear();
-        if (dailyRecords.length > 0 && parseInt(dailyRecords[0].date.split('/')[0], 10) > now.getMonth() + 2) currentYearForDate--;
+        const endOfPrevMonthJst = new Date(nowJst.getTime());
+        endOfPrevMonthJst.setDate(0);
+        const endOfPrevMonthNum = endOfPrevMonthJst.getFullYear() * 10000 + (endOfPrevMonthJst.getMonth() + 1) * 100 + endOfPrevMonthJst.getDate();
+
+        const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
+        const startOfWeekJst = new Date(nowJst.getTime());
+        startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
+        const startOfWeekNum = startOfWeekJst.getFullYear() * 10000 + (startOfWeekJst.getMonth() + 1) * 100 + startOfWeekJst.getDate();
+
+        const endOfPrevWeekJst = new Date(startOfWeekJst.getTime());
+        endOfPrevWeekJst.setDate(startOfWeekJst.getDate() - 1);
+        const endOfPrevWeekNum = endOfPrevWeekJst.getFullYear() * 10000 + (endOfPrevWeekJst.getMonth() + 1) * 100 + endOfPrevWeekJst.getDate();
+
+        let currentYearForDate = currentY;
+        if (dailyRecords.length > 0 && parseInt(dailyRecords[0].date.split('/')[0], 10) > currentM + 1) currentYearForDate--;
         
         let prevMonthForDate = -1;
-        const recordsWithDate = processedRecords.map(record => {
+        const recordsWithDateNum = processedRecords.map(record => {
            const [mStr, dStr] = record.date.split('/');
            const m = parseInt(mStr, 10);
            const d = parseInt(dStr, 10);
            if (prevMonthForDate !== -1 && prevMonthForDate === 12 && m === 1) currentYearForDate++;
            prevMonthForDate = m;
-           return { ...record, dateObj: new Date(currentYearForDate, m - 1, d) };
+           return { ...record, recordNum: currentYearForDate * 10000 + m * 100 + d };
         });
 
         const calculateMetrics = (key: 'x' | 'instagram' | 'note') => {
-          let thisMonthInc = 0;
-          let thisWeekInc = 0;
-          let endOfPrevMonthVal = recordsWithDate[0][key] || 0;
-          let endOfPrevWeekVal = recordsWithDate[0][key] || 0;
+          let thisMonthInc = 0, thisWeekInc = 0, todayInc = 0;
+          let endOfPrevMonthVal = recordsWithDateNum[0][key] || 0;
+          let endOfPrevWeekVal = recordsWithDateNum[0][key] || 0;
           
-          recordsWithDate.forEach(record => {
-             const t = record.dateObj.getTime();
+          recordsWithDateNum.forEach(record => {
+             const num = record.recordNum;
              const incKey = key === 'x' ? 'incX' : key === 'instagram' ? 'incInsta' : 'incNote';
-             if (t >= startOfThisMonth.getTime()) thisMonthInc += record[incKey];
-             if (t <= endOfPrevMonth.getTime()) endOfPrevMonthVal = record[key];
-             
-             if (t >= startOfThisWeek.getTime()) thisWeekInc += record[incKey];
-             if (t <= endOfPrevWeek.getTime()) endOfPrevWeekVal = record[key];
+             if (num >= startOfThisMonthNum) thisMonthInc += record[incKey];
+             if (num <= endOfPrevMonthNum) endOfPrevMonthVal = record[key];
+             if (num >= startOfWeekNum) thisWeekInc += record[incKey];
+             if (num <= endOfPrevWeekNum) endOfPrevWeekVal = record[key];
+             if (num === todayNum) todayInc += record[incKey];
           });
           
-          const latest = recordsWithDate[recordsWithDate.length - 1][key];
-          const prev1 = recordsWithDate.length > 1 ? recordsWithDate[recordsWithDate.length - 2][key] : latest;
-
+          const latest = recordsWithDateNum[recordsWithDateNum.length - 1][key];
           return {
-            followers: latest,
-            todayIncrease: latest - prev1,
-            weeklyIncrease: thisWeekInc,
+            followers: latest, todayIncrease: todayInc, weeklyIncrease: thisWeekInc,
             weeklyRate: endOfPrevWeekVal === 0 ? 100 : Math.round((latest / endOfPrevWeekVal) * 100),
-            monthlyIncrease: thisMonthInc,
-            monthlyRate: endOfPrevMonthVal === 0 ? 100 : Math.round((latest / endOfPrevMonthVal) * 100)
+            monthlyIncrease: thisMonthInc, monthlyRate: endOfPrevMonthVal === 0 ? 100 : Math.round((latest / endOfPrevMonthVal) * 100)
           };
         };
 
@@ -133,22 +131,16 @@ export function SNSPage() {
           const monthLabel = record.date.split('/')[0] + '月';
           if (!monthlyMap.has(monthLabel)) monthlyMap.set(monthLabel, { x: 0, instagram: 0, note: 0, total: 0 });
           const cur = monthlyMap.get(monthLabel)!;
-          cur.x += record.incX; cur.instagram += record.incInsta; cur.note += record.incNote;
-          cur.total += (record.incX + record.incInsta + record.incNote);
+          cur.x += record.incX; cur.instagram += record.incInsta; cur.note += record.incNote; cur.total += (record.incX + record.incInsta + record.incNote);
         });
 
-        const monthlyTableRaw = Array.from(monthlyMap.entries()).map(([month, val]) => ({
-          month, x: val.x, instagram: val.instagram, note: val.note, total: val.total
-        }));
-        
+        const monthlyTableRaw = Array.from(monthlyMap.entries()).map(([month, val]) => ({ month, x: val.x, instagram: val.instagram, note: val.note, total: val.total }));
         const monthlyTable = [...monthlyTableRaw].reverse();
-        const monthlyByPlatform = [...monthlyTableRaw].slice(-4).map(item => ({
-          name: item.month, X: item.x, Instagram: item.instagram, note: item.note,
-        }));
+        const monthlyByPlatform = [...monthlyTableRaw].slice(-4).map(item => ({ name: item.month, X: item.x, Instagram: item.instagram, note: item.note }));
 
         const weeklyMap = new Map<string, { x: number; instagram: number; note: number; total: number; startStr: string; endStr: string }>();
-        let currentYear = now.getFullYear();
-        if (processedRecords.length > 0 && parseInt(processedRecords[0].date.split('/')[0], 10) > now.getMonth() + 2) currentYear--;
+        let currentYear = nowJst.getFullYear();
+        if (processedRecords.length > 0 && parseInt(processedRecords[0].date.split('/')[0], 10) > nowJst.getMonth() + 2) currentYear--;
         
         let prevMonth = -1;
         processedRecords.forEach(record => {
@@ -160,51 +152,33 @@ export function SNSPage() {
            
            const dateObj = new Date(currentYear, m - 1, d);
            const dayOfWeek = dateObj.getDay() === 0 ? 7 : dateObj.getDay(); 
-           const endOfWeek = new Date(dateObj); endOfWeek.setDate(dateObj.getDate() + (7 - dayOfWeek));
-           const startOfWeek = new Date(endOfWeek); startOfWeek.setDate(endOfWeek.getDate() - 6);
+           const endOfWeek = new Date(dateObj.getTime()); endOfWeek.setDate(dateObj.getDate() + (7 - dayOfWeek));
+           const startOfWeek = new Date(endOfWeek.getTime()); startOfWeek.setDate(endOfWeek.getDate() - 6);
 
            const weekKey = `${endOfWeek.getFullYear()}-${endOfWeek.getMonth() + 1}-${endOfWeek.getDate()}`;
            if (!weeklyMap.has(weekKey)) {
               weeklyMap.set(weekKey, { x: 0, instagram: 0, note: 0, total: 0, startStr: `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()}`, endStr: `${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}` });
            }
            const weekData = weeklyMap.get(weekKey)!;
-           weekData.x += record.incX; weekData.instagram += record.incInsta; weekData.note += record.incNote;
-           weekData.total += (record.incX + record.incInsta + record.incNote);
+           weekData.x += record.incX; weekData.instagram += record.incInsta; weekData.note += record.incNote; weekData.total += (record.incX + record.incInsta + record.incNote);
         });
 
         const weeklyTableRaw = Array.from(weeklyMap.values()).map(data => {
             const endMonth = parseInt(data.endStr.split('/')[0], 10);
             const endDay = parseInt(data.endStr.split('/')[1], 10);
             const weekNum = Math.ceil(endDay / 7);
-            return {
-               week: `${endMonth}月第${weekNum}週 (${data.startStr}-${data.endStr})`,
-               shortWeek: `${endMonth}月第${weekNum}週`,
-               x: data.x, instagram: data.instagram, note: data.note, total: data.total
-            };
+            return { week: `${endMonth}月第${weekNum}週 (${data.startStr}-${data.endStr})`, shortWeek: `${endMonth}月第${weekNum}週`, x: data.x, instagram: data.instagram, note: data.note, total: data.total };
         });
 
         const weeklyTable = [...weeklyTableRaw].reverse();
-        const weeklyByPlatform = [...weeklyTableRaw].slice(-4).map(item => ({
-          name: item.shortWeek, X: item.x, Instagram: item.instagram, note: item.note,
-        }));
+        const weeklyByPlatform = [...weeklyTableRaw].slice(-4).map(item => ({ name: item.shortWeek, X: item.x, Instagram: item.instagram, note: item.note }));
 
         setData({
-          platforms: {
-            x: calculateMetrics('x'),
-            instagram: calculateMetrics('instagram'),
-            note: calculateMetrics('note'),
-          },
+          platforms: { x: calculateMetrics('x'), instagram: calculateMetrics('instagram'), note: calculateMetrics('note') },
           charts: {
-            followersTrend: dailyRecords.map(record => ({
-              name: record.date, X: record.x, Instagram: record.instagram, note: record.note, 総数: record.x + record.instagram + record.note,
-            })),
-            monthlyByPlatform,
-            weeklyByPlatform,
-            platformDistribution: [
-              { name: 'X', value: latestRecord.x, color: '#1DA1F2' },
-              { name: 'Instagram', value: latestRecord.instagram, color: '#d640e4' },
-              { name: 'note', value: latestRecord.note, color: '#41C9B4' },
-            ].filter(item => item.value > 0)
+            followersTrend: dailyRecords.map(record => ({ name: record.date, X: record.x, Instagram: record.instagram, note: record.note, 総数: record.x + record.instagram + record.note })),
+            monthlyByPlatform, weeklyByPlatform,
+            platformDistribution: [{ name: 'X', value: latestRecord.x, color: '#1DA1F2' }, { name: 'Instagram', value: latestRecord.instagram, color: '#d640e4' }, { name: 'note', value: latestRecord.note, color: '#41C9B4' }].filter(item => item.value > 0)
           },
           tables: { monthlyTable, weeklyTable }
         });
