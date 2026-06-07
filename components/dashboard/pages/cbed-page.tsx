@@ -12,6 +12,8 @@ import { DonutChart } from '../charts/donut-chart';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+
 const REGION_MAP: Record<string, string> = {
   北海道: '北海道', 青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
   茨城: '関東', 栃木: '関東', 群馬: '関東', 埼玉: '関東', 千葉: '関東', 東京: '関東', 神奈川: '関東',
@@ -59,39 +61,40 @@ export function CBEDPage() {
         if (updateIdx === -1) updateIdx = 17;
 
         const validRows = rawData.slice(headerRowIndex + 1).filter(row => row[titleIdx] && String(row[titleIdx]).trim() !== '');
+
         if (validRows.length === 0) return;
 
-        const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-        const currentY = nowJst.getFullYear();
-        const currentM = nowJst.getMonth() + 1;
-        const currentD = nowJst.getDate();
-        const todayNum = currentY * 10000 + currentM * 100 + currentD;
-        const currentMonthStr = `${currentY}-${String(currentM).padStart(2, '0')}`;
-
-        const endOfPrevMonthJst = new Date(nowJst.getTime());
-        endOfPrevMonthJst.setDate(0);
-        const prevMonthStr = `${endOfPrevMonthJst.getFullYear()}-${String(endOfPrevMonthJst.getMonth() + 1).padStart(2, '0')}`;
+        const now = getJSTDate();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
         let upcomingCount = 0, onlineCount = 0, offlineCount = 0, todayUpdateCount = 0;
-        let currentMonthCount = 0, prevMonthCount = 0;
         
         const regionCounts = new Map<string, number>();
         const prefCounts = new Map<string, { total: number, upcoming: number, completed: number, region: string }>();
         const monthCounts = new Map<string, number>();
+        
+        // ★ 未開催イベント専用のカウント
+        const upcomingRegionCounts = new Map<string, number>();
+        const upcomingMonthCounts = new Map<string, number>();
 
         PREFECTURES_FULL.forEach(pref => {
           let cleanPref = pref.replace(/(都|府|県)$/, '');
           if (cleanPref === '北海') cleanPref = '北海道';
           prefCounts.set(pref, { total: 0, upcoming: 0, completed: 0, region: REGION_MAP[cleanPref] });
         });
+        
+        let currentMonthCount = 0;
+        let prevMonthCount = 0;
+        const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
 
         validRows.forEach(row => {
           const updateStr = String(row[updateIdx] || '').trim();
           if (updateStr) {
-            const parts = updateStr.split(/[\/\- :]/);
-            if (parts.length >= 3) {
-              const uNum = parseInt(parts[0], 10) * 10000 + parseInt(parts[1], 10) * 100 + parseInt(parts[2], 10);
-              if (uNum === todayNum) todayUpdateCount++;
+            const updateDate = new Date(updateStr.replace(/\//g, '-'));
+            if (!isNaN(updateDate.getTime()) && updateDate.getTime() >= startOfToday.getTime()) {
+              todayUpdateCount++;
             }
           }
 
@@ -100,20 +103,20 @@ export function CBEDPage() {
           let monthLabel = '未定';
           
           if (eventDateStr) {
-            const eParts = eventDateStr.split('-');
-            if (eParts.length >= 3) {
-              const eNum = parseInt(eParts[0], 10) * 10000 + parseInt(eParts[1], 10) * 100 + parseInt(eParts[2], 10);
-              isUpcoming = eNum >= todayNum;
-              const ym = `${eParts[0]}-${String(parseInt(eParts[1], 10)).padStart(2, '0')}`;
-              monthLabel = `${parseInt(eParts[1], 10)}月`;
+            const eventDate = new Date(eventDateStr);
+            if (!isNaN(eventDate.getTime())) {
+              isUpcoming = eventDate >= now;
+              const ym = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
+              monthLabel = `${eventDate.getMonth() + 1}月`;
               if (ym === currentMonthStr) currentMonthCount++;
               if (ym === prevMonthStr) prevMonthCount++;
             }
           }
-          if (isUpcoming) upcomingCount++;
           monthCounts.set(monthLabel, (monthCounts.get(monthLabel) || 0) + 1);
 
           const isOnline = String(row[latIdx] || '').trim() === '' && String(row[lngIdx] || '').trim() === ''; 
+          let region = 'その他';
+
           if (isOnline) {
             onlineCount++;
             regionCounts.set('オンライン', (regionCounts.get('オンライン') || 0) + 1);
@@ -122,7 +125,7 @@ export function CBEDPage() {
             const rawPref = String(row[prefIdx] || '').trim();
             let cleanPref = rawPref.replace(/(都|府|県)$/, '');
             if (cleanPref === '北海') cleanPref = '北海道';
-            const region = REGION_MAP[cleanPref] || 'その他';
+            region = REGION_MAP[cleanPref] || 'その他';
             const displayPref = PREFECTURES_FULL.find(p => p.startsWith(cleanPref)) || (rawPref ? rawPref : '未設定');
 
             regionCounts.set(region, (regionCounts.get(region) || 0) + 1);
@@ -131,14 +134,36 @@ export function CBEDPage() {
             pData.total++;
             if (isUpcoming) pData.upcoming++; else pData.completed++;
           }
+
+          // ★ 未開催イベントの場合のみ、専用のグラフ用データを加算
+          if (isUpcoming) {
+            upcomingCount++;
+            upcomingMonthCounts.set(monthLabel, (upcomingMonthCounts.get(monthLabel) || 0) + 1);
+            if (isOnline) {
+              upcomingRegionCounts.set('オンライン', (upcomingRegionCounts.get('オンライン') || 0) + 1);
+            } else {
+              upcomingRegionCounts.set(region, (upcomingRegionCounts.get(region) || 0) + 1);
+            }
+          }
         });
 
         const regionColors = ['#38BDF8', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444', '#EC4899', '#10B981', '#6B7280'];
+        
         const regionDistribution = Array.from(regionCounts.entries())
           .map(([name, value], i) => ({ name, value, color: name === 'オンライン' ? '#06B6D4' : regionColors[i % regionColors.length] }))
           .sort((a, b) => b.value - a.value);
 
         const monthlyDistribution = Array.from(monthCounts.entries())
+          .filter(([name]) => name !== '未定')
+          .map(([name, value], i) => ({ name, value, color: regionColors[i % regionColors.length] }))
+          .sort((a, b) => (parseInt(a.name) || 0) - (parseInt(b.name) || 0));
+
+        // ★ 未開催イベント用のデータ整形
+        const upcomingRegionDistribution = Array.from(upcomingRegionCounts.entries())
+          .map(([name, value], i) => ({ name, value, color: name === 'オンライン' ? '#06B6D4' : regionColors[i % regionColors.length] }))
+          .sort((a, b) => b.value - a.value);
+
+        const upcomingMonthDistribution = Array.from(upcomingMonthCounts.entries())
           .filter(([name]) => name !== '未定')
           .map(([name, value], i) => ({ name, value, color: regionColors[i % regionColors.length] }))
           .sort((a, b) => (parseInt(a.name) || 0) - (parseInt(b.name) || 0));
@@ -159,27 +184,13 @@ export function CBEDPage() {
         const onlineTable = [{
           category: 'オンラインイベント全体',
           listings: onlineCount,
-          upcoming: validRows.filter(r => {
-             const dStr = String(r[dateIdx]).replace(/\//g, '-');
-             if(!dStr) return false;
-             const eParts = dStr.split('-');
-             if (eParts.length < 3) return false;
-             const eNum = parseInt(eParts[0],10)*10000 + parseInt(eParts[1],10)*100 + parseInt(eParts[2],10);
-             return String(r[latIdx]).trim() === '' && String(r[lngIdx]).trim() === '' && eNum >= todayNum;
-          }).length,
-          completed: validRows.filter(r => {
-             const dStr = String(r[dateIdx]).replace(/\//g, '-');
-             if(!dStr) return false;
-             const eParts = dStr.split('-');
-             if (eParts.length < 3) return false;
-             const eNum = parseInt(eParts[0],10)*10000 + parseInt(eParts[1],10)*100 + parseInt(eParts[2],10);
-             return String(r[latIdx]).trim() === '' && String(r[lngIdx]).trim() === '' && eNum < todayNum;
-          }).length,
+          upcoming: validRows.filter(r => String(r[latIdx]).trim() === '' && String(r[lngIdx]).trim() === '' && new Date(String(r[dateIdx]).replace(/\//g, '-')) >= now).length,
+          completed: validRows.filter(r => String(r[latIdx]).trim() === '' && String(r[lngIdx]).trim() === '' && new Date(String(r[dateIdx]).replace(/\//g, '-')) < now).length,
         }];
 
         setData({
           summary: { totalListings: validRows.length, upcomingListings: upcomingCount, offlineListings: offlineCount, onlineListings: onlineCount, monthlyIncrease: currentMonthCount - prevMonthCount, todayUpdateCount },
-          charts: { regionDistribution, monthlyDistribution },
+          charts: { regionDistribution, monthlyDistribution, upcomingRegionDistribution, upcomingMonthDistribution },
           rankings: { regionRanking, prefectureRanking },
           tables: { prefectureTableRaw, onlineTable }
         });
@@ -210,6 +221,7 @@ export function CBEDPage() {
   return (
     <div className="space-y-6">
       <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBED分析</h2><p className="text-muted-foreground mt-1">掲載イベントの件数、開催形式、地域別分布を確認できます。</p></div>
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <KpiCard title="掲載件数" value={summary.totalListings.toLocaleString()} unit="件" icon={Calendar} accentColor="primary" />
         <KpiCard title="未開催の掲載件数" value={summary.upcomingListings} unit="件" icon={CalendarOff} accentColor="warning" />
@@ -220,8 +232,13 @@ export function CBEDPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="地方別＋オンラインイベント割合"><ChartContainer height="h-[320px]">{charts?.regionDistribution?.length > 0 ? (<DonutChart data={charts.regionDistribution} centerLabel="イベント" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
-        <SectionCard title="開催月ごとの掲載件数割合"><ChartContainer height="h-[320px]">{charts?.monthlyDistribution?.length > 0 ? (<DonutChart data={charts.monthlyDistribution} centerLabel="イベント" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
+        <SectionCard title="【未開催】 地方別・オンライン割合" description="これから参加できるイベントの分布"><ChartContainer height="h-[300px]">{charts?.upcomingRegionDistribution?.length > 0 ? (<DonutChart data={charts.upcomingRegionDistribution} centerLabel="イベント" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
+        <SectionCard title="【未開催】 開催月ごとの件数割合" description="これから参加できるイベントの時期"><ChartContainer height="h-[300px]">{charts?.upcomingMonthDistribution?.length > 0 ? (<DonutChart data={charts.upcomingMonthDistribution} centerLabel="イベント" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SectionCard title="【全期間】 地方別＋オンライン割合"><ChartContainer height="h-[300px]">{charts?.regionDistribution?.length > 0 ? (<DonutChart data={charts.regionDistribution} centerLabel="イベント" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
+        <SectionCard title="【全期間】 開催月ごとの件数割合"><ChartContainer height="h-[300px]">{charts?.monthlyDistribution?.length > 0 ? (<DonutChart data={charts.monthlyDistribution} centerLabel="イベント" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
