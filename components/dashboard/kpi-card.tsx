@@ -1,71 +1,78 @@
-'use client';
-
-import { ReactNode } from 'react';
-import { TrendingUp, TrendingDown, Minus, LucideIcon } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { TrendType } from '@/lib/types';
+import { ReactNode } from 'react';
 
-interface KpiCardProps {
+// ★ "info" を追加！
+export type AccentColor = 'primary' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
+
+export interface KpiCardProps {
   title: string;
   value: string | number;
   unit?: string;
-  description?: string;
+  icon: LucideIcon;
   trendValue?: string;
-  trendType?: TrendType;
-  icon?: LucideIcon;
-  accentColor?: 'primary' | 'accent' | 'success' | 'warning' | 'danger';
+  trendType?: 'up' | 'down' | 'neutral';
+  accentColor?: AccentColor;
+  description?: string | ReactNode;
 }
 
-const accentColors = {
-  primary: 'text-primary',
-  accent: 'text-accent',
-  success: 'text-success',
-  warning: 'text-warning',
-  danger: 'text-destructive',
-};
-
-const trendColors = {
-  up: 'text-success',
-  down: 'text-destructive',
-  neutral: 'text-muted-foreground',
+const colorStyles: Record<AccentColor, { bg: string; text: string; iconBg: string }> = {
+  primary: { bg: 'border-primary/20', text: 'text-primary', iconBg: 'bg-primary/10' },
+  accent: { bg: 'border-accent/20', text: 'text-accent', iconBg: 'bg-accent/10' },
+  success: { bg: 'border-success/20', text: 'text-success', iconBg: 'bg-success/10' },
+  warning: { bg: 'border-warning/20', text: 'text-warning', iconBg: 'bg-warning/10' },
+  danger: { bg: 'border-danger/20', text: 'text-danger', iconBg: 'bg-danger/10' },
+  info: { bg: 'border-info/20', text: 'text-info', iconBg: 'bg-info/10' }, // ★追加！
 };
 
 export function KpiCard({
   title,
   value,
   unit,
-  description,
-  trendValue,
-  trendType = 'neutral',
   icon: Icon,
+  trendValue,
+  trendType,
   accentColor = 'primary',
+  description
 }: KpiCardProps) {
-  const TrendIcon = trendType === 'up' ? TrendingUp : trendType === 'down' ? TrendingDown : Minus;
+  const styles = colorStyles[accentColor];
 
   return (
-    <div className="glass-card rounded-2xl p-5 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          {Icon && (
-            <div className={cn('p-2 rounded-xl bg-secondary/50', accentColors[accentColor])}>
-              <Icon className="h-4 w-4" />
-            </div>
-          )}
-          <span className="text-sm font-medium text-muted-foreground">{title}</span>
-        </div>
-        {trendValue && (
-          <div className={cn('flex items-center gap-1 text-sm font-medium', trendColors[trendType])}>
-            <TrendIcon className="h-3.5 w-3.5" />
-            <span>{trendValue}</span>
+    <div className={cn('glass-card rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden group', styles.bg)}>
+      <div className="absolute top-0 right-0 p-4 opacity-50 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-110 transform">
+        <Icon className={cn('w-24 h-24 -mr-8 -mt-8', styles.text, 'opacity-20')} />
+      </div>
+      
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <div className={cn('p-2 rounded-xl', styles.iconBg)}>
+            <Icon className={cn('w-4 h-4', styles.text)} />
           </div>
-        )}
+          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+        </div>
+        
+        <div className="flex items-baseline gap-1 mt-3 relative z-10">
+          <span className="text-3xl font-bold tracking-tight text-foreground">{value}</span>
+          {unit && <span className="text-sm text-muted-foreground ml-1">{unit}</span>}
+        </div>
       </div>
-      <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-bold tracking-tight text-foreground">{value}</span>
-        {unit && <span className="text-lg text-muted-foreground">{unit}</span>}
-      </div>
-      {description && (
-        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+
+      {(trendValue || description) && (
+        <div className="mt-4 flex items-center gap-2 relative z-10">
+          {trendValue && (
+            <span className={cn(
+              'text-xs font-medium px-2 py-1 rounded-full',
+              trendType === 'up' ? 'bg-success/20 text-success' : 
+              trendType === 'down' ? 'bg-danger/20 text-danger' : 
+              'bg-secondary/50 text-muted-foreground'
+            )}>
+              {trendValue}
+            </span>
+          )}
+          {description && (
+            <span className="text-xs text-muted-foreground">{description}</span>
+          )}
+        </div>
       )}
     </div>
   );
