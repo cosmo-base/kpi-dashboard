@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { Users, TrendingUp, Sparkles, Zap, Activity } from 'lucide-react';
+import { Users, TrendingUp, Sparkles, Zap, Activity, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
@@ -11,6 +11,8 @@ import { ScrollableTable } from '../scrollable-table';
 import { DonutChart } from '../charts/donut-chart';
 import { LineChartComponent } from '../charts/line-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
+
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
@@ -74,25 +76,21 @@ export function SpaceDiagnosisPage() {
 
       if (allRows.length === 0) return;
 
-      const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+      const nowJst = getJSTDate();
       const currentY = nowJst.getFullYear();
       const currentM = nowJst.getMonth() + 1;
-      const currentD = nowJst.getDate();
       const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
 
       const endOfPrevMonthJst = new Date(nowJst.getTime());
       endOfPrevMonthJst.setDate(0);
       const endOfPrevMonthNum = endOfPrevMonthJst.getFullYear() * 10000 + (endOfPrevMonthJst.getMonth() + 1) * 100 + endOfPrevMonthJst.getDate();
 
-      const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
-      const startOfWeekJst = new Date(nowJst.getTime());
-      startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
-
       const axisCounts = { R: 0, P: 0, V: 0, A: 0, M: 0, X: 0, I: 0, S: 0 };
       const simpleAxisCounts = { R: 0, D: 0, I: 0, O: 0, P: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<number, number> };
       const simpleTypeMap = new Map<string, number>();
       const detailedTypeMap = new Map<string, number>();
       const dailyMap = new Map<string, any>();
+      const monthlyTypeMap = new Map<string, any>();
 
       allRows.forEach(row => {
         const type = String(row.type || '').trim();
@@ -101,6 +99,8 @@ export function SpaceDiagnosisPage() {
         const daily = dailyMap.get(dateKey)!;
         daily.incTotal++;
 
+        // --- タイプ別の増加推移用 ---
+        let basicType = 'その他';
         if (row._version === 'simple') {
           daily.incSimpleTotal++;
           if (row._source === 'CBHP') daily.incSimpleCbhp++;
@@ -108,6 +108,7 @@ export function SpaceDiagnosisPage() {
           if (type && SIMPLE_TYPE_COLORS[type]) {
             simpleTypeMap.set(type, (simpleTypeMap.get(type) || 0) + 1);
             if (type.includes('R')) simpleAxisCounts.R++; if (type.includes('D')) simpleAxisCounts.D++; if (type.includes('I')) simpleAxisCounts.I++; if (type.includes('O')) simpleAxisCounts.O++;
+            basicType = type; // RI, DI, RO, DO
           }
           const pVal = parseInt(row.P);
           if (pVal >= 1 && pVal <= 5) simpleAxisCounts.P[pVal]++;
@@ -116,6 +117,44 @@ export function SpaceDiagnosisPage() {
           if (type && DETAILED_TYPE_COLORS[type]) detailedTypeMap.set(type, (detailedTypeMap.get(type) || 0) + 1);
           const rp = parseInt(row.RP) || 0; const va = parseInt(row.VA) || 0; const mx = parseInt(row.MX) || 0; const is = parseInt(row.IS) || 0;
           if (rp > 0) axisCounts.R++; else axisCounts.P++; if (va > 0) axisCounts.V++; else axisCounts.A++; if (mx > 0) axisCounts.M++; else axisCounts.X++; if (is > 0) axisCounts.I++; else axisCounts.S++;
+          
+          // 完全版の16タイプを4大タイプ(RI,DI,RO,DO)にマッピング
+          const r = type.charAt(0);
+          const i = type.charAt(3);
+          if (r === 'R' && i === 'I') basicType = 'RI';
+          else if (r === 'P' && i === 'I') basicType = 'DI';
+          else if (r === 'R' && i === 'S') basicType = 'RO';
+          else if (r === 'P' && i === 'S') basicType = 'DO';
+        }
+
+        const mLabel = `${row.y}/${String(row.m).padStart(2, '0')}`;
+        if (!monthlyTypeMap.has(mLabel)) monthlyTypeMap.set(mLabel, { name: mLabel, RI: 0, DI: 0, RO: 0, DO: 0 });
+        if (['RI', 'DI', 'RO', 'DO'].includes(basicType)) {
+          monthlyTypeMap.get(mLabel)[basicType]++;
+        }
+      });
+
+      // --- 各問題の回答割合 (自動抽出) ---
+      const excludedHeaders = ['タイムスタンプ', 'date', 'type', 'RP', 'VA', 'MX', 'IS', 'P', '_source', '_version', 'num', 'dateKey', 'y', 'm', 'd'];
+      const questionsData: any[] = [];
+      const headers = Object.keys(allRows[0] || {});
+      
+      headers.forEach(header => {
+        if (excludedHeaders.includes(header) || header.includes('名前') || header.includes('ID')) return;
+        const counts = new Map<string, number>();
+        let validCount = 0;
+        allRows.forEach(row => {
+          const val = String(row[header] || '').trim();
+          if (val) {
+            counts.set(val, (counts.get(val) || 0) + 1);
+            validCount++;
+          }
+        });
+        // 回答の種類が2〜10種類で、全体の30%以上が回答しているものを「設問」と判定
+        if (counts.size >= 2 && counts.size <= 10 && validCount > allRows.length * 0.3) {
+           const distArr = Array.from(counts.entries()).sort((a,b) => b[1]-a[1]);
+           const distStr = distArr.map(([k,v]) => `${k} (${Math.round(v/validCount*100)}%)`).join('  /  ');
+           questionsData.push({ question: header, count: validCount, distribution: distStr });
         }
       });
 
@@ -146,9 +185,7 @@ export function SpaceDiagnosisPage() {
       const detailedRate = endOfPrevMonthDetailed === 0 ? 100 : Math.round((latest.detailedTotal / endOfPrevMonthDetailed) * 100);
 
       const monthlyAgg = new Map<string, any>();
-      const weeklyAgg = new Map<string, any>();
       
-      let prevMonth = -1;
       let currentYear = currentY;
       if (dailyRecords.length > 0 && parseInt(dailyRecords[0].dateKey.split('/')[0], 10) > currentM + 1) currentYear--;
 
@@ -157,24 +194,6 @@ export function SpaceDiagnosisPage() {
         if (!monthlyAgg.has(mLabel)) monthlyAgg.set(mLabel, { incTotal: 0, incSimple: 0, incSimpleCbhp: 0, incSimplePart: 0, incDetailed: 0, cum: 0 });
         const m = monthlyAgg.get(mLabel)!;
         m.incTotal += d.incTotal; m.incSimple += d.incSimpleTotal; m.incSimpleCbhp += d.incSimpleCbhp; m.incSimplePart += d.incSimplePart; m.incDetailed += d.incDetailed; m.cum = d.total;
-
-        const [yStr, mStr, dStr] = d.dateKey.split('/');
-        const monthNum = parseInt(mStr, 10);
-        const dayNum = parseInt(dStr, 10);
-        if (prevMonth !== -1 && prevMonth === 12 && monthNum === 1) currentYear++;
-        prevMonth = monthNum;
-        
-        const dateObj = new Date(currentYear, monthNum - 1, dayNum);
-        const dw = dateObj.getDay() === 0 ? 7 : dateObj.getDay(); 
-        const endOfWeek = new Date(dateObj.getTime()); endOfWeek.setDate(dateObj.getDate() + (7 - dw));
-        const startOfWeek = new Date(endOfWeek.getTime()); startOfWeek.setDate(endOfWeek.getDate() - 6);
-        
-        const wKey = `${endOfWeek.getFullYear()}-${endOfWeek.getMonth() + 1}-${endOfWeek.getDate()}`;
-        if (!weeklyAgg.has(wKey)) {
-          weeklyAgg.set(wKey, { incTotal: 0, incSimple: 0, incSimpleCbhp: 0, incSimplePart: 0, incDetailed: 0, cum: 0, startStr: `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()}`, endStr: `${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}` });
-        }
-        const w = weeklyAgg.get(wKey)!;
-        w.incTotal += d.incTotal; w.incSimple += d.incSimpleTotal; w.incSimpleCbhp += d.incSimpleCbhp; w.incSimplePart += d.incSimplePart; w.incDetailed += d.incDetailed; w.cum = d.total;
       });
 
       const buildTable = (aggMap: Map<string, any>, labelGen: (k:string, v:any)=>string) => {
@@ -190,18 +209,11 @@ export function SpaceDiagnosisPage() {
       };
 
       const monthlyTable = buildTable(monthlyAgg, (k) => k).map(r => ({ month: r.label, total: formatDiff(r.incTotal), simpleCbhp: formatDiff(r.incSimpleCbhp), simplePart: formatDiff(r.incSimplePart), full: formatDiff(r.incDetailed), rate: r.rate }));
-      const weeklyTable = buildTable(weeklyAgg, (k, v) => {
-        const endDay = parseInt(v.endStr.split('/')[1], 10);
-        return `${v.endStr.split('/')[0]}月第${Math.ceil(endDay / 7)}週 (${v.startStr}-${v.endStr})`;
-      }).map(r => ({ week: r.label, total: formatDiff(r.incTotal), simpleCbhp: formatDiff(r.incSimpleCbhp), simplePart: formatDiff(r.incSimplePart), full: formatDiff(r.incDetailed), rate: r.rate }));
 
       const simpleTypeDistribution = Array.from(simpleTypeMap.entries()).map(([k, v]) => ({ name: SIMPLE_TYPE_LABELS[k] || k, value: v, color: SIMPLE_TYPE_COLORS[k] || '#ccc' }));
       const detailedTypeDistribution = Array.from(detailedTypeMap.entries()).map(([k, v]) => ({ name: k, value: v, color: DETAILED_TYPE_COLORS[k] || '#ccc' }));
       const monthlyByVersion = Array.from(monthlyAgg.entries()).slice(-4).map(([k, v]) => ({ name: k, 簡易版_CBHP: v.incSimpleCbhp, 簡易版_参加者: v.incSimplePart, 完全版: v.incDetailed })); 
-      const weeklyByVersion = Array.from(weeklyAgg.values()).slice(-4).map(v => {
-        const endDay = parseInt(v.endStr.split('/')[1], 10);
-        return { name: `${v.endStr.split('/')[0]}月第${Math.ceil(endDay / 7)}週`, 簡易版_CBHP: v.incSimpleCbhp, 簡易版_参加者: v.incSimplePart, 完全版: v.incDetailed };
-      });
+      const monthlyTypeTrend = Array.from(monthlyTypeMap.values()).sort((a, b) => a.name.localeCompare(b.name)).slice(-6);
 
       setData({
         summary: {
@@ -211,8 +223,8 @@ export function SpaceDiagnosisPage() {
           simpleVersionParticipants: latest.simpleTotal, simpleVersionRate: simpleRate,
           simpleCbhpParticipants: latest.simpleCbhp, simplePartParticipants: latest.simplePart,
         },
-        charts: { participantsTrend: dailyRecords.map(d => ({ name: d.dateKey, 全体: d.total, 簡易版_合計: d.simpleTotal, 簡易版_CBHP: d.simpleCbhp, 簡易版_参加者: d.simplePart, 完全版: d.detailedTotal })), simpleTypeDistribution, detailedTypeDistribution, monthlyByVersion, weeklyByVersion },
-        axisCounts, simpleAxisCounts, tables: { monthlyTable, weeklyTable }
+        charts: { participantsTrend: dailyRecords.map(d => ({ name: d.dateKey, 全体: d.total, 完全版: d.detailedTotal, 簡易版_合計: d.simpleTotal })), simpleTypeDistribution, detailedTypeDistribution, monthlyByVersion, monthlyTypeTrend },
+        axisCounts, simpleAxisCounts, tables: { monthlyTable, questionsData }
       });
     }).catch(err => console.error('Data Load Error:', err));
   }, []);
@@ -240,6 +252,19 @@ export function SpaceDiagnosisPage() {
          <div className="glass-card p-4 rounded-xl flex items-center justify-between border border-border/50"><span className="text-sm font-medium text-muted-foreground">簡易版：CBHP経由</span><span className="text-xl font-bold text-foreground">{summary.simpleCbhpParticipants?.toLocaleString() || 0} 人</span></div>
          <div className="glass-card p-4 rounded-xl flex items-center justify-between border border-border/50"><span className="text-sm font-medium text-muted-foreground">簡易版：参加者ページ経由</span><span className="text-xl font-bold text-foreground">{summary.simplePartParticipants?.toLocaleString() || 0} 人</span></div>
       </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SectionCard title="診断参加者数推移 (累計)"><ChartContainer height="h-[320px]"><LineChartComponent data={charts.participantsTrend?.slice(-90) || []} lines={[{ dataKey: '全体', name: '全体', color: '#38BDF8' }, { dataKey: '完全版', name: '完全版', color: '#22C55E' }, { dataKey: '簡易版_合計', name: '簡易版(合)', color: '#8B5CF6' }]} /></ChartContainer></SectionCard>
+        <SectionCard title="4大タイプ 月別増加推移" description="どのタイプがいつ増えたか（完全版は4大タイプに変換して集計）"><ChartContainer height="h-[320px]"><StackedBarChart data={charts.monthlyTypeTrend || []} bars={[{ dataKey: 'RI', name: '天文台トラベラー', color: SIMPLE_TYPE_COLORS['RI'] }, { dataKey: 'DI', name: '人工衛星', color: SIMPLE_TYPE_COLORS['DI'] }, { dataKey: 'RO', name: 'ロケット打ち上げ', color: SIMPLE_TYPE_COLORS['RO'] }, { dataKey: 'DO', name: '宇宙ステーション', color: SIMPLE_TYPE_COLORS['DO'] }]} /></ChartContainer></SectionCard>
+      </div>
+
+      <SectionCard title="設問別 回答分布 (自動抽出)" description="データからアンケートの設問を自動判定し、選択肢ごとの割合を表示します" icon={HelpCircle}>
+        <ScrollableTable 
+          columns={[{ key: 'question', label: '設問名 / カラム名', align: 'left' }, { key: 'count', label: '有効回答数', align: 'right' }, { key: 'distribution', label: '回答割合', align: 'left' }]} 
+          data={tables.questionsData || []} 
+        />
+      </SectionCard>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SectionCard title="簡易版：各軸の傾向分析"><div className="pt-2 flex flex-col justify-center h-[350px]"><AxisBar labelLeft="R" countLeft={simpleAxisCounts?.R || 0} colorLeft="#d1d5db" labelRight="D" countRight={simpleAxisCounts?.D || 0} colorRight="#6b7280" /><AxisBar labelLeft="I" countLeft={simpleAxisCounts?.I || 0} colorLeft="#d1d5db" labelRight="O" countRight={simpleAxisCounts?.O || 0} colorRight="#6b7280" /><MultiSegmentBar title="P（5段階分布）" segments={pSegments} /></div></SectionCard>
         <SectionCard title="簡易版 4タイプ割合"><ChartContainer height="h-[350px]"><DonutChart data={charts.simpleTypeDistribution || []} centerLabel="簡易版" /></ChartContainer></SectionCard>
@@ -249,15 +274,6 @@ export function SpaceDiagnosisPage() {
         <SectionCard title="完全版 16タイプ割合"><ChartContainer height="h-[350px]"><DonutChart data={charts.detailedTypeDistribution || []} centerLabel="完全版" /></ChartContainer></SectionCard>
       </div>
       <SectionCard title="完全版 16タイプ一覧" description="カラーコードと正式名称の対応表"><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">{Object.entries(DETAILED_TYPE_LABELS).map(([key, label]) => (<div key={key} className="flex items-center gap-3 p-3 border border-border/50 rounded-xl bg-secondary/20"><div className="w-4 h-4 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: DETAILED_TYPE_COLORS[key] }} /><span className="text-sm text-foreground font-medium">{label}</span></div>))}</div></SectionCard>
-      <SectionCard title="診断参加者数推移 (累計)"><ChartContainer height="h-[320px]"><LineChartComponent data={charts.participantsTrend?.slice(-90) || []} lines={[{ dataKey: '全体', name: '全体', color: '#38BDF8' }, { dataKey: '完全版', name: '完全版', color: '#22C55E' }, { dataKey: '簡易版_合計', name: '簡易版(合)', color: '#8B5CF6' }, { dataKey: '簡易版_CBHP', name: '簡易(CBHP)', color: '#a78bfa' }, { dataKey: '簡易版_参加者', name: '簡易(参加)', color: '#c4b5fd' }]} /></ChartContainer></SectionCard>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="月別 参加者増加数"><ChartContainer height="h-[300px]"><StackedBarChart data={charts.monthlyByVersion || []} bars={[{ dataKey: '簡易版_CBHP', name: '簡易(CBHP)', color: '#a78bfa' }, { dataKey: '簡易版_参加者', name: '簡易(参加)', color: '#c4b5fd' }, { dataKey: '完全版', name: '完全版', color: '#22C55E' }]} /></ChartContainer></SectionCard>
-        <SectionCard title="週別 参加者増加数 (月〜日)"><ChartContainer height="h-[300px]"><StackedBarChart data={charts.weeklyByVersion || []} bars={[{ dataKey: '簡易版_CBHP', name: '簡易(CBHP)', color: '#a78bfa' }, { dataKey: '簡易版_参加者', name: '簡易(参加)', color: '#c4b5fd' }, { dataKey: '完全版', name: '完全版', color: '#22C55E' }]} /></ChartContainer></SectionCard>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="月単位の参加者増加人数"><ScrollableTable columns={[{ key: 'month', label: '月', align: 'left' }, { key: 'total', label: '合計増', align: 'right' }, { key: 'simpleCbhp', label: '簡易(CBHP)', align: 'right' }, { key: 'simplePart', label: '簡易(参加)', align: 'right' }, { key: 'full', label: '完全版', align: 'right' }, { key: 'rate', label: '前月比', align: 'right' }]} data={tables.monthlyTable || []} /></SectionCard>
-        <SectionCard title="週単位の参加者増加人数"><ScrollableTable columns={[{ key: 'week', label: '週 (月〜日)', align: 'left' }, { key: 'total', label: '合計増', align: 'right' }, { key: 'simpleCbhp', label: '簡易(CBHP)', align: 'right' }, { key: 'simplePart', label: '簡易(参加)', align: 'right' }, { key: 'full', label: '完全版', align: 'right' }, { key: 'rate', label: '前週比', align: 'right' }]} data={tables.weeklyTable || []} /></SectionCard>
-      </div>
     </div>
   );
 }
