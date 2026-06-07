@@ -12,8 +12,6 @@ import { DonutChart } from '../charts/donut-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 import { RankingList } from '../ranking-list';
 
-const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
   if (num < 0) return num.toLocaleString(); 
@@ -40,7 +38,7 @@ export function CBLPage() {
         const validRows = rows.filter(row => row.title && String(row.title).trim() !== '');
         if (validRows.length === 0) return;
 
-        const nowJst = getJSTDate();
+        const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
         const currentY = nowJst.getFullYear();
         const currentM = nowJst.getMonth() + 1;
         const currentMonthStr = `${currentY}/${String(currentM).padStart(2, '0')}`;
@@ -52,7 +50,6 @@ export function CBLPage() {
         let totalViews = 0, recommendCount = 0, currentMonthCount = 0, endOfPrevMonthArticles = 0;
 
         const categoryCounts = new Map<string, number>();
-        const categoryViewsCounts = new Map<string, number>(); // ★ ビュー数用のMapを追加
         const typeCounts = new Map<string, number>();
         const levelCounts = new Map<string, number>();
         const monthlyCounts = new Map<string, number>();
@@ -83,10 +80,7 @@ export function CBLPage() {
           const cat = String(row.category || '未分類').trim();
           const type = String(row.type || '未分類').trim();
           const level = String(row.level || '未設定').trim();
-          
           categoryCounts.set(cat, (categoryCounts.get(cat) || 0) + 1);
-          categoryViewsCounts.set(cat, (categoryViewsCounts.get(cat) || 0) + views); // ★ ビュー数を加算
-          
           typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
           levelCounts.set(level, (levelCounts.get(level) || 0) + 1);
         });
@@ -94,7 +88,6 @@ export function CBLPage() {
         const monthlyRate = endOfPrevMonthArticles === 0 ? 100 : Math.round((validRows.length / endOfPrevMonthArticles) * 100);
 
         const categoryDistribution = Array.from(categoryCounts.entries()).sort((a, b) => b[1] - a[1]).map(([name, value], i) => ({ name, value, color: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }));
-        const categoryViewsDistribution = Array.from(categoryViewsCounts.entries()).sort((a, b) => b[1] - a[1]).map(([name, value], i) => ({ name, value, color: CATEGORY_COLORS[i % CATEGORY_COLORS.length] })); // ★ ビュー数のデータ作成
         const typeDistribution = Array.from(typeCounts.entries()).sort((a, b) => b[1] - a[1]).map(([name, value], i) => ({ name, value, color: TYPE_COLORS[i % TYPE_COLORS.length] }));
         const levelDistribution = Array.from(levelCounts.entries()).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value, color: LEVEL_COLORS[name] || '#6B7280' }));
 
@@ -106,7 +99,7 @@ export function CBLPage() {
 
         setData({
           summary: { totalArticles: validRows.length, totalViews: totalViews, recommendCount: recommendCount, monthlyIncrease: currentMonthCount, monthlyRate },
-          charts: { categoryDistribution, categoryViewsDistribution, typeDistribution, levelDistribution, monthlyTrend },
+          charts: { categoryDistribution, typeDistribution, levelDistribution, monthlyTrend },
           rankings: { topViewedArticles },
           tables: { categoryTable }
         });
@@ -129,9 +122,8 @@ export function CBLPage() {
         <KpiCard title="今月の新規記事" value={`+${summary.monthlyIncrease || 0}`} unit="記事" trendValue={`先月末比 ${summary.monthlyRate}%`} trendType="up" icon={TrendingUp} accentColor="accent" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SectionCard title="カテゴリ別 記事数"><ChartContainer height="h-[300px]"><DonutChart data={charts.categoryDistribution || []} centerLabel="記事" /></ChartContainer></SectionCard>
-        <SectionCard title="カテゴリ別 ビュー数"><ChartContainer height="h-[300px]"><DonutChart data={charts.categoryViewsDistribution || []} centerLabel="Views" /></ChartContainer></SectionCard>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SectionCard title="カテゴリ別 割合"><ChartContainer height="h-[300px]"><DonutChart data={charts.categoryDistribution || []} centerLabel="記事" /></ChartContainer></SectionCard>
         <SectionCard title="タイプ別 割合"><ChartContainer height="h-[300px]"><DonutChart data={charts.typeDistribution || []} centerLabel="記事" /></ChartContainer></SectionCard>
         <SectionCard title="レベル別 割合"><ChartContainer height="h-[300px]"><DonutChart data={charts.levelDistribution || []} centerLabel="記事" /></ChartContainer></SectionCard>
       </div>
