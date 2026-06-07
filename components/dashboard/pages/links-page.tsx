@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Link as LinkIcon,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,
+  Link as LinkIcon,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,
   type LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -155,13 +155,6 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/document/d/1hhsrqBj57j58JzkmIlQOgizK3zfGzm5_xUGK_kB-Rbk/edit?tab=t.0',
         description: 'コミュニティ招待リンクの管理',
         icon: LinkIcon,
-      },
-      {
-        id: 'admin-3',
-        title: 'パートナー申請データ',
-        url: 'https://docs.google.com/spreadsheets/d/1PtyAO6VeBwgZcFsiiUhQseg6ugZJmMI_Di6N5StMQiA/edit?gid=0#gid=0',
-        description: 'パートナー申請の管理シート',
-        icon: Handshake,
       },
       {
         id: 'admin-4',
@@ -334,9 +327,114 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-10',
         title: '宇宙タイプ診断詳細版診断データ',
-        url: 'https://docs.google.com/spreadsheets/d/13yFYKDVm0g09Vw6cyHN9Hr4H2n66CL9SpPDJ-mytLb0/edit?',
+        url: 'https://docs.google.com/spreadsheets/d/13yFYKDVm0g09Vw6cyHN9Hr4H2n66CL9SpPDJ-mytLb0/edit',
         description: '宇宙タイプ診断詳細版診断データ',
         icon: Sparkles ,
+      },
+      {
+        id: 'manage-11',
+        title: 'CBHP分析',
+        url: 'https://docs.google.com/spreadsheets/d/1QwgyndR230Vtr2qiWAgw0FNQEaCfdA1VYagoRE2rxOQ/edit',
+        description: 'GA4からとってきたCBHPトラッキングデータ',
+        icon: FileText,
+      },
+    ]
+  }, 
+  {
+    id: 'form',
+    label: 'フォーム',
+    icon: LayoutList,
+    links: [
+      {
+        id: 'form-1',
+        title: 'CosmoBase お問い合わせ',
+        url: 'https://docs.google.com/forms/d/1TwH-_aVNWMhbxnjIEDwOu0nDnGJVzUoByAxKkgWwAgk/edit',
+        description: 'CBHP お問い合わせ',
+        icon: LayoutList,
+      },
+      {
+        id: 'form-2',
+        title: 'Cosmo Base パートナー制度 お問い合わせ',
+        url: 'https://docs.google.com/forms/d/17CJ_KNtX5HUJj4G8PX1POWuJ1BCbu3kHI4uk_G-mq7k/edit',
+        description: 'CBHP パートナーお問い合わせ',
+        icon: LayoutList,
+      },
+      {
+        id: 'form-3',
+        title: 'パートナー申請データ',
+        url: 'https://docs.google.com/spreadsheets/d/1PtyAO6VeBwgZcFsiiUhQseg6ugZJmMI_Di6N5StMQiA/edit',
+        description: 'パートナー申請の管理シート',
+        icon: Handshake,
+      },
+      {
+        id: 'form-4',
+        title: 'パートナー修正データ',
+        url: 'https://docs.google.com/spreadsheets/d/1kBId4mWEhDfoW3pjTAlbO7Cvyh-z7Y4CiQgtjkIbNdk/edit?gid=0#gid=0',
+        description: 'パートナーページ 修正データ',
+        icon: Handshake,
+      },
+      {
+        id: 'form-5',
+        title: 'CBLパートナー資料格納',
+        url: 'https://docs.google.com/spreadsheets/d/1Jk8IJ3l__qBzjWuOPbWY6p8_863Fniz6uzDjiuYO6v4/edit?gid=0#gid=0',
+        description: 'パートナーページ CBL資料格納申請フォーム',
+        icon: Handshake,
+      },
+      {
+        id: 'form-6',
+        title: 'イベント登壇申請データ',
+        url: 'https://docs.google.com/spreadsheets/d/1Yq6BzFS4iZi4IL4bh9AQyTwXn5ZNjUUFJ1yrXULU0fA/edit?gid=0#gid=0',
+        description: 'パートナーページ 知っトク登壇申請フォーム',
+        icon: Handshake,
+      },
+      {
+        id: 'form-7',
+        title: 'メンバー申請',
+        url: 'https://docs.google.com/forms/d/1aeTY1RA-LENst3fB7N0sawSngwqZg6Fhro6o3dCXQnM/edit',
+        description: 'パートナーページ メンバー申請フォーム',
+        icon: Handshake,
+      },
+      {
+        id: 'form-8',
+        title: 'アンケート確認',
+        url: 'https://docs.google.com/forms/d/1q-zSXsQMkC69FnN85awN7aq4qSVZPLFaEuW7anYCRDU/edit',
+        description: 'パートナーページ アンケート確認フォーム',
+        icon: Handshake,
+      },
+      {
+        id: 'form-9',
+        title: 'Cosmo Base 匿名質問フォーム',
+        url: 'https://docs.google.com/forms/d/1LEBog2v-TAOpL28RgmJNzteWHrXNPm-wM9dbPl4wbNY/edit',
+        description: '参加者ページ 宇宙教えて 匿名質問フォーム',
+        icon: LayoutList,
+      },
+      {
+        id: 'form-10',
+        title: 'イベント登録',
+        url: 'https://docs.google.com/forms/d/1m-6FLHRjzG5MDQL5Xix4ms2JVeMS8cXTSygVBsjGoh4/edit',
+        description: '参加者ページ CBED イベント追加フォーム',
+        icon: LayoutList,
+      },
+      {
+        id: 'form-11',
+        title: 'イベントテーマ希望フォーム',
+        url: 'https://docs.google.com/forms/d/1hAQvD1RB_aMA8sSDXnfsfKFfj_SnWtLH3RJhXfZEpoY/edit',
+        description: '参加者ページ 宇宙知っトク リクエストフォーム',
+        icon: LayoutList,
+      },
+      {
+        id: 'form-12',
+        title: 'CBMDお問い合わせ',
+        url: 'https://docs.google.com/forms/d/1F2rcnOkK1R7oMBL4HrEle4yLU58ON108NKjUMVhp9Os/edit',
+        description: '参加者ページ CBMD お問い合わせフォーム',
+        icon: LayoutList,
+      },
+      {
+        id: 'form-13',
+        title: 'Cosmo Baseで宇宙知っトク　参加後アンケート',
+        url: 'https://docs.google.com/forms/d/14Gy8dIBSOwT69dqiBsCIEhq0Az4j9wCJ9_itZwsjR2Q/edit',
+        description: '',
+        icon: LayoutList,
       },
     ]
   },
