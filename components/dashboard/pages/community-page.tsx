@@ -10,6 +10,9 @@ import { ScrollableTable } from '../scrollable-table';
 import { LineChartComponent } from '../charts/line-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 import { DonutChart } from '../charts/donut-chart';
+import { Button } from '@/components/ui/button';
+
+const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
@@ -19,6 +22,7 @@ const formatDiff = (num: number) => {
 
 export function CommunityPage() {
   const [data, setData] = useState<any>(null);
+  const [showSns, setShowSns] = useState(false); // SNS表示のON/OFF
 
   useEffect(() => {
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRoX91AuTR9uVSNcCSqr0ir_SIP-6ZtNpOqBHaLEwXDMA99w1Rws-5L7crTpqBY_JqHa-n0Ie4PxWLq/pub?gid=0&single=true&output=csv';
@@ -37,13 +41,22 @@ export function CommunityPage() {
         const dayIdx = headers.indexOf('日');
         const increaseIdx = headers.indexOf('参加増加数');
         const totalIdx = headers.indexOf('参加数');
+        let xIdx = headers.indexOf('X');
+        if (xIdx === -1) xIdx = headers.indexOf('x');
+        const instaIdx = headers.indexOf('Instagram');
+        const noteIdx = headers.indexOf('note');
 
         const dailyRecords = rawData.slice(headerRowIndex + 1)
-          .map(row => ({
-            date: `${row[monthIdx]}/${row[dayIdx]}`,
-            increase: Number(row[increaseIdx]) || 0,
-            total: Number(row[totalIdx]) || 0,
-          }))
+          .map(row => {
+            // SNSのフォロワー数合計を計算
+            const snsTotal = (Number(row[xIdx]) || 0) + (Number(row[instaIdx]) || 0) + (Number(row[noteIdx]) || 0);
+            return {
+              date: `${row[monthIdx]}/${row[dayIdx]}`,
+              increase: Number(row[increaseIdx]) || 0,
+              total: Number(row[totalIdx]) || 0,
+              snsTotal: snsTotal
+            };
+          })
           .filter(record => record.total > 0);
 
         if (dailyRecords.length === 0) return;
@@ -73,12 +86,11 @@ export function CommunityPage() {
           name: `${name} (${val})`, value: val, color: sourceColors[name] || defaultColors[colorIdx++ % defaultColors.length]
         }));
 
-        // --- 0:00 JSTに正確に切り替わる最強の日付計算ロジック ---
-        const nowJst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+        const nowJst = getJSTDate();
         const currentY = nowJst.getFullYear();
         const currentM = nowJst.getMonth() + 1;
         const currentD = nowJst.getDate();
-        const todayNum = currentY * 10000 + currentM * 100 + currentD; // 例: 20260601
+        const todayNum = currentY * 10000 + currentM * 100 + currentD;
         const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
 
         const endOfPrevMonthJst = new Date(nowJst.getTime());
@@ -195,7 +207,14 @@ export function CommunityPage() {
             thisWeekIncrease: thisWeekIncrease, weeklyIncreaseRate: weeklyIncreaseRate,
             todayIncrease: todayIncrease,
           },
-          charts: { membersTrend: dailyRecords.map(record => ({ name: record.date, 累計人数: record.total })), monthlyByTotal, weeklyByTotal, sourceDistribution },
+          charts: { 
+            membersTrend: dailyRecords.map(record => ({ 
+              name: record.date, 
+              累計人数: record.total,
+              SNS総フォロワー数: record.snsTotal > 0 ? record.snsTotal : undefined
+            })), 
+            monthlyByTotal, weeklyByTotal, sourceDistribution 
+          },
           tables: { monthlyTable, weeklyTable }
         });
       })
@@ -217,7 +236,29 @@ export function CommunityPage() {
         <KpiCard title="週間比" value={summary.weeklyIncreaseRate} unit="%" trendValue="先週末比" trendType="up" icon={TrendingUp} accentColor="success" />
         <KpiCard title="今日の増加数" value={formatDiff(summary.todayIncrease)} unit="人" icon={UserPlus} accentColor="warning" />
       </div>
-      <SectionCard title="全体の人数推移"><ChartContainer height="h-[350px]"><LineChartComponent data={charts.membersTrend.slice(-90)} lines={[{ dataKey: '累計人数', name: '累計人数', color: '#38BDF8' }]} /></ChartContainer></SectionCard>
+      
+      <SectionCard title="全体の人数推移" description="Discord参加人数とSNSフォロワー数の比較">
+        <div className="flex justify-end mb-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowSns(!showSns)} 
+            className={showSns ? 'bg-primary text-primary-foreground border-transparent' : 'bg-secondary/30 text-foreground'}
+          >
+            {showSns ? 'SNSフォロワー数を隠す' : 'SNSフォロワー数を重ねて比較'}
+          </Button>
+        </div>
+        <ChartContainer height="h-[350px]">
+          <LineChartComponent 
+            data={charts.membersTrend.slice(-90)} 
+            lines={[
+              { dataKey: '累計人数', name: 'Discord累計人数', color: '#38BDF8' },
+              ...(showSns ? [{ dataKey: 'SNS総フォロワー数', name: 'SNS総フォロワー数', color: '#F59E0B' }] : [])
+            ]} 
+          />
+        </ChartContainer>
+      </SectionCard>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SectionCard title="月別増加人数" description="直近4か月の推移"><ChartContainer height="h-[300px]"><StackedBarChart data={charts.monthlyByTotal} bars={[{ dataKey: '増加数', name: '増加人数', color: '#38BDF8' }]} /></ChartContainer></SectionCard>
         <SectionCard title="週別増加人数" description="直近4週の推移 (月〜日)"><ChartContainer height="h-[300px]"><StackedBarChart data={charts.weeklyByTotal} bars={[{ dataKey: '増加数', name: '増加人数', color: '#8B5CF6' }]} /></ChartContainer></SectionCard>
