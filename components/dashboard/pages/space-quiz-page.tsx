@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { Users, Calendar, TrendingUp, Clock, Target, ArrowUpDown, CalendarDays } from 'lucide-react';
+import { Users, Calendar, TrendingUp, Clock, Target, ArrowUpDown, CalendarDays, AlertTriangle, HelpCircle } from 'lucide-react';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ZAxis } from 'recharts';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
@@ -21,6 +22,27 @@ const formatDiff = (num: number) => {
 };
 
 type SortMode = 'date_desc' | 'answers_desc' | 'accuracy_desc' | 'accuracy_asc';
+
+// ★ 重なった点をすべて表示するカスタムツールチップ
+const ScatterTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-slate-900 border border-white/10 p-3 rounded-xl shadow-xl z-50 max-w-xs">
+        <div className="max-h-[150px] overflow-y-auto custom-scrollbar pr-2 mb-2 space-y-1">
+          {data.questions.map((q: string, i: number) => (
+            <p key={i} className="text-white font-bold text-sm leading-tight border-b border-white/10 pb-1 last:border-0">{q}</p>
+          ))}
+        </div>
+        <div className="flex gap-4 pt-1">
+          <p className="text-[#38BDF8] text-xs font-medium">回答数: {data.answers}件</p>
+          <p className="text-[#8B5CF6] text-xs font-medium">正答率: {data.accuracy}%</p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 export function SpaceQuizPage() {
   const [data, setData] = useState<any>(null);
@@ -44,6 +66,22 @@ export function SpaceQuizPage() {
 
         const tableDataRaw: any[] = [];
         const dailyAgg = new Map<string, any>();
+        const typeCounts = new Map<string, number>();
+
+        const nowJst = getJSTDate();
+        const currentY = nowJst.getFullYear();
+        const currentM = nowJst.getMonth() + 1;
+        const currentD = nowJst.getDate();
+        const todayNum = currentY * 10000 + currentM * 100 + currentD;
+        
+        const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
+        const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
+        const startOfWeekJst = new Date(nowJst.getTime());
+        startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
+        const startOfWeekNum = startOfWeekJst.getFullYear() * 10000 + (startOfWeekJst.getMonth() + 1) * 100 + startOfWeekJst.getDate();
+
+        let thisWeekQuestions = 0, thisWeekZeroAnswers = 0;
+        let thisMonthQuestions = 0, thisMonthZeroAnswers = 0;
 
         validRows.forEach((row) => {
           const dateStrRaw = String(row['出題日'] || '').replace(/\-/g, '/').split(' ')[0];
@@ -57,6 +95,12 @@ export function SpaceQuizPage() {
           
           const dateKey = `${y}/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}`;
           const formattedDate = `${m}/${d}`;
+
+          // --- 種別の集計 ---
+          const typeStr = String(row['クイズの分類'] || row['種別'] || row['カテゴリ'] || '未分類').trim();
+          if (typeStr) {
+            typeCounts.set(typeStr, (typeCounts.get(typeStr) || 0) + 1);
+          }
 
           const answers = parseInt(String(row['回答数'] || '0').replace(/,/g, ''), 10) || 0;
           const ansDiscord = parseInt(String(row['回答数(Discord)'] || '0').replace(/,/g, ''), 10) || 0;
@@ -88,30 +132,30 @@ export function SpaceQuizPage() {
           dayData.answers += answers;
           dayData.corrects += calculatedCorrect;
 
-          tableDataRaw.push({ id: row['番号'], question: String(row['問題']), answers: answers, correct: calculatedCorrect, accuracy: accNum, num: num });
+          tableDataRaw.push({ id: row['番号'], question: String(row['問題']), type: typeStr, answers: answers, correct: calculatedCorrect, accuracy: Math.round(accNum * 10) / 10, num: num, timestamp: new Date(dateStrRaw).getTime() });
+
+          // --- 回答0件の割合集計 (今月・今週) ---
+          if (num >= startOfThisMonthNum && num <= todayNum) {
+            thisMonthQuestions++;
+            if (answers === 0) thisMonthZeroAnswers++;
+          }
+          if (num >= startOfWeekNum && num <= todayNum) {
+            thisWeekQuestions++;
+            if (answers === 0) thisWeekZeroAnswers++;
+          }
         });
 
-        const dailyRecords = Array.from(dailyAgg.values()).sort((a, b) => a.num - b.num);
+        const zeroRateWeek = thisWeekQuestions > 0 ? Math.round((thisWeekZeroAnswers / thisWeekQuestions) * 100) : 0;
+        const zeroRateMonth = thisMonthQuestions > 0 ? Math.round((thisMonthZeroAnswers / thisMonthQuestions) * 100) : 0;
 
+        const dailyRecords = Array.from(dailyAgg.values()).sort((a, b) => a.num - b.num);
         let cumulativeAnswers = 0;
         const trendData: any[] = [];
         const accuracyData: any[] = [];
 
-        const nowJst = getJSTDate();
-        const currentY = nowJst.getFullYear();
-        const currentM = nowJst.getMonth() + 1;
-        const currentD = nowJst.getDate();
-        const todayNum = currentY * 10000 + currentM * 100 + currentD;
-        const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
-
         const endOfPrevMonthJst = new Date(nowJst.getTime());
         endOfPrevMonthJst.setDate(0);
         const endOfPrevMonthNum = endOfPrevMonthJst.getFullYear() * 10000 + (endOfPrevMonthJst.getMonth() + 1) * 100 + endOfPrevMonthJst.getDate();
-
-        const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
-        const startOfWeekJst = new Date(nowJst.getTime());
-        startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
-        const startOfWeekNum = startOfWeekJst.getFullYear() * 10000 + (startOfWeekJst.getMonth() + 1) * 100 + startOfWeekJst.getDate();
 
         const endOfPrevWeekJst = new Date(startOfWeekJst.getTime());
         endOfPrevWeekJst.setDate(startOfWeekJst.getDate() - 1);
@@ -123,7 +167,7 @@ export function SpaceQuizPage() {
         dailyRecords.forEach(day => {
           cumulativeAnswers += day.answers;
           trendData.push({ name: day.formattedDate, 参加者数: cumulativeAnswers });
-          accuracyData.push({ name: day.formattedDate, 正答率: day.answers > 0 ? Math.round((day.corrects / day.answers) * 1000) / 10 : 0 });
+          accuracyData.push({ name: day.formattedDate, 正答率: day.answers > 0 ? Math.round((day.corrects / day.answers) * 10) / 10 : 0 });
 
           const num = day.num;
           if (num >= startOfThisMonthNum) thisMonthAnswers += day.answers;
@@ -137,10 +181,59 @@ export function SpaceQuizPage() {
         const weeklyRate = endOfPrevWeekCum === 0 ? 100 : Math.round((cumulativeAnswers / endOfPrevWeekCum) * 100);
         const averageAccuracy = totalAnswers <= 0 ? 0 : Math.round((totalCorrects / totalAnswers) * 100);
 
+        const typeColors = ['#38BDF8', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444', '#EC4899', '#10B981', '#6B7280'];
+        const typeDistribution = Array.from(typeCounts.entries())
+          .filter(([name]) => name !== '未分類')
+          .sort((a, b) => b[1] - a[1])
+          .map(([name, value], i) => ({ name, value, color: typeColors[i % typeColors.length] }));
+
         const platformDistribution = [
           { name: 'Discord', value: sumDiscord, color: '#5865F2' }, { name: 'X', value: sumX, color: '#1DA1F2' },
           { name: 'Instagram', value: sumInstagram, color: '#E4405F' }, { name: 'マイコミュ', value: sumMyCommu, color: '#F59E0B' },
         ].filter(item => item.value > 0).sort((a, b) => b.value - a.value);
+
+        // --- 難易度別集計 (回答5件超のみ対象) ---
+        const difficultyGroups = [
+          { range: '0-20%', min: 0, max: 20, count: 0, totalAns: 0, totalAcc: 0 },
+          { range: '21-40%', min: 21, max: 40, count: 0, totalAns: 0, totalAcc: 0 },
+          { range: '41-60%', min: 41, max: 60, count: 0, totalAns: 0, totalAcc: 0 },
+          { range: '61-80%', min: 61, max: 80, count: 0, totalAns: 0, totalAcc: 0 },
+          { range: '81-100%', min: 81, max: 100, count: 0, totalAns: 0, totalAcc: 0 },
+        ];
+
+        tableDataRaw.filter(q => q.answers > 5).forEach(q => {
+          const group = difficultyGroups.find(g => q.accuracy >= g.min && q.accuracy <= g.max);
+          if (group) {
+            group.count++;
+            group.totalAns += q.answers;
+            group.totalAcc += q.accuracy;
+          }
+        });
+
+        const difficultyTable = difficultyGroups.map(g => ({
+          range: g.range,
+          count: g.count,
+          avgAnswers: g.count > 0 ? Math.round(g.totalAns / g.count) : 0,
+          avgAccuracy: g.count > 0 ? `${Math.round(g.totalAcc / g.count)}%` : '-'
+        }));
+
+        // --- ★ 重なり対策: 散布図用データのグループ化 ---
+        const scatterMap = new Map<string, any>();
+        tableDataRaw.filter(q => q.answers > 0).forEach(q => {
+          const key = `${q.answers}-${q.accuracy}`;
+          if (!scatterMap.has(key)) {
+            scatterMap.set(key, { answers: q.answers, accuracy: q.accuracy, questions: [q.question] });
+          } else {
+            scatterMap.get(key).questions.push(q.question);
+          }
+        });
+        const scatterData = Array.from(scatterMap.values());
+
+        // --- 要注意問題の抽出 ---
+        const avgAnswersOverall = tableDataRaw.length > 0 ? totalAnswers / tableDataRaw.length : 0;
+        const attentionQuestions = tableDataRaw
+          .filter(q => q.answers >= avgAnswersOverall && q.accuracy <= 50 && q.answers > 0)
+          .sort((a, b) => b.answers - a.answers); 
 
         setData({
           summary: {
@@ -148,9 +241,10 @@ export function SpaceQuizPage() {
             monthlyParticipants: thisMonthAnswers, monthlyParticipantsRate: monthlyRate,
             weeklyParticipants: thisWeekAnswers, weeklyParticipantsRate: weeklyRate,
             todayParticipants: todayAnswers, averageAccuracy: averageAccuracy,
+            zeroRateWeek, zeroRateMonth, thisWeekQuestions, thisMonthQuestions
           },
-          charts: { participantsTrend: trendData, accuracyTrend: accuracyData, platformDistribution },
-          tables: { questionRanking: tableDataRaw }
+          charts: { participantsTrend: trendData, accuracyTrend: accuracyData, platformDistribution, typeDistribution, scatterData },
+          tables: { questionRanking: tableDataRaw, difficultyTable, attentionQuestions }
         });
       })
       .catch(err => console.error('CSV Fetch Error:', err));
@@ -171,53 +265,66 @@ export function SpaceQuizPage() {
     <div className="space-y-6">
       <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">宇宙クイズ分析</h2><p className="text-muted-foreground mt-1">宇宙クイズの参加状況、正答率、プラットフォーム別の回答傾向を確認できます。</p></div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard title="総参加者数 (累計)" value={summary.totalParticipants.toLocaleString()} unit="人" icon={Users} accentColor="primary" />
         <KpiCard title="今月の参加者数" value={`+${summary.monthlyParticipants.toLocaleString()}`} unit="人" icon={Calendar} accentColor="accent" />
         <KpiCard title="参加者数の先月末比" value={summary.monthlyParticipantsRate} unit="%" icon={TrendingUp} accentColor="success" trendValue={`先月末比`} trendType="up" />
         <KpiCard title="平均正答率" value={summary.averageAccuracy} unit="%" icon={Target} accentColor="primary" />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard title="今週の参加者数" value={`+${summary.weeklyParticipants.toLocaleString()}`} unit="人" icon={CalendarDays} accentColor="primary" />
         <KpiCard title="参加者数の先週末比" value={summary.weeklyParticipantsRate} unit="%" icon={TrendingUp} accentColor="success" trendValue={`先週末比`} trendType="up" />
         <KpiCard title="今日の参加者数" value={`+${summary.todayParticipants.toLocaleString()}`} unit="人" icon={Clock} accentColor="warning" />
+        <KpiCard title="今週の回答0件割合" value={summary.zeroRateWeek} unit="%" icon={HelpCircle} accentColor="danger" description={`出題${summary.thisWeekQuestions}件中`} />
+        <KpiCard title="今月の回答0件割合" value={summary.zeroRateMonth} unit="%" icon={HelpCircle} accentColor="danger" description={`出題${summary.thisMonthQuestions}件中`} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <SectionCard title="宇宙クイズ 累計参加者数推移"><ChartContainer height="h-[350px]"><LineChartComponent data={charts.participantsTrend.slice(-90)} lines={[{ dataKey: '参加者数', name: '累計参加者数', color: '#38BDF8' }]} /></ChartContainer></SectionCard>
+        <SectionCard title="日別 平均正答率推移"><ChartContainer height="h-[350px]"><LineChartComponent data={charts.accuracyTrend.slice(-90)} lines={[{ dataKey: '正答率', name: '平均正答率', color: '#8B5CF6' }]} yAxisUnit="%" /></ChartContainer></SectionCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="宇宙クイズ 累計参加者数推移"><ChartContainer height="h-[350px]"><LineChartComponent data={charts.participantsTrend.slice(-90)} lines={[{ dataKey: '参加者数', name: '累計参加者数', color: '#38BDF8' }]} /></ChartContainer></SectionCard>
-        <SectionCard title="プラットフォーム別 回答割合"><ChartContainer height="h-[350px]">{charts.platformDistribution.length > 0 ? (<DonutChart data={charts.platformDistribution} centerLabel="回答" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">プラットフォームデータがありません</div>)}</ChartContainer></SectionCard>
+        <SectionCard title="クイズ種別 割合" description="検定に向けた問題カテゴリの分布"><ChartContainer height="h-[300px]">{charts.typeDistribution.length > 0 ? (<DonutChart data={charts.typeDistribution} centerLabel="問題数" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
+        <SectionCard title="プラットフォーム別 回答割合" description="各SNS・コミュニティからの回答比率"><ChartContainer height="h-[300px]">{charts.platformDistribution.length > 0 ? (<DonutChart data={charts.platformDistribution} centerLabel="回答" />) : (<div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>)}</ChartContainer></SectionCard>
       </div>
 
-      <SectionCard title="宇宙クイズ 日別 平均正答率推移"><ChartContainer height="h-[300px]"><LineChartComponent data={charts.accuracyTrend.slice(-90)} lines={[{ dataKey: '正答率', name: '平均正答率', color: '#8B5CF6' }]} yAxisUnit="%" /></ChartContainer></SectionCard>
+      <SectionCard title="回答人数と正答率の分布図" description="右に行くほど回答数が多く、上に行くほど正答率が高い問題です。点にマウスを乗せると問題名が表示されます。">
+        <ChartContainer height="h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis type="number" dataKey="answers" name="回答数" stroke="#888" tick={{ fill: '#888' }} label={{ value: '回答数', position: 'insideBottomRight', offset: -10, fill: '#888' }} />
+              <YAxis type="number" dataKey="accuracy" name="正答率" unit="%" stroke="#888" tick={{ fill: '#888' }} domain={[0, 100]} label={{ value: '正答率(%)', angle: -90, position: 'insideLeft', fill: '#888' }} />
+              <ZAxis type="number" range={[60, 60]} />
+              <RechartsTooltip cursor={{ strokeDasharray: '3 3' }} content={<ScatterTooltip />} />
+              <Scatter name="問題" data={charts.scatterData} fill="#38BDF8" opacity={0.6} />
+            </ScatterChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </SectionCard>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SectionCard title="難易度別 分析" description="正答率20%ごとの集計（※回答5件以下の問題は除外）">
+          <ScrollableTable columns={[{ key: 'range', label: '正答率の帯', align: 'left' }, { key: 'count', label: '問題数', align: 'right' }, { key: 'avgAnswers', label: '平均回答数', align: 'right' }, { key: 'avgAccuracy', label: '平均正答率', align: 'right' }]} data={tables.difficultyTable} />
+        </SectionCard>
+        
+        <SectionCard title="要注意問題リスト" description="回答数が平均以上で、正答率が50%以下のつまずきやすい問題" icon={AlertTriangle}>
+          <ScrollableTable 
+            columns={[{ key: 'question', label: '問題名', align: 'left' }, { key: 'answers', label: '回答数', align: 'right' }, { key: 'accuracyStr', label: '正答率', align: 'right' }]} 
+            data={tables.attentionQuestions.map((q: any) => ({ ...q, accuracyStr: <span className="text-danger font-semibold">{q.accuracy}%</span> }))} 
+          />
+        </SectionCard>
+      </div>
 
       <SectionCard title="問題別 回答データ一覧" description="各問題の回答数と正答率（ボタンで並び替え可能）">
         <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
           <span className="text-sm text-muted-foreground mr-1">並び順:</span>
-          {[
-            { mode: 'date_desc', label: '新着順' },
-            { mode: 'answers_desc', label: '回答数順' },
-            { mode: 'accuracy_desc', label: '正答率 (高)' },
-            { mode: 'accuracy_asc', label: '正答率 (低)' },
-          ].map((btn) => (
-            <Button
-              key={btn.mode}
-              variant="outline"
-              size="sm"
-              onClick={() => setSortMode(btn.mode as SortMode)}
-              className={cn(
-                'transition-all duration-200',
-                sortMode === btn.mode
-                  ? 'bg-primary text-primary-foreground border-transparent'
-                  : 'bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground'
-              )}
-            >
-              {btn.mode !== 'date_desc' && <ArrowUpDown className="h-3 w-3 mr-1" />}
-              {btn.label}
+          {[ { mode: 'date_desc', label: '新着順' }, { mode: 'answers_desc', label: '回答数順' }, { mode: 'accuracy_desc', label: '正答率 (高)' }, { mode: 'accuracy_asc', label: '正答率 (低)' } ].map((btn) => (
+            <Button key={btn.mode} variant="outline" size="sm" onClick={() => setSortMode(btn.mode as SortMode)} className={cn('transition-all duration-200', sortMode === btn.mode ? 'bg-primary text-primary-foreground border-transparent' : 'bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground')}>
+              {btn.mode !== 'date_desc' && <ArrowUpDown className="h-3 w-3 mr-1" />}{btn.label}
             </Button>
           ))}
         </div>
-        <ScrollableTable columns={[{ key: 'rank', label: '順位', align: 'center' }, { key: 'question', label: '問題名', align: 'left' }, { key: 'answers', label: '回答数', align: 'right' }, { key: 'correct', label: '正解数', align: 'right' }, { key: 'accuracyStr', label: '正答率', align: 'right' }]} data={sortedQuestions.map((q, i) => ({ ...q, rank: sortMode === 'date_desc' ? '-' : i + 1, answers: q.answers.toLocaleString(), correct: q.correct.toLocaleString(), accuracyStr: `${Math.round(q.accuracy * 10) / 10}%` }))} />
+        <ScrollableTable columns={[{ key: 'rank', label: '順位', align: 'center' }, { key: 'question', label: '問題名', align: 'left' }, { key: 'answers', label: '回答数', align: 'right' }, { key: 'correct', label: '正解数', align: 'right' }, { key: 'accuracyStr', label: '正答率', align: 'right' }]} data={sortedQuestions.map((q, i) => ({ ...q, rank: sortMode === 'date_desc' ? '-' : i + 1, answers: q.answers.toLocaleString(), correct: q.correct.toLocaleString(), accuracyStr: `${q.accuracy}%` }))} />
       </SectionCard>
     </div>
   );
