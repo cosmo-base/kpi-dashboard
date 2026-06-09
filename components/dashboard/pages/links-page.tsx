@@ -293,7 +293,7 @@ const initialLinkCategories: LinkCategory[] = [
         id: 'manage-4',
         title: 'CBED原本',
         url: 'https://docs.google.com/spreadsheets/d/1jl7DqMAcPN92p7RbMeLRE7RPuvea3j-lsAMSs8M1Xj4/edit',
-        description: 'イベントデータベースの原本スプレッドシート',
+        description: 'CBEDの原本スプレッドシート、ロケット打ち上げ',
         icon: FileText,
       },
       {
@@ -344,6 +344,20 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1QwgyndR230Vtr2qiWAgw0FNQEaCfdA1VYagoRE2rxOQ/edit',
         description: 'GA4からとってきたCBHPトラッキングデータ',
         icon: FileText,
+      },
+      {
+        id: 'manage-12',
+        title: '行ってきた スプレッドシート',
+        url: 'https://docs.google.com/spreadsheets/d/1LfqPf4W1Cv2vPxa7FXC2Cx4WMWPN3i1L1qhUIuaFo4Y/edit',
+        description: '行ってきた管理リスト(参加者ページ反映)',
+        icon: Database,
+      },
+      {
+        id: 'manage-13',
+        title: '宇宙知っトク進捗確認 スプレッドシート',
+        url: 'https://docs.google.com/spreadsheets/d/1Clqn3sHYbpthvFKzb2XAaQ8RLHwWSOYxgkvm4HxoJp0/edit',
+        description: '知っトク管理リスト(参加者ページ反映)',
+        icon: Database,
       },
     ]
   }, 
