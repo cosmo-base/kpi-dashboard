@@ -15,6 +15,7 @@ interface LinkItem {
   url: string;
   description: string;
   icon: LucideIcon;
+  subCategory?: string; // ★ 追加：下の階層（グループ）を分けるためのプロパティ
 }
 
 interface LinkCategory {
@@ -36,41 +37,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://fsifofficial.github.io/CosmoBase/',
         description: 'CBホームページ',
         icon: Home,
-      },
-      {
-        id: 'general-2',
-        title: 'X',
-        url: 'https://x.com/CosmoBase',
-        description: 'CB X',
-        icon: X,
-      },
-      {
-        id: 'general-3',
-        title: 'Instagram',
-        url: 'https://www.instagram.com/cosmobase.official',
-        description: 'CB Instagram',
-        icon: Focus,
-      },
-      {
-        id: 'general-4',
-        title: 'note',
-        url: 'https://note.com/cosmobase',
-        description: 'CB note',
-        icon: Notebook,
-      },
-      {
-        id: 'general-5',
-        title: 'YouTube',
-        url: 'https://www.youtube.com/channel/UC3bcWCM6ccvsyQyiXLIwhkQ',
-        description: 'CB YouTube',
-        icon: SquarePlay,
-      },
-      {
-        id: 'general-6',
-        title: 'Peatix',
-        url: 'https://peatix.com/user/29355410/dashboard',
-        description: '',
-        icon: Users,
+        subCategory: 'Webサイト'
       },
       {
         id: 'general-7',
@@ -78,6 +45,47 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://fsifofficial.wixsite.com/future-space-industr',
         description: '',
         icon: Home,
+        subCategory: 'Webサイト'
+      },
+      {
+        id: 'general-2',
+        title: 'X',
+        url: 'https://x.com/CosmoBase',
+        description: 'CB X',
+        icon: X,
+        subCategory: 'SNS'
+      },
+      {
+        id: 'general-3',
+        title: 'Instagram',
+        url: 'https://www.instagram.com/cosmobase.official',
+        description: 'CB Instagram',
+        icon: Focus,
+        subCategory: 'SNS'
+      },
+      {
+        id: 'general-4',
+        title: 'note',
+        url: 'https://note.com/cosmobase',
+        description: 'CB note',
+        icon: Notebook,
+        subCategory: 'SNS'
+      },
+      {
+        id: 'general-5',
+        title: 'YouTube',
+        url: 'https://www.youtube.com/channel/UC3bcWCM6ccvsyQyiXLIwhkQ',
+        description: 'CB YouTube',
+        icon: SquarePlay,
+        subCategory: 'SNS'
+      },
+      {
+        id: 'general-6',
+        title: 'Peatix',
+        url: 'https://peatix.com/user/29355410/dashboard',
+        description: '',
+        icon: Users,
+        subCategory: ''
       },
     ],
   },
@@ -92,6 +100,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://cosmo-base.github.io/member_only/',
         description: '参加者向けトップページ',
         icon: Home,
+        subCategory: ''
       },
       {
         id: 'member-2',
@@ -99,6 +108,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://cosmo-base.github.io/library/index.html',
         description: 'Cosmo Base Library',
         icon: BookOpen,
+        subCategory: ''
       },
       {
         id: 'member-3',
@@ -106,6 +116,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://cosmo-base.github.io/member_only/CBED/',
         description: 'Cosmo Base Event Database',
         icon: Calendar,
+        subCategory: ''
       },
       {
         id: 'member-4',
@@ -113,6 +124,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://cosmo-base.github.io/member_only/CBMD/',
         description: 'Cosmo Base Museum Database',
         icon: Database,
+        subCategory: ''
       },
     ],
   },
@@ -127,6 +139,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://cosmo-base.github.io/member_only/partner/',
         description: 'パートナー専用ページ',
         icon: Handshake,
+        subCategory: ''
       },
       {
         id: 'partner-2',
@@ -134,6 +147,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://cosmo-base.github.io/member_only/partner/join/',
         description: 'パートナー申請フォーム',
         icon: UserPlus,
+        subCategory: ''
       },
     ],
   },
@@ -148,69 +162,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://drive.google.com/drive/u/0/folders/1odqLTxdIc9T91aneRIdraf1YY44aeqcC',
         description: '運営共有ドライブ',
         icon: FolderOpen,
-      },
-      {
-        id: 'admin-2',
-        title: '招待リンク一覧',
-        url: 'https://docs.google.com/document/d/1hhsrqBj57j58JzkmIlQOgizK3zfGzm5_xUGK_kB-Rbk/edit?tab=t.0',
-        description: 'コミュニティ招待リンクの管理',
-        icon: LinkIcon,
-      },
-      {
-        id: 'admin-3',
-        title: 'SNS投稿テンプレート',
-        url: 'https://docs.google.com/spreadsheets/d/15F49NGpyEEjdRAEKAHAeBpkH4HWsiZXpEyMAiLCniPo/edit?gid=0#gid=0',
-        description: 'SNS投稿用のテンプレート集',
-        icon: FileText,
-      },
-      {
-        id: 'admin-4',
-        title: 'Union',
-        url: 'https://campus-union-connect.base44.app/Home',
-        description: '',
-        icon: Building ,
-      },
-      {
-        id: 'admin-5',
-        title: 'パートナー営業',
-        url: 'https://docs.google.com/spreadsheets/d/1Nbq6rD_PfF1-KdIXqlq4wCVPA6SWITvDroO5eKe42Q4/edit',
-        description: '',
-        icon: Handshake,
-      },
-      {
-        id: 'admin-6',
-        title: 'パートナー公開チェックリスト',
-        url: 'https://docs.google.com/spreadsheets/d/1SoZ2O92aYnMXRBuFU7-vV7gX4vItVbxnIoKhGVxpo4s/edit',
-        description: '',
-        icon: Handshake,
-      },
-      {
-        id: 'admin-7',
-        title: '宇宙知っトク進捗確認',
-        url: 'https://docs.google.com/spreadsheets/d/1Clqn3sHYbpthvFKzb2XAaQ8RLHwWSOYxgkvm4HxoJp0/edit',
-        description: '',
-        icon: FileText,
-      },
-      {
-        id: 'admin-8',
-        title: 'Instagramビジネス投稿(Cosmo Base)',
-        url: 'https://business.facebook.com/latest/home?asset_id=922321694307649&business_id=2338074866656029',
-        description: '',
-        icon: Focus,
-      },
-      {
-        id: 'admin-9',
-        title: 'Instagramビジネス投稿(FSIF)',
-        url: 'https://business.facebook.com/latest/home?asset_id=416684408195963&business_id=1693962128107258',
-        description: '',
-        icon: Focus,
-      },
-      {
-        id: 'admin-10',
-        title: 'パートナー営業資料',
-        url: 'https://drive.google.com/drive/u/0/folders/1g-u-D4AWqQQeO7SheKx7m0bgiaGvQ326',
-        description: '',
-        icon: Handshake,
+        subCategory: 'ドライブ・資料'
       },
       {
         id: 'admin-11',
@@ -218,6 +170,79 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1BRjUW9K0S7OVqKs4oN4zEPPFnGQnF89KoqDq0a1CY-k/edit',
         description: '',
         icon: Building,
+        subCategory: 'ドライブ・資料'
+      },
+      {
+        id: 'admin-2',
+        title: '招待リンク一覧',
+        url: 'https://docs.google.com/document/d/1hhsrqBj57j58JzkmIlQOgizK3zfGzm5_xUGK_kB-Rbk/edit?tab=t.0',
+        description: 'コミュニティ招待リンクの管理',
+        icon: LinkIcon,
+        subCategory: '管理・運用シート'
+      },
+      {
+        id: 'admin-5',
+        title: 'パートナー営業',
+        url: 'https://docs.google.com/spreadsheets/d/1Nbq6rD_PfF1-KdIXqlq4wCVPA6SWITvDroO5eKe42Q4/edit',
+        description: '',
+        icon: Handshake,
+        subCategory: 'パートナー'
+      },
+      {
+        id: 'admin-10',
+        title: 'パートナー営業資料',
+        url: 'https://drive.google.com/drive/u/0/folders/1g-u-D4AWqQQeO7SheKx7m0bgiaGvQ326',
+        description: '',
+        icon: Handshake,
+        subCategory: 'パートナー'
+      },
+      {
+        id: 'admin-6',
+        title: 'パートナー公開チェックリスト',
+        url: 'https://docs.google.com/spreadsheets/d/1SoZ2O92aYnMXRBuFU7-vV7gX4vItVbxnIoKhGVxpo4s/edit',
+        description: '',
+        icon: Handshake,
+        subCategory: 'パートナー'
+      },
+      {
+        id: 'admin-7',
+        title: '宇宙知っトク進捗確認',
+        url: 'https://docs.google.com/spreadsheets/d/1Clqn3sHYbpthvFKzb2XAaQ8RLHwWSOYxgkvm4HxoJp0/edit',
+        description: '',
+        icon: FileText,
+        subCategory: '宇宙知っトク'
+      },
+      {
+        id: 'admin-3',
+        title: 'SNS投稿テンプレート',
+        url: 'https://docs.google.com/spreadsheets/d/15F49NGpyEEjdRAEKAHAeBpkH4HWsiZXpEyMAiLCniPo/edit?gid=0#gid=0',
+        description: 'SNS投稿用のテンプレート集',
+        icon: FileText,
+        subCategory: 'SNS'
+      },
+      {
+        id: 'admin-8',
+        title: 'Instagramビジネス投稿(Cosmo Base)',
+        url: 'https://business.facebook.com/latest/home?asset_id=922321694307649&business_id=2338074866656029',
+        description: '',
+        icon: Focus,
+        subCategory: 'SNS'
+      },
+      {
+        id: 'admin-9',
+        title: 'Instagramビジネス投稿(FSIF)',
+        url: 'https://business.facebook.com/latest/home?asset_id=416684408195963&business_id=1693962128107258',
+        description: '',
+        icon: Focus,
+        subCategory: 'SNS'
+      },
+      {
+        id: 'admin-4',
+        title: 'Union',
+        url: 'https://campus-union-connect.base44.app/Home',
+        description: '',
+        icon: Building,
+        subCategory: ''
       },
     ],
   },
@@ -231,14 +256,16 @@ const initialLinkCategories: LinkCategory[] = [
         title: 'FSIF Github',
         url: 'https://github.com/FSIFofficial',
         description: 'CBHP,AIBot',
-        icon: FolderGit ,
+        icon: FolderGit,
+        subCategory: ''
       },
       {
         id: 'admin2-2',
         title: 'CB Github',
         url: 'https://github.com/cosmo-base/',
         description: '参加者、CBL、KPI,CBBot',
-        icon: FolderGit ,
+        icon: FolderGit,
+        subCategory: ''
       },
       {
         id: 'admin2-3',
@@ -246,13 +273,15 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://manage.wix.com/dashboard/5676783d-ee0f-4707-a11d-e960efead3e1/setup?referralInfo=my-sites',
         description: '',
         icon: FolderGit,
+        subCategory: ''
       },
       {
         id: 'admin2-4',
         title: 'CBHP analytics',
         url: 'https://analytics.google.com/analytics/web/?utm_source=marketingplatform.google.com&utm_medium=et&utm_campaign=marketingplatform.google.com%2Fabout%2Fanalytics%2F#/a385612556p525984972/reports/intelligenthome?params=_u..nav%3Dmaui',
         description: 'GA4解析ツール',
-        icon: ChartSpline ,
+        icon: ChartSpline,
+        subCategory: ''
       },
       {
         id: 'admin2-5',
@@ -260,6 +289,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://supabase.com/dashboard/project/oqomwuhrvqoozfujgtsj/storage/files/buckets/library',
         description: '',
         icon: FolderGit,
+        subCategory: ''
       },
     ],
   },
@@ -274,6 +304,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1DVcnAj75n_Hokt74Q-SX_FI_J5PSbJiOzhvwJfHggFM/edit?gid=0#gid=0',
         description: 'KPIデータの原本（Discord,SNS）',
         icon: BarChart3,
+        subCategory: 'Discord, SNS'
       },
       {
         id: 'manage-2',
@@ -281,6 +312,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/113XXwG9heW_Vv173SH_pp9w8cwRgWzC341jbXeaJ22w/edit',
         description: '宇宙クイズの回答データ',
         icon: HelpCircle,
+        subCategory: '毎日宇宙クイズ'
       },
       {
         id: 'manage-3',
@@ -288,6 +320,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1QtgJJiX1dBq_jXtbEgD88v9ZgSCcZSr2cObcnglKsNQ/edit',
         description: 'CBLの原本スプレッドシート',
         icon: FileText,
+        subCategory: 'CBL'
       },
       {
         id: 'manage-4',
@@ -295,6 +328,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1jl7DqMAcPN92p7RbMeLRE7RPuvea3j-lsAMSs8M1Xj4/edit',
         description: 'CBEDの原本スプレッドシート、ロケット打ち上げ',
         icon: FileText,
+        subCategory: 'CBED'
       },
       {
         id: 'manage-5',
@@ -302,6 +336,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1gdD3uqzvQWZMmn0UK6LZm_TIWS53Ar8tR80E8cz-ybY/edit',
         description: 'CBMDの原本',
         icon: Database,
+        subCategory: 'CBMD'
       },
       {
         id: 'manage-6',
@@ -309,6 +344,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1FL6G_-IpL4Yck1tds7hqFL1pqJ85RDt1oyVE545WOZQ/edit',
         description: 'CBHPパートナーデータ',
         icon: Handshake,
+        subCategory: 'パートナー'
       },
       {
         id: 'manage-7',
@@ -316,27 +352,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1Nbq6rD_PfF1-KdIXqlq4wCVPA6SWITvDroO5eKe42Q4/edit',
         description: 'パートナーデータ',
         icon: Handshake,
-      },
-      {
-        id: 'manage-8',
-        title: '宇宙タイプ診断簡易版データ(CBHP)',
-        url: 'https://docs.google.com/spreadsheets/d/1LcbLG6GYqNZXlx38ZXqgLZ0OlLBLavd8VSJZEayfXYs/edit',
-        description: '宇宙タイプ診断簡易版診断データ',
-        icon: Sparkles ,
-      },
-      {
-        id: 'manage-9',
-        title: '宇宙タイプ診断簡易版データ(参加者)',
-        url: 'https://docs.google.com/spreadsheets/d/1LiOtm3NW4NGMQuchAjnSj_26rK3K9AaxSo4Autphi8Y/edit',
-        description: '宇宙タイプ診断簡易版診断データ',
-        icon: Sparkles ,
-      },
-      {
-        id: 'manage-10',
-        title: '宇宙タイプ診断詳細版診断データ',
-        url: 'https://docs.google.com/spreadsheets/d/13yFYKDVm0g09Vw6cyHN9Hr4H2n66CL9SpPDJ-mytLb0/edit',
-        description: '宇宙タイプ診断詳細版診断データ',
-        icon: Sparkles ,
+        subCategory: 'パートナー'
       },
       {
         id: 'manage-11',
@@ -344,6 +360,31 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1QwgyndR230Vtr2qiWAgw0FNQEaCfdA1VYagoRE2rxOQ/edit',
         description: 'GA4からとってきたCBHPトラッキングデータ',
         icon: FileText,
+        subCategory: 'CBHP'
+      },
+      {
+        id: 'manage-8',
+        title: '宇宙タイプ診断簡易版データ(CBHP)',
+        url: 'https://docs.google.com/spreadsheets/d/1LcbLG6GYqNZXlx38ZXqgLZ0OlLBLavd8VSJZEayfXYs/edit',
+        description: '宇宙タイプ診断 簡易版診断データ',
+        icon: Sparkles,
+        subCategory: '宇宙タイプ診断'
+      },
+      {
+        id: 'manage-9',
+        title: '宇宙タイプ診断簡易版データ(参加者)',
+        url: 'https://docs.google.com/spreadsheets/d/1LiOtm3NW4NGMQuchAjnSj_26rK3K9AaxSo4Autphi8Y/edit',
+        description: '宇宙タイプ診断 簡易版診断データ',
+        icon: Sparkles,
+        subCategory: '宇宙タイプ診断'
+      },
+      {
+        id: 'manage-10',
+        title: '宇宙タイプ診断詳細版診断データ',
+        url: 'https://docs.google.com/spreadsheets/d/13yFYKDVm0g09Vw6cyHN9Hr4H2n66CL9SpPDJ-mytLb0/edit',
+        description: '宇宙タイプ診断 完全版診断データ',
+        icon: Sparkles,
+        subCategory: '宇宙タイプ診断'
       },
       {
         id: 'manage-12',
@@ -351,6 +392,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1LfqPf4W1Cv2vPxa7FXC2Cx4WMWPN3i1L1qhUIuaFo4Y/edit',
         description: '行ってきた管理リスト(参加者ページ反映)',
         icon: Database,
+        subCategory: '行ってきた'
       },
       {
         id: 'manage-13',
@@ -358,6 +400,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1Clqn3sHYbpthvFKzb2XAaQ8RLHwWSOYxgkvm4HxoJp0/edit',
         description: '知っトク管理リスト(参加者ページ反映)',
         icon: Database,
+        subCategory: '宇宙知っトク'
       },
     ]
   }, 
@@ -372,6 +415,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/forms/d/1TwH-_aVNWMhbxnjIEDwOu0nDnGJVzUoByAxKkgWwAgk/edit',
         description: 'CBHP お問い合わせ',
         icon: LayoutList,
+        subCategory: 'お問い合わせ'
       },
       {
         id: 'form-2',
@@ -379,6 +423,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/forms/d/17CJ_KNtX5HUJj4G8PX1POWuJ1BCbu3kHI4uk_G-mq7k/edit',
         description: 'CBHP パートナーお問い合わせ',
         icon: LayoutList,
+        subCategory: 'パートナー'
       },
       {
         id: 'form-3',
@@ -386,6 +431,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1PtyAO6VeBwgZcFsiiUhQseg6ugZJmMI_Di6N5StMQiA/edit',
         description: 'パートナー申請の管理シート',
         icon: Handshake,
+        subCategory: 'パートナー'
       },
       {
         id: 'form-4',
@@ -393,6 +439,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1kBId4mWEhDfoW3pjTAlbO7Cvyh-z7Y4CiQgtjkIbNdk/edit?gid=0#gid=0',
         description: 'パートナーページ 修正データ',
         icon: Handshake,
+        subCategory: 'パートナー'
       },
       {
         id: 'form-5',
@@ -400,20 +447,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/spreadsheets/d/1Jk8IJ3l__qBzjWuOPbWY6p8_863Fniz6uzDjiuYO6v4/edit?gid=0#gid=0',
         description: 'パートナーページ CBL資料格納申請フォーム',
         icon: Handshake,
-      },
-      {
-        id: 'form-6',
-        title: 'イベント登壇申請データ',
-        url: 'https://docs.google.com/spreadsheets/d/1Yq6BzFS4iZi4IL4bh9AQyTwXn5ZNjUUFJ1yrXULU0fA/edit?gid=0#gid=0',
-        description: 'パートナーページ 知っトク登壇申請フォーム',
-        icon: Handshake,
-      },
-      {
-        id: 'form-7',
-        title: 'メンバー申請',
-        url: 'https://docs.google.com/forms/d/1aeTY1RA-LENst3fB7N0sawSngwqZg6Fhro6o3dCXQnM/edit',
-        description: 'パートナーページ メンバー申請フォーム',
-        icon: Handshake,
+        subCategory: 'パートナー'
       },
       {
         id: 'form-8',
@@ -421,6 +455,23 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/forms/d/1q-zSXsQMkC69FnN85awN7aq4qSVZPLFaEuW7anYCRDU/edit',
         description: 'パートナーページ アンケート確認フォーム',
         icon: Handshake,
+        subCategory: 'パートナー'
+      },
+      {
+        id: 'form-6',
+        title: 'イベント登壇申請データ',
+        url: 'https://docs.google.com/spreadsheets/d/1Yq6BzFS4iZi4IL4bh9AQyTwXn5ZNjUUFJ1yrXULU0fA/edit?gid=0#gid=0',
+        description: 'パートナーページ 知っトク登壇申請フォーム',
+        icon: Handshake,
+        subCategory: 'パートナー'
+      },
+      {
+        id: 'form-7',
+        title: 'メンバー申請',
+        url: 'https://docs.google.com/forms/d/1aeTY1RA-LENst3fB7N0sawSngwqZg6Fhro6o3dCXQnM/edit',
+        description: 'パートナーページ メンバー申請フォーム',
+        icon: Handshake,
+        subCategory: 'パートナー'
       },
       {
         id: 'form-9',
@@ -428,6 +479,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/forms/d/1LEBog2v-TAOpL28RgmJNzteWHrXNPm-wM9dbPl4wbNY/edit',
         description: '参加者ページ 宇宙教えて 匿名質問フォーム',
         icon: LayoutList,
+        subCategory: '宇宙教えて'
       },
       {
         id: 'form-10',
@@ -435,6 +487,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/forms/d/1m-6FLHRjzG5MDQL5Xix4ms2JVeMS8cXTSygVBsjGoh4/edit',
         description: '参加者ページ CBED イベント追加フォーム',
         icon: LayoutList,
+        subCategory: 'CBED'
       },
       {
         id: 'form-11',
@@ -442,6 +495,15 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/forms/d/1hAQvD1RB_aMA8sSDXnfsfKFfj_SnWtLH3RJhXfZEpoY/edit',
         description: '参加者ページ 宇宙知っトク リクエストフォーム',
         icon: LayoutList,
+        subCategory: '宇宙知っトク'
+      },
+      {
+        id: 'form-12',
+        title: '宇宙知っトク 参加後アンケート',
+        url: 'https://docs.google.com/forms/d/14Gy8dIBSOwT69dqiBsCIEhq0Az4j9wCJ9_itZwsjR2Q/edit',
+        description: '',
+        icon: LayoutList,
+        subCategory: '宇宙知っトク'
       },
       {
         id: 'form-12',
@@ -449,13 +511,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://docs.google.com/forms/d/1F2rcnOkK1R7oMBL4HrEle4yLU58ON108NKjUMVhp9Os/edit',
         description: '参加者ページ CBMD お問い合わせフォーム',
         icon: LayoutList,
-      },
-      {
-        id: 'form-13',
-        title: 'Cosmo Baseで宇宙知っトク　参加後アンケート',
-        url: 'https://docs.google.com/forms/d/14Gy8dIBSOwT69dqiBsCIEhq0Az4j9wCJ9_itZwsjR2Q/edit',
-        description: '',
-        icon: LayoutList,
+        subCategory: 'CBMD'
       },
     ]
   },
@@ -465,102 +521,116 @@ const initialLinkCategories: LinkCategory[] = [
     icon: Image,
     links: [
       {
-        id: 'design-1',
-        title: 'Instagram＿イベント投稿＿デザイン',
-        url: 'https://canva.link/6ohgqrezzrde9dj',
-        description: '',
-        icon: Image,
-      },
-      {
-        id: 'design-2',
-        title: '宇宙知っトク＿座談会用当日＿資料',
-        url: 'https://canva.link/sygrarpb5f0osz4',
-        description: '',
-        icon: Image,
-      },
-      {
         id: 'design-3',
-        title: 'Instagram＿汎用投稿＿デザイン',
+        title: 'Instagram_汎用投稿_デザイン',
         url: 'https://canva.link/ac3ep7ya04p7ff0',
         description: '',
         icon: Image,
+        subCategory: 'SNS投稿用'
       },
       {
         id: 'design-4',
-        title: 'Instagram＿クイズ投稿＿デザイン',
+        title: 'Instagram_クイズ投稿_デザイン',
         url: 'https://canva.link/k9rtx04myz9upf5',
         description: '',
         icon: Image,
-      },
-      {
-        id: 'design-5',
-        title: 'CB＿メイン背景＿デザイン',
-        url: 'https://canva.link/t4cehf79ym5swmz',
-        description: '',
-        icon: Image,
-      },
-      {
-        id: 'design-6',
-        title: 'FSIF&CB＿新歓＿資料',
-        url: 'https://canva.link/lyl255ilb5p40mm',
-        description: '',
-        icon: Image,
-      },
-      {
-        id: 'design-7',
-        title: 'パートナー締結＿メインデザイン',
-        url: 'https://canva.link/1aakw2t0bjl906i',
-        description: '',
-        icon: Handshake,
-      },
-      {
-        id: 'design-8',
-        title: 'CBMDコンテンツ紹介＿投稿用デザイン',
-        url: 'https://canva.link/foa4xfbsrjn5lbp',
-        description: '',
-        icon: Image,
-      },
-      {
-        id: 'design-9',
-        title: '週間宇宙ニュース＿表紙デザイン',
-        url: 'https://canva.link/wyjmvia38dzv2cu',
-        description: '',
-        icon: Image,
-      },
-      {
-        id: 'design-10',
-        title: 'note＿コンテンツ紹介＿デザイン',
-        url: 'https://canva.link/h8fsg4d8ielshsv',
-        description: '',
-        icon: Image,
+        subCategory: 'SNS投稿用'
       },
       {
         id: 'design-11',
-        title: '宇宙クイズ＿問題&回答＿デザイン',
+        title: '宇宙クイズ_問題&回答_デザイン',
         url: 'https://canva.link/v9q69e1cmw5xc8v',
         description: '',
         icon: Image,
-      },
-      {
-        id: 'design-12',
-        title: 'プレスリリース＿表紙＿デザイン',
-        url: 'https://canva.link/ql3kf2fnhktw0l8',
-        description: '',
-        icon: Image,
-      },
-      {
-        id: 'design-13',
-        title: '宇宙知っトク＿表紙＿デザイン',
-        url: 'https://canva.link/3oqqw9yl2iqbew8',
-        description: '',
-        icon: Image,
+        subCategory: 'SNS投稿用'
       },
       {
         id: 'design-14',
-        title: 'パートナー締結＿サブ(Instagram)デザイン',
+        title: 'パートナー締結_サブ(Instagram)デザイン',
         url: 'https://canva.link/dcgka4ivmcz80tg',
         description: '',
         icon: Handshake,
+        subCategory: 'SNS投稿用'
+      },
+      {
+        id: 'design-1',
+        title: 'Instagram_イベント投稿_デザイン',
+        url: 'https://canva.link/6ohgqrezzrde9dj',
+        description: '',
+        icon: Image,
+        subCategory: 'SNS投稿用'
+      },
+      {
+        id: 'design-2',
+        title: '宇宙知っトク_座談会用当日_資料',
+        url: 'https://canva.link/sygrarpb5f0osz4',
+        description: '',
+        icon: Image,
+        subCategory: '資料・カバー画像'
+      },
+      {
+        id: 'design-6',
+        title: 'FSIF&CB_新歓_資料',
+        url: 'https://canva.link/lyl255ilb5p40mm',
+        description: '',
+        icon: Image,
+        subCategory: '資料・カバー画像'
+      },
+      {
+        id: 'design-9',
+        title: '週間宇宙ニュース_表紙デザイン',
+        url: 'https://canva.link/wyjmvia38dzv2cu',
+        description: '',
+        icon: Image,
+        subCategory: '資料・カバー画像'
+      },
+      {
+        id: 'design-10',
+        title: 'note_コンテンツ紹介_デザイン',
+        url: 'https://canva.link/h8fsg4d8ielshsv',
+        description: '',
+        icon: Image,
+        subCategory: '資料・カバー画像'
+      },
+      {
+        id: 'design-13',
+        title: '宇宙知っトク_表紙_デザイン',
+        url: 'https://canva.link/3oqqw9yl2iqbew8',
+        description: '',
+        icon: Image,
+        subCategory: '資料・カバー画像'
+      },
+      {
+        id: 'design-5',
+        title: 'CB_メイン背景_デザイン',
+        url: 'https://canva.link/t4cehf79ym5swmz',
+        description: '',
+        icon: Image,
+        subCategory: 'ブランディング・宣伝'
+      },
+      {
+        id: 'design-7',
+        title: 'パートナー締結_メインデザイン',
+        url: 'https://canva.link/1aakw2t0bjl906i',
+        description: '',
+        icon: Handshake,
+        subCategory: 'ブランディング・宣伝'
+      },
+      {
+        id: 'design-8',
+        title: 'CBMDコンテンツ紹介_投稿用デザイン',
+        url: 'https://canva.link/foa4xfbsrjn5lbp',
+        description: '',
+        icon: Image,
+        subCategory: 'ブランディング・宣伝'
+      },
+      {
+        id: 'design-12',
+        title: 'プレスリリース_表紙_デザイン',
+        url: 'https://canva.link/ql3kf2fnhktw0l8',
+        description: '',
+        icon: Image,
+        subCategory: 'ブランディング・宣伝'
       },
     ],
   },
@@ -571,10 +641,11 @@ const initialLinkCategories: LinkCategory[] = [
     links: [
       {
         id: 'external-1',
-        title: '宇宙システム株式会社＿宇宙関連のイベント',
+        title: '宇宙システム株式会社_宇宙関連のイベント',
         url: 'https://space-sd.co.jp/symposium/symposium.html',
         description: '',
         icon: Building,
+        subCategory: ''
       },
       {
         id: 'external-2',
@@ -582,6 +653,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://sorabatake.jp/',
         description: '',
         icon: Building,
+        subCategory: ''
       },
       {
         id: 'external-3',
@@ -589,6 +661,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://sorae.info/',
         description: '',
         icon: Building,
+        subCategory: ''
       },
       {
         id: 'external-4',
@@ -596,6 +669,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://spacemedia.jp/',
         description: '',
         icon: Building,
+        subCategory: ''
       },
       {
         id: 'external-5',
@@ -603,6 +677,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://space-connect.jp/',
         description: '',
         icon: Building,
+        subCategory: ''
       },
     ],
   },
@@ -715,6 +790,14 @@ export function LinksPage() {
   const [activeCategory, setActiveCategory] = useState('member');
   const currentCategory = initialLinkCategories.find((cat) => cat.id === activeCategory);
 
+  // 選択されたタブのリンクをサブカテゴリでグループ化
+  const groupedLinks = currentCategory?.links.reduce((acc, link) => {
+    const group = link.subCategory || 'その他';
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(link);
+    return acc;
+  }, {} as Record<string, LinkItem[]>);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -735,7 +818,7 @@ export function LinksPage() {
         </div>
       </div>
 
-      {/* Sub-tabs */}
+      {/* Sub-tabs (Main Categories) */}
       <div className="flex gap-2 flex-wrap">
         {initialLinkCategories.map((category) => {
           const Icon = category.icon;
@@ -771,7 +854,7 @@ export function LinksPage() {
         })}
       </div>
 
-      {/* Link Cards Grid */}
+      {/* Link Cards Grid Grouped by Subcategory */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeCategory}
@@ -780,14 +863,29 @@ export function LinksPage() {
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
         >
-          {currentCategory && currentCategory.links.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {currentCategory.links.map((link, index) => (
-                <LinkCard 
-                  key={link.id}
-                  link={link} 
-                  delay={index}
-                />
+          {groupedLinks && Object.keys(groupedLinks).length > 0 ? (
+            <div className="space-y-8">
+              {Object.entries(groupedLinks).map(([group, links]) => (
+                <div key={group} className="scroll-mt-6">
+                  {/* サブカテゴリの見出し */}
+                  <div className="flex items-center gap-3 mb-4 border-b border-border/50 pb-2">
+                    <div className="w-1.5 h-5 bg-primary rounded-full"></div>
+                    <h3 className="text-lg font-bold text-foreground tracking-tight">{group}</h3>
+                    <span className="text-xs font-medium text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">
+                      {links.length}件
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {links.map((link, index) => (
+                      <LinkCard 
+                        key={link.id}
+                        link={link} 
+                        delay={index}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (

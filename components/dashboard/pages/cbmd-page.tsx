@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { FileText, TrendingUp, Calendar } from 'lucide-react';
+import { FileText, TrendingUp, Calendar, ArrowUpRight } from 'lucide-react';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
 import { RankingList } from '../ranking-list';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
+import { Button } from '@/components/ui/button';
 
 const REGION_MAP: Record<string, string> = {
   北海道: '北海道', 青森: '東北', 岩手: '東北', 宮城: '東北', 秋田: '東北', 山形: '東北', 福島: '東北',
@@ -33,7 +34,7 @@ export function CBMDPage() {
 
         const headerRowIndex = rawData.findIndex(row => row.includes('name') && row.includes('prefecture'));
         if (headerRowIndex === -1) return;
-        
+
         const headers = rawData[headerRowIndex];
         const nameIdx = headers.indexOf('name');
         const prefIdx = headers.indexOf('prefecture');
@@ -105,7 +106,7 @@ export function CBMDPage() {
 
         const prefectureRanking = Array.from(prefCounts.entries())
           .filter(([name]) => name !== '未設定')
-          .sort((a, b) => b[1] - a[1]).slice(0, 10) 
+          .sort((a, b) => b[1] - a[1]).slice(0, 10)
           .map(([name, count], i) => ({ rank: i + 1, name, count, percentage: Math.round((count / totalListings) * 100) || 0 }));
 
         setData({
@@ -123,7 +124,24 @@ export function CBMDPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBMD分析</h2><p className="text-muted-foreground mt-1">CBMD掲載情報（ミュージアム・施設）の地域別・都道府県別の分布を確認できます。</p></div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
+        <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBMD分析</h2><p className="text-muted-foreground mt-1">CBMD掲載情報（ミュージアム・施設）の地域別・都道府県別の分布を確認できます。</p></div>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1gdD3uqzvQWZMmn0UK6LZm_TIWS53Ar8tR80E8cz-ybY/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KpiCard title="掲載件数" value={summary.totalListings.toLocaleString()} unit="件" icon={FileText} accentColor="primary" />

@@ -13,7 +13,7 @@ import {
   CalendarDays,
   AlertTriangle,
   HelpCircle,
-  BookOpenText,
+  BookOpenText, ArrowUpRight,
 } from "lucide-react";
 import {
   ScatterChart,
@@ -521,11 +521,26 @@ export function SpaceQuizPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
         <h2 className="text-2xl font-bold text-foreground">宇宙クイズ分析</h2>
         <p className="text-muted-foreground mt-1">
           宇宙クイズの参加状況、正答率、プラットフォーム別の回答傾向を確認できます。
         </p>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/113XXwG9heW_Vv173SH_pp9w8cwRgWzC341jbXeaJ22w/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -715,7 +730,7 @@ export function SpaceQuizPage() {
                 shape={(props: any) => {
                   const { cx, cy, payload } = props;
                   if (payload.isOrigin)
-                    return <circle cx={cx} cy={cy} r={8} fill="#38BDF8" />; 
+                    return <circle cx={cx} cy={cy} r={8} fill="#38BDF8" />;
                   return <circle cx={cx} cy={cy} r={6} fill="#38BDF8" />;
                 }}
               />

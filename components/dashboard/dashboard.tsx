@@ -12,7 +12,7 @@ import { CBLPage } from './pages/cbl-page';
 import { SpaceDiagnosisPage } from './pages/space-diagnosis-page';
 import { LinksPage } from './pages/links-page';
 import { SNSPage } from './pages/sns-page';
-import { CBHPPage } from './pages/ga4-page';
+import { CBHPPage } from './pages/cbhp-page';
 import { LoadingSkeleton } from './chart-container';
 import { dashboardTabs } from '@/lib/mock-data';
 

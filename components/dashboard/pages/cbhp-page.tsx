@@ -9,7 +9,7 @@ import {
   Globe,
   MapPin,
   MessageCircle,
-  ArrowUpDown,
+  ArrowUpDown, ArrowUpRight
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
@@ -459,13 +459,28 @@ export function CBHPPage() {
         }}
       />
 
-      <div className="mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
         <h2 className="text-2xl font-bold text-foreground">
           CBHP アクセス解析 (GA4)
         </h2>
         <p className="text-muted-foreground mt-1">
           ウェブサイトのアクセス状況・エンゲージメント・流入経路・コンバージョンを確認できます。
         </p>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1QwgyndR230Vtr2qiWAgw0FNQEaCfdA1VYagoRE2rxOQ/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

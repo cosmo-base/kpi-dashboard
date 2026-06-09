@@ -9,7 +9,7 @@ import {
   Globe,
   TrendingUp,
   ArrowUpDown,
-  Clock,
+  Clock, ArrowUpRight
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
@@ -476,11 +476,28 @@ export function CBEDPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-foreground">CBED分析</h2>
-        <p className="text-muted-foreground mt-1">
-          掲載イベントの件数、開催形式、地域別分布を確認できます。
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-foreground">CBED分析</h2>
+          <p className="text-muted-foreground mt-1">
+            掲載イベントの件数、開催形式、地域別分布を確認できます。
+          </p>
+        </div>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1jl7DqMAcPN92p7RbMeLRE7RPuvea3j-lsAMSs8M1Xj4/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -662,6 +679,6 @@ export function CBEDPage() {
           />
         </SectionCard>
       </div>
-    </div>
+    </div >
   );
 }

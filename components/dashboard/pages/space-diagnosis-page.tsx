@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import { Users, TrendingUp, Sparkles, Zap, HelpCircle } from "lucide-react";
+import { Users, TrendingUp, Sparkles, Zap, HelpCircle, ArrowUpRight } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";
@@ -10,6 +10,7 @@ import { ScrollableTable } from "../scrollable-table";
 import { DonutChart } from "../charts/donut-chart";
 import { LineChartComponent } from "../charts/line-chart";
 import { StackedBarChart } from "../charts/stacked-bar-chart";
+import { Button } from '@/components/ui/button';
 
 const getJSTDate = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -795,13 +796,58 @@ export function SpaceDiagnosisPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
         <h2 className="text-2xl font-bold text-foreground">
           宇宙タイプ診断 分析
         </h2>
         <p className="text-muted-foreground mt-1">
           診断参加者数、簡易版（CBHP/参加者ページ）・完全版の利用状況、各軸の傾向を確認できます。
         </p>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1LcbLG6GYqNZXlx38ZXqgLZ0OlLBLavd8VSJZEayfXYs/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)(簡易版_CBHP)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1LiOtm3NW4NGMQuchAjnSj_26rK3K9AaxSo4Autphi8Y/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)(簡易版_参加者)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/13yFYKDVm0g09Vw6cyHN9Hr4H2n66CL9SpPDJ-mytLb0/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)(完全版)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

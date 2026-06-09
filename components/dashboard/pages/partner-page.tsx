@@ -10,13 +10,14 @@ import {
   TrendingUp,
   XCircle,
   Phone,
-  HelpCircle,
+  HelpCircle, ArrowUpRight
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";
 import { ScrollableTable } from "../scrollable-table";
 import { DonutChart } from "../charts/donut-chart";
+import { Button } from '@/components/ui/button';
 
 // カテゴリ用カラーパレット
 const CATEGORY_COLORS: Record<string, string> = {
@@ -269,11 +270,26 @@ export function PartnerPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
         <h2 className="text-2xl font-bold text-foreground">パートナー分析</h2>
         <p className="text-muted-foreground mt-1">
           パートナー企業・団体の締結状況と属性を確認できます。
         </p>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1Nbq6rD_PfF1-KdIXqlq4wCVPA6SWITvDroO5eKe42Q4/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
       </div>
 
       {/* KPI Cards - First Row */}

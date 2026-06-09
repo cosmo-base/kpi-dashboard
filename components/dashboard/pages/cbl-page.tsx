@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { BookOpen, Eye, Star, TrendingUp, Calendar, BarChart3 } from 'lucide-react';
+import { BookOpen, Eye, Star, TrendingUp, Calendar, BarChart3, ArrowUpRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
@@ -11,12 +11,13 @@ import { ScrollableTable } from '../scrollable-table';
 import { DonutChart } from '../charts/donut-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 import { RankingList } from '../ranking-list';
+import { Button } from '@/components/ui/button';
 
 const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
-  if (num < 0) return num.toLocaleString(); 
+  if (num < 0) return num.toLocaleString();
   return '0';
 };
 
@@ -83,10 +84,10 @@ export function CBLPage() {
           const cat = String(row.category || '未分類').trim();
           const type = String(row.type || '未分類').trim();
           const level = String(row.level || '未設定').trim();
-          
+
           categoryCounts.set(cat, (categoryCounts.get(cat) || 0) + 1);
           categoryViewsCounts.set(cat, (categoryViewsCounts.get(cat) || 0) + views); // ★ ビュー数を加算
-          
+
           typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
           levelCounts.set(level, (levelCounts.get(level) || 0) + 1);
         });
@@ -120,8 +121,24 @@ export function CBLPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBL (Library) 分析</h2><p className="text-muted-foreground mt-1">Cosmo Base Libraryの記事数、ビュー数、カテゴリ分布等を確認できます。</p></div>
-
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
+        <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">CBL (Library) 分析</h2><p className="text-muted-foreground mt-1">Cosmo Base Libraryの記事数、ビュー数、カテゴリ分布等を確認できます。</p></div>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1QtgJJiX1dBq_jXtbEgD88v9ZgSCcZSr2cObcnglKsNQ/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard title="総記事数" value={summary.totalArticles?.toLocaleString() || 0} unit="記事" icon={BookOpen} accentColor="primary" />
         <KpiCard title="総ビュー数" value={summary.totalViews?.toLocaleString() || 0} unit="views" icon={Eye} accentColor="success" />

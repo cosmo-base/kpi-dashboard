@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, Calendar, Zap } from 'lucide-react';
+import { TrendingUp, Users, Calendar, Zap, ArrowUpRight } from 'lucide-react';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { LineChartComponent } from '../charts/line-chart';
@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
-  if (num < 0) return num.toLocaleString(); 
+  if (num < 0) return num.toLocaleString();
   return '0';
 };
 
@@ -43,7 +43,7 @@ export function SNSPage() {
 
         const headerRowIndex = rawData.findIndex(row => row.includes('Instagram'));
         if (headerRowIndex === -1) return;
-        
+
         const headers = rawData[headerRowIndex];
         const monthIdx = headers.indexOf('月');
         const dayIdx = headers.indexOf('日');
@@ -90,32 +90,32 @@ export function SNSPage() {
 
         let currentYearForDate = currentY;
         if (dailyRecords.length > 0 && parseInt(dailyRecords[0].date.split('/')[0], 10) > currentM + 1) currentYearForDate--;
-        
+
         let prevMonthForDate = -1;
         const recordsWithDateNum = processedRecords.map(record => {
-           const [mStr, dStr] = record.date.split('/');
-           const m = parseInt(mStr, 10);
-           const d = parseInt(dStr, 10);
-           if (prevMonthForDate !== -1 && prevMonthForDate === 12 && m === 1) currentYearForDate++;
-           prevMonthForDate = m;
-           return { ...record, recordNum: currentYearForDate * 10000 + m * 100 + d };
+          const [mStr, dStr] = record.date.split('/');
+          const m = parseInt(mStr, 10);
+          const d = parseInt(dStr, 10);
+          if (prevMonthForDate !== -1 && prevMonthForDate === 12 && m === 1) currentYearForDate++;
+          prevMonthForDate = m;
+          return { ...record, recordNum: currentYearForDate * 10000 + m * 100 + d };
         });
 
         const calculateMetrics = (key: 'x' | 'instagram' | 'note') => {
           let thisMonthInc = 0, thisWeekInc = 0, todayInc = 0;
           let endOfPrevMonthVal = recordsWithDateNum[0][key] || 0;
           let endOfPrevWeekVal = recordsWithDateNum[0][key] || 0;
-          
+
           recordsWithDateNum.forEach(record => {
-             const num = record.recordNum;
-             const incKey = key === 'x' ? 'incX' : key === 'instagram' ? 'incInsta' : 'incNote';
-             if (num >= startOfThisMonthNum) thisMonthInc += record[incKey];
-             if (num <= endOfPrevMonthNum) endOfPrevMonthVal = record[key];
-             if (num >= startOfWeekNum) thisWeekInc += record[incKey];
-             if (num <= endOfPrevWeekNum) endOfPrevWeekVal = record[key];
-             if (num === todayNum) todayInc += record[incKey];
+            const num = record.recordNum;
+            const incKey = key === 'x' ? 'incX' : key === 'instagram' ? 'incInsta' : 'incNote';
+            if (num >= startOfThisMonthNum) thisMonthInc += record[incKey];
+            if (num <= endOfPrevMonthNum) endOfPrevMonthVal = record[key];
+            if (num >= startOfWeekNum) thisWeekInc += record[incKey];
+            if (num <= endOfPrevWeekNum) endOfPrevWeekVal = record[key];
+            if (num === todayNum) todayInc += record[incKey];
           });
-          
+
           const latest = recordsWithDateNum[recordsWithDateNum.length - 1][key];
           return {
             followers: latest, todayIncrease: todayInc, weeklyIncrease: thisWeekInc,
@@ -141,33 +141,33 @@ export function SNSPage() {
         const weeklyMap = new Map<string, { x: number; instagram: number; note: number; total: number; startStr: string; endStr: string }>();
         let currentYear = nowJst.getFullYear();
         if (processedRecords.length > 0 && parseInt(processedRecords[0].date.split('/')[0], 10) > nowJst.getMonth() + 2) currentYear--;
-        
+
         let prevMonth = -1;
         processedRecords.forEach(record => {
-           const [mStr, dStr] = record.date.split('/');
-           const m = parseInt(mStr, 10);
-           const d = parseInt(dStr, 10);
-           if (prevMonth !== -1 && prevMonth === 12 && m === 1) currentYear++;
-           prevMonth = m;
-           
-           const dateObj = new Date(currentYear, m - 1, d);
-           const dayOfWeek = dateObj.getDay() === 0 ? 7 : dateObj.getDay(); 
-           const endOfWeek = new Date(dateObj.getTime()); endOfWeek.setDate(dateObj.getDate() + (7 - dayOfWeek));
-           const startOfWeek = new Date(endOfWeek.getTime()); startOfWeek.setDate(endOfWeek.getDate() - 6);
+          const [mStr, dStr] = record.date.split('/');
+          const m = parseInt(mStr, 10);
+          const d = parseInt(dStr, 10);
+          if (prevMonth !== -1 && prevMonth === 12 && m === 1) currentYear++;
+          prevMonth = m;
 
-           const weekKey = `${endOfWeek.getFullYear()}-${endOfWeek.getMonth() + 1}-${endOfWeek.getDate()}`;
-           if (!weeklyMap.has(weekKey)) {
-              weeklyMap.set(weekKey, { x: 0, instagram: 0, note: 0, total: 0, startStr: `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()}`, endStr: `${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}` });
-           }
-           const weekData = weeklyMap.get(weekKey)!;
-           weekData.x += record.incX; weekData.instagram += record.incInsta; weekData.note += record.incNote; weekData.total += (record.incX + record.incInsta + record.incNote);
+          const dateObj = new Date(currentYear, m - 1, d);
+          const dayOfWeek = dateObj.getDay() === 0 ? 7 : dateObj.getDay();
+          const endOfWeek = new Date(dateObj.getTime()); endOfWeek.setDate(dateObj.getDate() + (7 - dayOfWeek));
+          const startOfWeek = new Date(endOfWeek.getTime()); startOfWeek.setDate(endOfWeek.getDate() - 6);
+
+          const weekKey = `${endOfWeek.getFullYear()}-${endOfWeek.getMonth() + 1}-${endOfWeek.getDate()}`;
+          if (!weeklyMap.has(weekKey)) {
+            weeklyMap.set(weekKey, { x: 0, instagram: 0, note: 0, total: 0, startStr: `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()}`, endStr: `${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}` });
+          }
+          const weekData = weeklyMap.get(weekKey)!;
+          weekData.x += record.incX; weekData.instagram += record.incInsta; weekData.note += record.incNote; weekData.total += (record.incX + record.incInsta + record.incNote);
         });
 
         const weeklyTableRaw = Array.from(weeklyMap.values()).map(data => {
-            const endMonth = parseInt(data.endStr.split('/')[0], 10);
-            const endDay = parseInt(data.endStr.split('/')[1], 10);
-            const weekNum = Math.ceil(endDay / 7);
-            return { week: `${endMonth}月第${weekNum}週 (${data.startStr}-${data.endStr})`, shortWeek: `${endMonth}月第${weekNum}週`, x: data.x, instagram: data.instagram, note: data.note, total: data.total };
+          const endMonth = parseInt(data.endStr.split('/')[0], 10);
+          const endDay = parseInt(data.endStr.split('/')[1], 10);
+          const weekNum = Math.ceil(endDay / 7);
+          return { week: `${endMonth}月第${weekNum}週 (${data.startStr}-${data.endStr})`, shortWeek: `${endMonth}月第${weekNum}週`, x: data.x, instagram: data.instagram, note: data.note, total: data.total };
         });
 
         const weeklyTable = [...weeklyTableRaw].reverse();
@@ -221,11 +221,23 @@ export function SNSPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="space-y-8">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-gradient-to-br from-[#1DA1F2]/20 to-[#E4405F]/20 border border-[#1DA1F2]/20">
-          <TrendingUp className="h-6 w-6 text-[#1DA1F2]" />
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
         <div><h2 className="text-2xl font-bold text-foreground">SNS分析</h2><p className="text-sm text-muted-foreground">X、Instagram、noteのフォロワー数と増加推移を確認できます</p></div>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1DVcnAj75n_Hokt74Q-SX_FI_J5PSbJiOzhvwJfHggFM/edit?gid=0#gid=0"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
       </div>
 
       <div className="space-y-6">

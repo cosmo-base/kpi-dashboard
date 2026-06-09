@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { Users, TrendingUp, Calendar, CalendarDays, Clock, UserPlus } from 'lucide-react';
+import { Users, TrendingUp, Calendar, CalendarDays, Clock, UserPlus, ArrowUpRight } from 'lucide-react';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
@@ -16,7 +16,7 @@ const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone:
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
-  if (num < 0) return num.toLocaleString(); 
+  if (num < 0) return num.toLocaleString();
   return '0';
 };
 
@@ -35,7 +35,7 @@ export function CommunityPage() {
 
         const headerRowIndex = rawData.findIndex(row => row.includes('参加数'));
         if (headerRowIndex === -1) return;
-        
+
         const headers = rawData[headerRowIndex];
         const monthIdx = headers.indexOf('月');
         const dayIdx = headers.indexOf('日');
@@ -61,7 +61,7 @@ export function CommunityPage() {
 
         if (dailyRecords.length === 0) return;
         const latest = dailyRecords[dailyRecords.length - 1];
-        
+
         const sourceColors: Record<string, string> = {
           '個別招待': '#38BDF8', 'HP': '#8B5CF6', 'X': '#1DA1F2', 'Instagram': '#E4405F',
           'note': '#41C9B4', 'YouTube': '#FF0000', 'ピーテックス(外部のイベント掲載)': '#F59E0B',
@@ -108,19 +108,19 @@ export function CommunityPage() {
 
         let currentYearForDate = currentY;
         if (dailyRecords.length > 0) {
-           const firstMonth = parseInt(dailyRecords[0].date.split('/')[0], 10);
-           if (firstMonth > currentM + 1) currentYearForDate--;
+          const firstMonth = parseInt(dailyRecords[0].date.split('/')[0], 10);
+          if (firstMonth > currentM + 1) currentYearForDate--;
         }
-        
+
         let prevMonthForDate = -1;
         const recordsWithDateNum = dailyRecords.map(record => {
-           const [mStr, dStr] = record.date.split('/');
-           const m = parseInt(mStr, 10);
-           const d = parseInt(dStr, 10);
-           if (prevMonthForDate !== -1 && prevMonthForDate === 12 && m === 1) currentYearForDate++;
-           prevMonthForDate = m;
-           const recordNum = currentYearForDate * 10000 + m * 100 + d;
-           return { ...record, recordNum };
+          const [mStr, dStr] = record.date.split('/');
+          const m = parseInt(mStr, 10);
+          const d = parseInt(dStr, 10);
+          if (prevMonthForDate !== -1 && prevMonthForDate === 12 && m === 1) currentYearForDate++;
+          prevMonthForDate = m;
+          const recordNum = currentYearForDate * 10000 + m * 100 + d;
+          return { ...record, recordNum };
         });
 
         let thisMonthIncrease = 0, thisWeekIncrease = 0, todayIncrease = 0;
@@ -128,11 +128,11 @@ export function CommunityPage() {
         let endOfPrevWeekTotal = recordsWithDateNum[0]?.total || 0;
 
         recordsWithDateNum.forEach(r => {
-           if (r.recordNum >= startOfThisMonthNum) thisMonthIncrease += r.increase;
-           if (r.recordNum <= endOfPrevMonthNum) endOfPrevMonthTotal = r.total;
-           if (r.recordNum >= startOfWeekNum) thisWeekIncrease += r.increase;
-           if (r.recordNum <= endOfPrevWeekNum) endOfPrevWeekTotal = r.total;
-           if (r.recordNum === todayNum) todayIncrease += r.increase;
+          if (r.recordNum >= startOfThisMonthNum) thisMonthIncrease += r.increase;
+          if (r.recordNum <= endOfPrevMonthNum) endOfPrevMonthTotal = r.total;
+          if (r.recordNum >= startOfWeekNum) thisWeekIncrease += r.increase;
+          if (r.recordNum <= endOfPrevWeekNum) endOfPrevWeekTotal = r.total;
+          if (r.recordNum === todayNum) todayIncrease += r.increase;
         });
 
         const monthlyIncreaseRate = endOfPrevMonthTotal === 0 ? 100 : Math.round((latest.total / endOfPrevMonthTotal) * 100);
@@ -143,7 +143,7 @@ export function CommunityPage() {
           const monthLabel = record.date.split('/')[0] + '月';
           if (!monthlyMap.has(monthLabel)) monthlyMap.set(monthLabel, { increase: 0, total: 0 });
           const current = monthlyMap.get(monthLabel)!;
-          current.increase += record.increase; current.total = record.total; 
+          current.increase += record.increase; current.total = record.total;
         });
 
         const monthlyTableRaw = Array.from(monthlyMap.entries()).map(([month, val]) => ({ month, increase: val.increase, cumulative: val.total }));
@@ -154,38 +154,38 @@ export function CommunityPage() {
             rate = prevCumulative <= 0 ? 100 : Math.round((item.cumulative / prevCumulative) * 100);
           }
           return { month: item.month, increase: item.increase, rate: `${rate}%`, cumulative: item.cumulative };
-        }).reverse(); 
+        }).reverse();
 
         const weeklyMap = new Map<string, { increase: number; cumulative: number; startStr: string; endStr: string }>();
         let currentYear = nowJst.getFullYear();
         if (dailyRecords.length > 0 && parseInt(dailyRecords[0].date.split('/')[0], 10) > nowJst.getMonth() + 2) currentYear--;
-        
+
         let prevMonth = -1;
         dailyRecords.forEach(record => {
-           const [mStr, dStr] = record.date.split('/');
-           const m = parseInt(mStr, 10);
-           const d = parseInt(dStr, 10);
-           if (prevMonth !== -1 && prevMonth === 12 && m === 1) currentYear++;
-           prevMonth = m;
-           
-           const dateObj = new Date(currentYear, m - 1, d);
-           const dayOfWeek = dateObj.getDay() === 0 ? 7 : dateObj.getDay(); 
-           const endOfWeek = new Date(dateObj.getTime()); endOfWeek.setDate(dateObj.getDate() + (7 - dayOfWeek));
-           const startOfWeek = new Date(endOfWeek.getTime()); startOfWeek.setDate(endOfWeek.getDate() - 6);
-           const weekKey = `${endOfWeek.getFullYear()}-${endOfWeek.getMonth() + 1}-${endOfWeek.getDate()}`;
-           
-           if (!weeklyMap.has(weekKey)) {
-              weeklyMap.set(weekKey, { increase: 0, cumulative: 0, startStr: `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()}`, endStr: `${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}` });
-           }
-           const weekData = weeklyMap.get(weekKey)!;
-           weekData.increase += record.increase; weekData.cumulative = record.total; 
+          const [mStr, dStr] = record.date.split('/');
+          const m = parseInt(mStr, 10);
+          const d = parseInt(dStr, 10);
+          if (prevMonth !== -1 && prevMonth === 12 && m === 1) currentYear++;
+          prevMonth = m;
+
+          const dateObj = new Date(currentYear, m - 1, d);
+          const dayOfWeek = dateObj.getDay() === 0 ? 7 : dateObj.getDay();
+          const endOfWeek = new Date(dateObj.getTime()); endOfWeek.setDate(dateObj.getDate() + (7 - dayOfWeek));
+          const startOfWeek = new Date(endOfWeek.getTime()); startOfWeek.setDate(endOfWeek.getDate() - 6);
+          const weekKey = `${endOfWeek.getFullYear()}-${endOfWeek.getMonth() + 1}-${endOfWeek.getDate()}`;
+
+          if (!weeklyMap.has(weekKey)) {
+            weeklyMap.set(weekKey, { increase: 0, cumulative: 0, startStr: `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()}`, endStr: `${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}` });
+          }
+          const weekData = weeklyMap.get(weekKey)!;
+          weekData.increase += record.increase; weekData.cumulative = record.total;
         });
 
         const weeklyTableRaw = Array.from(weeklyMap.values()).map(data => {
-            const endMonth = parseInt(data.endStr.split('/')[0], 10);
-            const endDay = parseInt(data.endStr.split('/')[1], 10);
-            const weekNum = Math.ceil(endDay / 7);
-            return { week: `${endMonth}月第${weekNum}週 (${data.startStr}-${data.endStr})`, shortWeek: `${endMonth}月第${weekNum}週`, increase: data.increase, cumulative: data.cumulative };
+          const endMonth = parseInt(data.endStr.split('/')[0], 10);
+          const endDay = parseInt(data.endStr.split('/')[1], 10);
+          const weekNum = Math.ceil(endDay / 7);
+          return { week: `${endMonth}月第${weekNum}週 (${data.startStr}-${data.endStr})`, shortWeek: `${endMonth}月第${weekNum}週`, increase: data.increase, cumulative: data.cumulative };
         });
 
         const weeklyTable = weeklyTableRaw.map((item, idx) => {
@@ -195,7 +195,7 @@ export function CommunityPage() {
             rate = prevCumulative <= 0 ? 100 : Math.round((item.cumulative / prevCumulative) * 100);
           }
           return { week: item.week, increase: item.increase, rate: `${rate}%`, cumulative: item.cumulative };
-        }).reverse(); 
+        }).reverse();
 
         const monthlyByTotal = [...monthlyTableRaw].slice(-4).map(item => ({ name: item.month, 増加数: item.increase }));
         const weeklyByTotal = [...weeklyTableRaw].slice(-4).map(item => ({ name: item.shortWeek, 増加数: item.increase }));
@@ -207,13 +207,13 @@ export function CommunityPage() {
             thisWeekIncrease: thisWeekIncrease, weeklyIncreaseRate: weeklyIncreaseRate,
             todayIncrease: todayIncrease,
           },
-          charts: { 
-            membersTrend: dailyRecords.map(record => ({ 
-              name: record.date, 
+          charts: {
+            membersTrend: dailyRecords.map(record => ({
+              name: record.date,
               累計人数: record.total,
               SNS総フォロワー数: record.snsTotal > 0 ? record.snsTotal : undefined
-            })), 
-            monthlyByTotal, weeklyByTotal, sourceDistribution 
+            })),
+            monthlyByTotal, weeklyByTotal, sourceDistribution
           },
           tables: { monthlyTable, weeklyTable }
         });
@@ -227,7 +227,25 @@ export function CommunityPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">Discord登録数</h2><p className="text-muted-foreground mt-1">Cosmo Base全体の登録者数、増加推移、詳細な期間集計を確認できます。</p></div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
+        <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">Discord登録数</h2><p className="text-muted-foreground mt-1">Cosmo Base全体の登録者数、増加推移、詳細な期間集計を確認できます。</p></div>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1DVcnAj75n_Hokt74Q-SX_FI_J5PSbJiOzhvwJfHggFM/edit?gid=0#gid=0"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <KpiCard title="全体の人数" value={summary.totalMembers.toLocaleString()} unit="人" icon={Users} accentColor="primary" />
         <KpiCard title="今月の増加数" value={formatDiff(summary.thisMonthIncrease)} unit="人" icon={TrendingUp} accentColor="success" />
@@ -236,25 +254,25 @@ export function CommunityPage() {
         <KpiCard title="週間比" value={summary.weeklyIncreaseRate} unit="%" trendValue="先週末比" trendType="up" icon={TrendingUp} accentColor="success" />
         <KpiCard title="今日の増加数" value={formatDiff(summary.todayIncrease)} unit="人" icon={UserPlus} accentColor="warning" />
       </div>
-      
+
       <SectionCard title="全体の人数推移" description="Discord参加人数とSNSフォロワー数の比較">
         <div className="flex justify-end mb-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowSns(!showSns)} 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSns(!showSns)}
             className={showSns ? 'bg-primary text-primary-foreground border-transparent' : 'bg-secondary/30 text-foreground'}
           >
             {showSns ? 'SNSフォロワー数を隠す' : 'SNSフォロワー数を重ねて比較'}
           </Button>
         </div>
         <ChartContainer height="h-[350px]">
-          <LineChartComponent 
-            data={charts.membersTrend.slice(-90)} 
+          <LineChartComponent
+            data={charts.membersTrend.slice(-90)}
             lines={[
               { dataKey: '累計人数', name: 'Discord累計人数', color: '#38BDF8' },
               ...(showSns ? [{ dataKey: 'SNS総フォロワー数', name: 'SNS総フォロワー数', color: '#F59E0B' }] : [])
-            ]} 
+            ]}
           />
         </ChartContainer>
       </SectionCard>
