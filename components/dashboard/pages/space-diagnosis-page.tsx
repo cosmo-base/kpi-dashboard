@@ -82,22 +82,22 @@ const SIMPLE_QUESTIONS_MAP = [
 ];
 
 const DETAILED_2CHOICE_MAP = [
-  { key: "Q1", text: "宇宙のニュースでつい見てしまうのは？", labels: { "1": "未知の銀河やブラックホール", "-1": "宇宙ビジネスやロケット開発" } },
-  { key: "Q2", text: "宇宙の魅力はどっちに近い？", labels: { "1": "神秘やロマン", "-1": "可能性や実用性" } },
-  { key: "Q3", text: "もし宇宙関連で自由に1万円使えるなら？", labels: { "1": "星空ツアーや高画質な写真集", "-1": "専門書や最新技術サロン" } },
-  { key: "Q4", text: "宇宙について話すなら？", labels: { "1": "「宇宙人いると思う？」", "-1": "「この技術、地上で使えるね」" } },
-  { key: "Q7", text: "面白い宇宙コンテンツを見たら？", labels: { "1": "満足して終わる", "-1": "誰かに話す・発信する" } },
-  { key: "Q8", text: "最近の宇宙との関わりは？", labels: { "1": "見る・読む", "-1": "話す・投稿・参加" } },
-  { key: "Q9", text: "コミュニティに入ったら？", labels: { "1": "まずは様子を見る", "-1": "とりあえず発言してみる" } },
-  { key: "Q10", text: "本音として近いのは？", labels: { "1": "発信や制作はハードル高い", "-1": "見てるだけだと物足りない" } },
-  { key: "Q13", text: "ロケットで気になるのは？", labels: { "1": "構造や仕組み", "-1": "社会への影響" } },
-  { key: "Q14", text: "新しい宇宙プロジェクトが発表されたら？", labels: { "1": "どんな技術で動くの？", "-1": "人類の未来をどう変えるの？" } },
-  { key: "Q15", text: "展示で見入るのは？", labels: { "1": "部品や構造", "-1": "歴史や未来" } },
-  { key: "Q16", text: "モヤっとするのは？", labels: { "1": "仕組みが分からない説明", "-1": "全体像が見えない話" } },
-  { key: "Q19", text: "宇宙との関わり方は？", labels: { "1": "趣味として楽しみたい", "-1": "仕事や活動にしたい" } },
-  { key: "Q20", text: "宇宙に時間を使うなら？", labels: { "1": "楽しいこと優先", "-1": "役に立つこと優先" } },
-  { key: "Q21", text: "理想の関わり方は？", labels: { "1": "自分のペース", "-1": "社会に影響" } },
-  { key: "Q22", text: "冷める瞬間は？", labels: { "1": "義務や成果を求められる時", "-1": "何も生まれない時" } },
+  { key: "Q1", text: "宇宙のニュースでつい見てしまうのは？", opt1: "未知の銀河やブラックホール", val1: "1", opt2: "宇宙ビジネスやロケット開発", val2: "-1" },
+  { key: "Q2", text: "宇宙の魅力はどっちに近い？", opt1: "神秘やロマン", val1: "1", opt2: "可能性や実用性", val2: "-1" },
+  { key: "Q3", text: "もし宇宙関連で自由に1万円使えるなら？", opt1: "星空ツアーや高画質な写真集", val1: "1", opt2: "専門書や最新技術サロン", val2: "-1" },
+  { key: "Q4", text: "宇宙について話すなら？", opt1: "「宇宙人いると思う？」", val1: "1", opt2: "「この技術、地上で使えるね」", val2: "-1" },
+  { key: "Q7", text: "面白い宇宙コンテンツを見たら？", opt1: "満足して終わる", val1: "1", opt2: "誰かに話す・発信する", val2: "-1" },
+  { key: "Q8", text: "最近の宇宙との関わりは？", opt1: "見る・読む", val1: "1", opt2: "話す・投稿・参加", val2: "-1" },
+  { key: "Q9", text: "コミュニティに入ったら？", opt1: "まずは様子を見る", val1: "1", opt2: "とりあえず発言してみる", val2: "-1" },
+  { key: "Q10", text: "本音として近いのは？", opt1: "発信や制作はハードル高い", val1: "1", opt2: "見てるだけだと物足りない", val2: "-1" },
+  { key: "Q13", text: "ロケットで気になるのは？", opt1: "構造や仕組み", val1: "1", opt2: "社会への影響", val2: "-1" },
+  { key: "Q14", text: "新しい宇宙プロジェクトが発表されたら？", opt1: "どんな技術で動くの？", val1: "1", opt2: "人類の未来をどう変えるの？", val2: "-1" },
+  { key: "Q15", text: "展示で見入るのは？", opt1: "部品や構造", val1: "1", opt2: "歴史や未来", val2: "-1" },
+  { key: "Q16", text: "モヤっとするのは？", opt1: "仕組みが分からない説明", val1: "1", opt2: "全体像が見えない話", val2: "-1" },
+  { key: "Q19", text: "宇宙との関わり方は？", opt1: "趣味として楽しみたい", val1: "1", opt2: "仕事や活動にしたい", val2: "-1" },
+  { key: "Q20", text: "宇宙に時間を使うなら？", opt1: "楽しいこと優先", val1: "1", opt2: "役に立つこと優先", val2: "-1" },
+  { key: "Q21", text: "理想の関わり方は？", opt1: "自分のペース", val1: "1", opt2: "社会に影響", val2: "-1" },
+  { key: "Q22", text: "冷める瞬間は？", opt1: "義務や成果を求められる時", val1: "1", opt2: "何も生まれない時", val2: "-1" },
 ];
 
 const DETAILED_5SCALE_MAP = [
@@ -208,9 +208,13 @@ const DistributionBar = ({ item }: { item: any }) => {
             <div key={i} style={{ width: `${opt.percentage}%`, backgroundColor: scaleColors[i] }} className="border-r border-background/20 last:border-none" title={`${opt.percentage}% (${opt.count}人)`}/>
           ))}
         </div>
-        <div className="flex w-full justify-between text-[11px] text-muted-foreground px-1">
+        {/* ★ 各％の前に対応する色のドットと選択肢の数値を配置 */}
+        <div className="flex w-full justify-between text-[11px] text-muted-foreground px-0.5">
           {item.options.map((opt: any, i: number) => (
-            <span key={i} className="font-medium w-6 text-center">{opt.percentage}%</span>
+            <span key={i} className="flex items-center gap-1 font-medium justify-center whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: scaleColors[i] }} />
+              <span>[{opt.label}] {opt.percentage}%</span>
+            </span>
           ))}
         </div>
       </div>
