@@ -194,63 +194,45 @@ const MultiSegmentBar = ({ title, segments }: any) => {
   );
 };
 
-const DistributionBar = ({ options }: { options: any[] }) => {
-  const colors = [
-    "#38BDF8",
-    "#8B5CF6",
-    "#22C55E",
-    "#F59E0B",
-    "#EF4444",
-    "#EC4899",
-    "#10B981",
-    "#6B7280",
-  ];
-  return (
-    <div className="w-full flex flex-col gap-1.5 min-w-[200px] py-1">
-      <div className="flex flex-wrap gap-x-4 gap-y-2 mt-1 text-xs text-muted-foreground leading-snug">
-        {options.map(
-          (opt, i) =>
-            opt.percentage > 0 && (
-              <span
-                key={opt.label}
-                className="flex items-start gap-1.5"
-              >
-                <span
-                  className="w-2 h-2 rounded-full flex-shrink-0 mt-1"
-                  style={{ backgroundColor: colors[i % colors.length] }}
-                ></span>
-                <span>
-                  <span className="font-bold text-foreground">
-                    {opt.label}
-                  </span>{" "}
-                  ({opt.percentage}%)
-                </span>
-              </span>
-            ),
-        )}
+const DistributionBar = ({ item }: { item: any }) => {
+  if (item.type === "scale") {
+    const scaleColors = ["#38BDF8", "#7DD3FC", "#E2E8F0", "#94A3B8", "#64748B"];
+    return (
+      <div className="w-full min-w-[280px] py-1">
+        <div className="flex justify-between text-[11px] font-bold text-foreground mb-1.5">
+          <span>{item.leftLabel}</span>
+          <span>{item.rightLabel}</span>
+        </div>
+        <div className="flex w-full h-3 rounded-full overflow-hidden bg-secondary/30 mb-1">
+          {item.options.map((opt: any, i: number) => (
+            <div key={i} style={{ width: `${opt.percentage}%`, backgroundColor: scaleColors[i] }} className="border-r border-background/20 last:border-none" title={`${opt.percentage}% (${opt.count}人)`}/>
+          ))}
+        </div>
+        <div className="flex w-full justify-between text-[11px] text-muted-foreground px-1">
+          {item.options.map((opt: any, i: number) => (
+            <span key={i} className="font-medium w-6 text-center">{opt.percentage}%</span>
+          ))}
+        </div>
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground leading-tight">
-        {options.map(
-          (opt, i) =>
-            opt.percentage > 0 && (
-              <span
-                key={opt.label}
-                className="flex items-center gap-1 whitespace-nowrap"
-              >
-                <span
-                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: colors[i % colors.length] }}
-                ></span>
-                <span className="font-bold text-foreground truncate max-w-[120px]">
-                  {opt.label}
-                </span>{" "}
-                ({opt.percentage}%)
-              </span>
-            ),
-        )}
+    );
+  } else {
+    return (
+      <div className="w-full min-w-[280px] py-1">
+        <div className="flex justify-between text-[11px] font-bold mb-1.5 gap-3">
+          <span className="w-1/2 truncate text-left text-[#38BDF8]">{item.options[0].label}</span>
+          <span className="w-1/2 truncate text-right text-[#8B5CF6]">{item.options[1].label}</span>
+        </div>
+        <div className="flex w-full h-3 rounded-full overflow-hidden bg-secondary/30 mb-1">
+          <div style={{ width: `${item.options[0].percentage}%`, backgroundColor: '#38BDF8' }} title={`${item.options[0].label}: ${item.options[0].percentage}% (${item.options[0].count}人)`}/>
+          <div style={{ width: `${item.options[1].percentage}%`, backgroundColor: '#8B5CF6' }} title={`${item.options[1].label}: ${item.options[1].percentage}% (${item.options[1].count}人)`}/>
+        </div>
+        <div className="flex justify-between text-[11px] font-medium text-muted-foreground px-1">
+          <span className="text-[#38BDF8]">{item.options[0].percentage}%</span>
+          <span className="text-[#8B5CF6]">{item.options[1].percentage}%</span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 export function SpaceDiagnosisPage() {
@@ -439,84 +421,38 @@ export function SpaceDiagnosisPage() {
 
             if (validCount > 0) {
               const options: any[] = [];
-              if (isScale) {
-                // ★ 簡易版と完全版で数値の扱いとラベルを分ける
-                let scales: string[] = [];
-                let scaleLabels: Record<string, string> = {};
 
+              if (isScale) {
+                let scales: string[] = [];
                 if (versionFilter === "simple") {
                   scales = ["5", "4", "3", "2", "1"];
-                  scaleLabels = {
-                    "5": "5: とてもそう思う",
-                    "4": "4",
-                    "3": "3",
-                    "2": "2",
-                    "1": "1: まったくそう思わない",
-                  };
                 } else {
-                  // 完全版は 2, 1, 0, -1, -2 の順
-                  scales = ["2", "1", "0", "-1", "-2"];
-                  const isInv = q.invert === true;
-                  scaleLabels = {
-                    "2": isInv ? "2: 全くそう思わない" : "2: とてもそう思う",
-                    "1": "1",
-                    "0": "0",
-                    "-1": "-1",
-                    "-2": isInv ? "-2: とてもそう思う" : "-2: 全くそう思わない",
-                  };
+                  // invert設定に応じた順番（左が常に「とてもそう思う」になるように並べる）
+                  scales = q.invert ? ["-2", "-1", "0", "1", "2"] : ["2", "1", "0", "-1", "-2"];
                 }
 
                 scales.forEach((s) => {
                   const c = counts.get(s) || 0;
-                  if (c > 0)
-                    options.push({
-                      label: scaleLabels[s] || s,
-                      count: c,
-                      percentage: Math.round((c / validCount) * 100),
-                    });
+                  options.push({ label: s, count: c, percentage: Math.round((c / validCount) * 100) || 0 });
                 });
-                Array.from(counts.entries()).forEach(([k, v]) => {
-                  if (!scales.includes(k))
-                    options.push({
-                      label: k,
-                      count: v,
-                      percentage: Math.round((v / validCount) * 100),
-                    });
+
+                let sortOrder = q.key.startsWith("Q") ? 100 + parseInt(q.key.replace("Q", ""), 10) : (["R", "D", "I", "O", "P"].indexOf(q.key) + 1);
+
+                questionsData.push({
+                  key: q.key, sortOrder, category: groupLabel, question: q.text, count: validCount,
+                  type: "scale", leftLabel: "とてもそう思う", rightLabel: "全くそう思わない", options
                 });
               } else {
-                // 2択などの場合
-                const distArr = Array.from(counts.entries()).sort(
-                  (a, b) => b[1] - a[1],
-                );
-                distArr.forEach(([k, v]) => {
-                  // q.labels が定義されていればそれを使い、無ければそのままの値を表示
-                  const displayText = q.labels && q.labels[k] ? q.labels[k] : k;
-                  options.push({
-                    label: displayText,
-                    count: v,
-                    percentage: Math.round((v / validCount) * 100),
-                  });
+                const c1 = counts.get(q.val1) || 0;
+                const c2 = counts.get(q.val2) || 0;
+                options.push({ label: q.opt1, count: c1, percentage: Math.round((c1 / validCount) * 100) || 0 });
+                options.push({ label: q.opt2, count: c2, percentage: Math.round((c2 / validCount) * 100) || 0 });
+
+                questionsData.push({
+                  key: q.key, sortOrder: 100 + parseInt(q.key.replace("Q", ""), 10), category: groupLabel, question: q.text, count: validCount,
+                  type: "choice", options
                 });
               }
-
-              // 固定順序のためのソート用キーを付与
-              let sortOrder = 0;
-              if (q.key === "R") sortOrder = 1;
-              else if (q.key === "D") sortOrder = 2;
-              else if (q.key === "I") sortOrder = 3;
-              else if (q.key === "O") sortOrder = 4;
-              else if (q.key === "P") sortOrder = 5;
-              else if (q.key.startsWith("Q"))
-                sortOrder = 100 + parseInt(q.key.replace("Q", ""), 10);
-
-              questionsData.push({
-                key: q.key,
-                sortOrder,
-                category: groupLabel,
-                question: q.text,
-                count: validCount,
-                options,
-              });
             }
           });
         };
@@ -1220,17 +1156,11 @@ export function SpaceDiagnosisPage() {
             <tbody className="divide-y divide-border/50">
               {tables.questionsData.map((q: any, i: number) => (
                 <tr key={i} className="hover:bg-secondary/20 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                    {q.key}
-                  </td>
-                  <td className="px-4 py-3 text-foreground font-medium">
-                    {q.question}
-                  </td>
-                  <td className="px-4 py-3 text-right text-muted-foreground">
-                    {q.count.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 min-w-[250px]">
-                    <DistributionBar options={q.options} />
+                  <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{q.key}</td>
+                  <td className="px-4 py-3 text-foreground font-medium">{q.question}</td>
+                  <td className="px-4 py-3 text-right text-muted-foreground">{q.count.toLocaleString()}</td>
+                  <td className="px-4 py-3 min-w-[300px]">
+                    <DistributionBar item={q} />
                   </td>
                 </tr>
               ))}
