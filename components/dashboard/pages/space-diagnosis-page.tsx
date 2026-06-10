@@ -52,22 +52,22 @@ const DETAILED_TYPE_COLORS: Record<string, string> = {
   PAMS: "#5AADD6",
 };
 const DETAILED_TYPE_LABELS: Record<string, string> = {
-  RVXI: "宇宙ロマン志向夢想家 (RVXI)",
-  RVXS: "未来観察志向観測者 (RVXS)",
-  RVMI: "天体愛好志向探訪者 (RVMI)",
-  RVMS: "探査共感志向見守り手 (RVMS)",
-  RAXI: "宇宙探求志向探求者 (RAXI)",
-  RAXS: "宇宙伝道志向語り部 (RAXS)",
-  RAMI: "趣味没頭志向職人 (RAMI)",
-  RAMS: "宇宙カルチャー志向仕掛け人 (RAMS)",
-  PVXI: "宇宙教養志向学び手 (PVXI)",
-  PVXS: "産業分析志向分析者 (PVXS)",
-  PVMI: "最新テック志向追跡者 (PVMI)",
-  PVMS: "社会応用志向つなぎ手 (PVMS)",
-  PAXI: "宇宙キャリア志向開拓者 (PAXI)",
-  PAXS: "産業推進志向推進者 (PAXS)",
-  PAMI: "技術開発志向創り手 (PAMI)",
-  PAMS: "社会課題解決志向実装者 (PAMS)",
+  RVXI: "🌌宇宙ロマン志向夢想家 (RVXI)",
+  RVXS: "🌕未来観察志向観測者 (RVXS)",
+  RVMI: "🪐天体愛好志向探訪者 (RVMI)",
+  RVMS: "🌠探査共感志向見守り手 (RVMS)",
+  RAXI: "🛸宇宙探求志向探求者 (RAXI)",
+  RAXS: "🎙️宇宙伝道志向語り部 (RAXS)",
+  RAMI: "📸趣味没頭志向職人 (RAMI)",
+  RAMS: "🎉宇宙カルチャー志向仕掛け人 (RAMS)",
+  PVXI: "📖宇宙教養志向学び手 (PVXI)",
+  PVXS: "🧩産業分析志向分析者 (PVXS)",
+  PVMI: "📡最新テック志向追跡者 (PVMI)",
+  PVMS: "🤝社会応用志向つなぎ手 (PVMS)",
+  PAXI: "🧭宇宙キャリア志向開拓者 (PAXI)",
+  PAXS: "🏁産業推進志向推進者 (PAXS)",
+  PAMI: "🔧技術開発志向創り手 (PAMI)",
+  PAMS: "🌐社会課題解決志向実装者 (PAMS)",
 };
 
 const SIMPLE_QUESTIONS_MAP = [
@@ -82,42 +82,33 @@ const SIMPLE_QUESTIONS_MAP = [
 ];
 
 const DETAILED_2CHOICE_MAP = [
-  { key: "Q1", text: "宇宙のニュースでつい見てしまうのは？" },
-  { key: "Q2", text: "宇宙の魅力はどっちに近い？" },
-  { key: "Q3", text: "もし宇宙関連で自由に1万円使えるなら？" },
-  { key: "Q4", text: "宇宙について話すなら？" },
-  { key: "Q7", text: "面白い宇宙コンテンツを見たら？" },
-  { key: "Q8", text: "最近の宇宙との関わりは？" },
-  { key: "Q9", text: "コミュニティに入ったら？" },
-  { key: "Q10", text: "本音として近いのは？" },
-  { key: "Q13", text: "ロケットで気になるのは？" },
-  { key: "Q14", text: "新しい宇宙プロジェクトが発表されたら？" },
-  { key: "Q15", text: "展示で見入るのは？" },
-  { key: "Q16", text: "モヤっとするのは？" },
-  { key: "Q19", text: "宇宙との関わり方は？" },
-  { key: "Q20", text: "宇宙に時間を使うなら？" },
-  { key: "Q21", text: "理想の関わり方は？" },
-  { key: "Q22", text: "冷める瞬間は？" },
+  { key: "Q1", text: "宇宙のニュースでつい見てしまうのは？", labels: { "1": "未知の銀河やブラックホール", "-1": "宇宙ビジネスやロケット開発" } },
+  { key: "Q2", text: "宇宙の魅力はどっちに近い？", labels: { "1": "神秘やロマン", "-1": "可能性や実用性" } },
+  { key: "Q3", text: "もし宇宙関連で自由に1万円使えるなら？", labels: { "1": "星空ツアーや高画質な写真集", "-1": "専門書や最新技術サロン" } },
+  { key: "Q4", text: "宇宙について話すなら？", labels: { "1": "「宇宙人いると思う？」", "-1": "「この技術、地上で使えるね」" } },
+  { key: "Q7", text: "面白い宇宙コンテンツを見たら？", labels: { "1": "満足して終わる", "-1": "誰かに話す・発信する" } },
+  { key: "Q8", text: "最近の宇宙との関わりは？", labels: { "1": "見る・読む", "-1": "話す・投稿・参加" } },
+  { key: "Q9", text: "コミュニティに入ったら？", labels: { "1": "まずは様子を見る", "-1": "とりあえず発言してみる" } },
+  { key: "Q10", text: "本音として近いのは？", labels: { "1": "発信や制作はハードル高い", "-1": "見てるだけだと物足りない" } },
+  { key: "Q13", text: "ロケットで気になるのは？", labels: { "1": "構造や仕組み", "-1": "社会への影響" } },
+  { key: "Q14", text: "新しい宇宙プロジェクトが発表されたら？", labels: { "1": "どんな技術で動くの？", "-1": "人類の未来をどう変えるの？" } },
+  { key: "Q15", text: "展示で見入るのは？", labels: { "1": "部品や構造", "-1": "歴史や未来" } },
+  { key: "Q16", text: "モヤっとするのは？", labels: { "1": "仕組みが分からない説明", "-1": "全体像が見えない話" } },
+  { key: "Q19", text: "宇宙との関わり方は？", labels: { "1": "趣味として楽しみたい", "-1": "仕事や活動にしたい" } },
+  { key: "Q20", text: "宇宙に時間を使うなら？", labels: { "1": "楽しいこと優先", "-1": "役に立つこと優先" } },
+  { key: "Q21", text: "理想の関わり方は？", labels: { "1": "自分のペース", "-1": "社会に影響" } },
+  { key: "Q22", text: "冷める瞬間は？", labels: { "1": "義務や成果を求められる時", "-1": "何も生まれない時" } },
 ];
 
 const DETAILED_5SCALE_MAP = [
-  {
-    key: "Q5",
-    text: "宇宙の美しさやスケールに、理由なく心を動かされることがある",
-  },
-  { key: "Q6", text: "宇宙は“ビジネスや社会を変える手段”として興味がある" },
-  { key: "Q11", text: "面白いものを見るだけで満足できるタイプだ" },
-  {
-    key: "Q12",
-    text: "自分の考えや好きなことを、何かしらの形で外に出したいと思う",
-  },
-  { key: "Q17", text: "細かい仕組みや構造を理解すると満足感がある" },
-  { key: "Q18", text: "大きな流れや未来の方向性を理解するとワクワクする" },
-  { key: "Q23", text: "自分が楽しいと思えることを最優先したい" },
-  {
-    key: "Q24",
-    text: "自分の行動が誰かや社会に影響することにやりがいを感じる",
-  },
+  { key: "Q5", text: "宇宙の美しさやスケールに、理由なく心を動かされることがある", invert: false },
+  { key: "Q6", text: "宇宙は“ビジネスや社会を変える手段”として興味がある", invert: true },
+  { key: "Q11", text: "面白いものを見るだけで満足できるタイプだ", invert: false },
+  { key: "Q12", text: "自分の考えや好きなことを、何かしらの形で外に出したいと思う", invert: true },
+  { key: "Q17", text: "細かい仕組みや構造を理解すると満足感がある", invert: false },
+  { key: "Q18", text: "大きな流れや未来の方向性を理解するとワクワクする", invert: true },
+  { key: "Q23", text: "自分が楽しいと思えることを最優先したい", invert: false },
+  { key: "Q24", text: "自分の行動が誰かや社会に影響することにやりがいを感じる", invert: true },
 ];
 
 const AxisBar = ({
@@ -216,18 +207,25 @@ const DistributionBar = ({ options }: { options: any[] }) => {
   ];
   return (
     <div className="w-full flex flex-col gap-1.5 min-w-[200px] py-1">
-      <div className="h-3 w-full flex rounded-full overflow-hidden bg-secondary/30">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 mt-1 text-xs text-muted-foreground leading-snug">
         {options.map(
           (opt, i) =>
             opt.percentage > 0 && (
-              <div
+              <span
                 key={opt.label}
-                style={{
-                  width: `${opt.percentage}%`,
-                  backgroundColor: colors[i % colors.length],
-                }}
-                title={`${opt.label}: ${opt.percentage}%`}
-              />
+                className="flex items-start gap-1.5"
+              >
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0 mt-1"
+                  style={{ backgroundColor: colors[i % colors.length] }}
+                ></span>
+                <span>
+                  <span className="font-bold text-foreground">
+                    {opt.label}
+                  </span>{" "}
+                  ({opt.percentage}%)
+                </span>
+              </span>
             ),
         )}
       </div>
@@ -442,13 +440,37 @@ export function SpaceDiagnosisPage() {
             if (validCount > 0) {
               const options: any[] = [];
               if (isScale) {
-                // 5段階評価は 5, 4, 3, 2, 1 の順番
-                const scales = ["5", "4", "3", "2", "1"];
+                // ★ 簡易版と完全版で数値の扱いとラベルを分ける
+                let scales: string[] = [];
+                let scaleLabels: Record<string, string> = {};
+
+                if (versionFilter === "simple") {
+                  scales = ["5", "4", "3", "2", "1"];
+                  scaleLabels = {
+                    "5": "5: とてもそう思う",
+                    "4": "4",
+                    "3": "3",
+                    "2": "2",
+                    "1": "1: まったくそう思わない",
+                  };
+                } else {
+                  // 完全版は 2, 1, 0, -1, -2 の順
+                  scales = ["2", "1", "0", "-1", "-2"];
+                  const isInv = q.invert === true;
+                  scaleLabels = {
+                    "2": isInv ? "2: 全くそう思わない" : "2: とてもそう思う",
+                    "1": "1",
+                    "0": "0",
+                    "-1": "-1",
+                    "-2": isInv ? "-2: とてもそう思う" : "-2: 全くそう思わない",
+                  };
+                }
+
                 scales.forEach((s) => {
                   const c = counts.get(s) || 0;
                   if (c > 0)
                     options.push({
-                      label: s,
+                      label: scaleLabels[s] || s,
                       count: c,
                       percentage: Math.round((c / validCount) * 100),
                     });
@@ -462,20 +484,22 @@ export function SpaceDiagnosisPage() {
                     });
                 });
               } else {
-                // 2択などは件数が多い順
+                // 2択などの場合
                 const distArr = Array.from(counts.entries()).sort(
                   (a, b) => b[1] - a[1],
                 );
                 distArr.forEach(([k, v]) => {
+                  // q.labels が定義されていればそれを使い、無ければそのままの値を表示
+                  const displayText = q.labels && q.labels[k] ? q.labels[k] : k;
                   options.push({
-                    label: k,
+                    label: displayText,
                     count: v,
                     percentage: Math.round((v / validCount) * 100),
                   });
                 });
               }
 
-              // ★ 固定順序のためのソート用キーを付与
+              // 固定順序のためのソート用キーを付与
               let sortOrder = 0;
               if (q.key === "R") sortOrder = 1;
               else if (q.key === "D") sortOrder = 2;
