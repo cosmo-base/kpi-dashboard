@@ -205,7 +205,7 @@ const DistributionBar = ({ item }: { item: any }) => {
         </div>
         <div className="flex w-full h-3 rounded-full overflow-hidden bg-secondary/30 mb-1">
           {item.options.map((opt: any, i: number) => (
-            <div key={i} style={{ width: `${opt.percentage}%`, backgroundColor: scaleColors[i] }} className="border-r border-background/20 last:border-none" title={`${opt.percentage}% (${opt.count}人)`}/>
+            <div key={i} style={{ width: `${opt.percentage}%`, backgroundColor: scaleColors[i] }} className="border-r border-background/20 last:border-none" title={`${opt.percentage}% (${opt.count}人)`} />
           ))}
         </div>
         {/* ★ 各％の前に対応する色のドットと選択肢の数値を配置 */}
@@ -227,8 +227,8 @@ const DistributionBar = ({ item }: { item: any }) => {
           <span className="w-1/2 truncate text-right text-[#8B5CF6]">{item.options[1].label}</span>
         </div>
         <div className="flex w-full h-3 rounded-full overflow-hidden bg-secondary/30 mb-1">
-          <div style={{ width: `${item.options[0].percentage}%`, backgroundColor: '#38BDF8' }} title={`${item.options[0].label}: ${item.options[0].percentage}% (${item.options[0].count}人)`}/>
-          <div style={{ width: `${item.options[1].percentage}%`, backgroundColor: '#8B5CF6' }} title={`${item.options[1].label}: ${item.options[1].percentage}% (${item.options[1].count}人)`}/>
+          <div style={{ width: `${item.options[0].percentage}%`, backgroundColor: '#38BDF8' }} title={`${item.options[0].label}: ${item.options[0].percentage}% (${item.options[0].count}人)`} />
+          <div style={{ width: `${item.options[1].percentage}%`, backgroundColor: '#8B5CF6' }} title={`${item.options[1].label}: ${item.options[1].percentage}% (${item.options[1].count}人)`} />
         </div>
         <div className="flex justify-between text-[11px] font-medium text-muted-foreground px-1">
           <span className="text-[#38BDF8]">{item.options[0].percentage}%</span>
@@ -295,6 +295,7 @@ export function SpaceDiagnosisPage() {
         const currentM = nowJst.getMonth() + 1;
         const currentD = nowJst.getDate();
         const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
+        const todayNum = currentY * 10000 + currentM * 100 + currentD;
 
         const endOfPrevMonthJst = new Date(nowJst.getTime());
         endOfPrevMonthJst.setDate(0);
@@ -512,6 +513,11 @@ export function SpaceDiagnosisPage() {
         let endOfPrevMonthTotal = 0,
           endOfPrevMonthSimple = 0,
           endOfPrevMonthDetailed = 0;
+        let todayTotal = 0;
+        let todaySimpleCbhp = 0;
+        let todaySimplePart = 0;
+        let todaySimpleTotal = 0;
+        let todayDetailed = 0;
 
         dailyRecords.forEach((d) => {
           const num = d.num;
@@ -524,6 +530,13 @@ export function SpaceDiagnosisPage() {
             endOfPrevMonthTotal = d.total;
             endOfPrevMonthSimple = d.simpleTotal;
             endOfPrevMonthDetailed = d.detailedTotal;
+          }
+          if (num === todayNum) {
+            todayTotal += d.incTotal;
+            todaySimpleCbhp += d.incSimpleCbhp;
+            todaySimplePart += d.incSimplePart;
+            todaySimpleTotal += d.incSimpleTotal;
+            todayDetailed += d.incDetailed;
           }
         });
 
@@ -647,20 +660,22 @@ export function SpaceDiagnosisPage() {
           rate: r.rate,
         }));
 
-        const simpleTypeDistribution = Array.from(simpleTypeMap.entries()).map(
-          ([k, v]) => ({
+        const simpleOrder = Object.keys(SIMPLE_TYPE_LABELS);
+        const simpleTypeDistribution = Array.from(simpleTypeMap.entries())
+          .sort((a, b) => simpleOrder.indexOf(a[0]) - simpleOrder.indexOf(b[0]))
+          .map(([k, v]) => ({
             name: SIMPLE_TYPE_LABELS[k] || k,
             value: v,
             color: SIMPLE_TYPE_COLORS[k] || "#ccc",
-          }),
-        );
-        const detailedTypeDistribution = Array.from(
-          detailedTypeMap.entries(),
-        ).map(([k, v]) => ({
-          name: k,
-          value: v,
-          color: DETAILED_TYPE_COLORS[k] || "#ccc",
-        }));
+          }));
+        const detailedOrder = Object.keys(DETAILED_TYPE_LABELS);
+        const detailedTypeDistribution = Array.from(detailedTypeMap.entries())
+          .sort((a, b) => detailedOrder.indexOf(a[0]) - detailedOrder.indexOf(b[0]))
+          .map(([k, v]) => ({
+            name: k,
+            value: v,
+            color: DETAILED_TYPE_COLORS[k] || "#ccc",
+          }));
 
         const monthlyByVersion = Array.from(monthlyAgg.entries())
           .slice(-4)
@@ -694,6 +709,11 @@ export function SpaceDiagnosisPage() {
         setData({
           summary: {
             totalParticipants: latest.total,
+            todayTotal: todayTotal,
+            todaySimpleCbhp: todaySimpleCbhp,
+            todaySimplePart: todaySimplePart,
+            todaySimpleTotal: todaySimpleTotal,
+            todayDetailed: todayDetailed,
             monthlyIncrease: thisMonthTotal,
             monthlyRate,
             fullVersionParticipants: latest.detailedTotal,
@@ -814,7 +834,7 @@ export function SpaceDiagnosisPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <KpiCard
           title="総参加者数"
           value={summary.totalParticipants?.toLocaleString() || 0}
@@ -837,6 +857,14 @@ export function SpaceDiagnosisPage() {
           trendType="up"
           icon={TrendingUp}
           accentColor="success"
+        />
+        <KpiCard
+          title="今日の参加数 (合計)"
+          value={`+${summary.todayTotal || 0}`}
+          unit="人"
+          icon={Users}
+          accentColor="warning"
+          description={`簡易版合計: +${summary.todaySimpleTotal || 0} (CBHP: +${summary.todaySimpleCbhp || 0} / 参加者: +${summary.todaySimplePart || 0}) | 完全版: +${summary.todayDetailed || 0}`}
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

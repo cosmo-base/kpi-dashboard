@@ -9,7 +9,7 @@ import { SpaceQuizPage } from './pages/space-quiz-page';
 import { CBEDPage } from './pages/cbed-page';
 import { CBMDPage } from './pages/cbmd-page';
 import { CBLPage } from './pages/cbl-page';
-import { SpaceDiagnosisPage } from './pages/space-diagnosis-page';
+import { SpaceDiagnosisPage } from './pages/space-type-page';
 import { LinksPage } from './pages/links-page';
 import { SNSPage } from './pages/sns-page';
 import { CBHPPage } from './pages/cbhp-page';

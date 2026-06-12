@@ -23,7 +23,7 @@ const formatDiff = (num: number) => {
 
 const CATEGORY_COLORS: string[] = ['#38BDF8', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444', '#EC4899', '#10B981', '#6B7280'];
 const TYPE_COLORS: string[] = ['#8B5CF6', '#38BDF8', '#F59E0B', '#22C55E', '#EC4899'];
-const LEVEL_COLORS: Record<string, string> = { '入門': '#22C55E', '初級': '#38BDF8', '中級': '#F59E0B', '上級': '#EF4444', '専門': '#8B5CF6' };
+const LEVEL_COLORS: Record<string, string> = { '初心者': '#22C55E', '中級者': '#38BDF8', '上級者': '#F59E0B' };
 
 export function CBLPage() {
   const [data, setData] = useState<any>(null);

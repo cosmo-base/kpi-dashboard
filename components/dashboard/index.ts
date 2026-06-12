@@ -20,4 +20,4 @@ export { SpaceQuizPage } from './pages/space-quiz-page';
 export { CBEDPage } from './pages/cbed-page';
 export { CBMDPage } from './pages/cbmd-page';
 export { CBLPage } from './pages/cbl-page';
-export { SpaceDiagnosisPage } from './pages/space-diagnosis-page';
+export { SpaceDiagnosisPage } from './pages/space-type-page';

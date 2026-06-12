@@ -205,6 +205,14 @@ const initialLinkCategories: LinkCategory[] = [
         subCategory: 'パートナー'
       },
       {
+        id: 'admin-12',
+        title: 'パートナー申請データ',
+        url: 'https://docs.google.com/spreadsheets/d/1PtyAO6VeBwgZcFsiiUhQseg6ugZJmMI_Di6N5StMQiA/edit',
+        description: 'パートナー申請の管理シート',
+        icon: Handshake,
+        subCategory: 'パートナー'
+      },
+      {
         id: 'admin-7',
         title: '宇宙知っトク進捗確認',
         url: 'https://docs.google.com/spreadsheets/d/1Clqn3sHYbpthvFKzb2XAaQ8RLHwWSOYxgkvm4HxoJp0/edit',
@@ -550,7 +558,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://canva.link/dcgka4ivmcz80tg',
         description: '',
         icon: Handshake,
-        subCategory: 'SNS投稿用'
+        subCategory: 'パートナー'
       },
       {
         id: 'design-1',
@@ -614,7 +622,7 @@ const initialLinkCategories: LinkCategory[] = [
         url: 'https://canva.link/1aakw2t0bjl906i',
         description: '',
         icon: Handshake,
-        subCategory: 'ブランディング・宣伝'
+        subCategory: 'パートナー'
       },
       {
         id: 'design-8',
