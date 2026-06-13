@@ -8,6 +8,7 @@ import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
 import { ScrollableTable } from '../scrollable-table';
 import { LineChartComponent } from '../charts/line-chart';
+import { LinearChartComponent } from '../charts/linear-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 import { DonutChart } from '../charts/donut-chart';
 import { Button } from '@/components/ui/button';
@@ -149,8 +150,8 @@ export function CommunityPage() {
         const monthlyTable = monthlyTableRaw.map((item, idx) => {
           let rate = 100;
           if (idx > 0) {
-            const prevCumulative = monthlyTableRaw[idx - 1].cumulative;
-            rate = prevCumulative <= 0 ? 100 : Math.round((item.cumulative / prevCumulative) * 100);
+            const prevIncrease = monthlyTableRaw[idx - 1].increase;
+            rate = prevIncrease <= 0 ? 100 : Math.round((item.increase / prevIncrease) * 100);
           }
           return { month: item.month, increase: item.increase, rateRaw: rate, rate: `${rate}%`, cumulative: item.cumulative };
         });
@@ -190,8 +191,8 @@ export function CommunityPage() {
         const weeklyTable = weeklyTableRaw.map((item, idx) => {
           let rate = 100;
           if (idx > 0) {
-            const prevCumulative = weeklyTableRaw[idx - 1].cumulative;
-            rate = prevCumulative <= 0 ? 100 : Math.round((item.cumulative / prevCumulative) * 100);
+            const prevIncrease = weeklyTableRaw[idx - 1].increase;
+            rate = prevIncrease <= 0 ? 100 : Math.round((item.increase / prevIncrease) * 100);
           }
           return { week: item.week, shortWeek: item.shortWeek, increase: item.increase, rateRaw: rate, rate: `${rate}%`, cumulative: item.cumulative };
         });
@@ -216,7 +217,7 @@ export function CommunityPage() {
               SNS総フォロワー数: record.snsTotal > 0 ? record.snsTotal : undefined
             })),
             monthlyByTotal, weeklyByTotal, sourceDistribution,
-            monthlyRateTrend, weeklyRateTrend // ★ 追加
+            monthlyRateTrend, weeklyRateTrend
           },
           tables: {
             monthlyTable: [...monthlyTable].reverse(),
@@ -285,18 +286,18 @@ export function CommunityPage() {
 
       {/* ★ 追加：比率の折れ線グラフセクション */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="月間 登録数 先月比の推移" description="前月の累計人数に対するパーセンテージ">
+        <SectionCard title="月間 登録数 先月比の推移" description="前月の増加人数に対するパーセンテージ">
           <ChartContainer height="h-[300px]">
-            <LineChartComponent
+            <LinearChartComponent
               data={charts.monthlyRateTrend.slice(-12)}
               lines={[{ dataKey: '先月比', name: '先月比', color: '#10B981' }]}
               yAxisUnit="%"
             />
           </ChartContainer>
         </SectionCard>
-        <SectionCard title="週間 登録数 先週比の推移" description="前週の累計人数に対するパーセンテージ">
+        <SectionCard title="週間 登録数 先週比の推移" description="前週の増加人数に対するパーセンテージ">
           <ChartContainer height="h-[300px]">
-            <LineChartComponent
+            <LinearChartComponent
               data={charts.weeklyRateTrend.slice(-12)}
               lines={[{ dataKey: '先週比', name: '先週比', color: '#F59E0B' }]}
               yAxisUnit="%"

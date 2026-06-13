@@ -14,6 +14,8 @@ import {
   HelpCircle,
   BookOpenText,
   ArrowUpRight,
+  Activity,
+  PieChart
 } from "lucide-react";
 import {
   ScatterChart,
@@ -174,11 +176,21 @@ export function SpaceQuizPage() {
         if (validRows.length === 0) return;
 
         let totalAnswers = 0,
-          totalCorrects = 0;
+          totalCorrects = 0,
+          totalZeroAnswers = 0; // ★累積0件問題数
+
         let sumDiscord = 0,
           sumX = 0,
           sumInstagram = 0,
           sumMyCommu = 0;
+
+        // ★媒体別のパフォーマンス用オブジェクト
+        const pStats = {
+          Discord: { qCount: 0, zeroCount: 0, ans: 0, cor: 0 },
+          X: { qCount: 0, zeroCount: 0, ans: 0, cor: 0 },
+          Instagram: { qCount: 0, zeroCount: 0, ans: 0, cor: 0 },
+          マイコミュ: { qCount: 0, zeroCount: 0, ans: 0, cor: 0 },
+        };
 
         const tableDataRaw: any[] = [];
         const dailyAgg = new Map<string, any>();
@@ -228,7 +240,8 @@ export function SpaceQuizPage() {
           }
 
           const answers = parseInt(String(row["回答数"] || "0").replace(/,/g, ""), 10) || 0;
-
+          if (answers === 0) totalZeroAnswers++;
+          
           // 媒体別の出題有無と回答数を取得
           const rawDiscord = String(row["回答数(Discord)"] || "").trim();
           const rawX = String(row["回答数(X)"] || "").trim();
@@ -240,12 +253,42 @@ export function SpaceQuizPage() {
           const ansInsta = parseInt(rawInsta.replace(/,/g, ""), 10) || 0;
           const ansMyCommu = parseInt(rawMyCommu.replace(/,/g, ""), 10) || 0;
 
-          // 空欄でない（出題されている）媒体を記録
+          // 正答数の取得
+          const corDiscord = parseInt(String(row["正答数(Discord)"] || "0").replace(/,/g, ""), 10) || 0;
+          const corX = parseInt(String(row["正答数(X)"] || "0").replace(/,/g, ""), 10) || 0;
+          const corInsta = parseInt(String(row["正答数(Instagram)"] || "0").replace(/,/g, ""), 10) || 0;
+          const corMyCommu = parseInt(String(row["正答数(マイコミュ)"] || "0").replace(/,/g, ""), 10) || 0;
+
+          // 媒体別パフォーマンス集計
           const platforms: string[] = [];
-          if (rawDiscord !== "") platforms.push("Discord");
-          if (rawX !== "") platforms.push("X");
-          if (rawInsta !== "") platforms.push("Instagram");
-          if (rawMyCommu !== "") platforms.push("マイコミュ");
+          if (rawDiscord !== "") {
+            platforms.push("Discord");
+            pStats.Discord.qCount++;
+            if (ansDiscord === 0) pStats.Discord.zeroCount++;
+            pStats.Discord.ans += ansDiscord;
+            pStats.Discord.cor += corDiscord;
+          }
+          if (rawX !== "") {
+            platforms.push("X");
+            pStats.X.qCount++;
+            if (ansX === 0) pStats.X.zeroCount++;
+            pStats.X.ans += ansX;
+            pStats.X.cor += corX;
+          }
+          if (rawInsta !== "") {
+            platforms.push("Instagram");
+            pStats.Instagram.qCount++;
+            if (ansInsta === 0) pStats.Instagram.zeroCount++;
+            pStats.Instagram.ans += ansInsta;
+            pStats.Instagram.cor += corInsta;
+          }
+          if (rawMyCommu !== "") {
+            platforms.push("マイコミュ");
+            pStats.マイコミュ.qCount++;
+            if (ansMyCommu === 0) pStats.マイコミュ.zeroCount++;
+            pStats.マイコミュ.ans += ansMyCommu;
+            pStats.マイコミュ.cor += corMyCommu;
+          }
 
           sumDiscord += ansDiscord;
           sumX += ansX;
@@ -263,12 +306,7 @@ export function SpaceQuizPage() {
           )
             accNum *= 100;
           if (isNaN(accNum)) accNum = 0;
-
-          const corDiscord = parseInt(String(row["正答数(Discord)"] || "0").replace(/,/g, ""), 10) || 0;
-          const corX = parseInt(String(row["正答数(X)"] || "0").replace(/,/g, ""), 10) || 0;
-          const corInsta = parseInt(String(row["正答数(Instagram)"] || "0").replace(/,/g, ""), 10) || 0;
-          const corMyCommu = parseInt(String(row["正答数(マイコミュ)"] || "0").replace(/,/g, ""), 10) || 0;
-
+          
           const correctSum = corDiscord + corX + corInsta + corMyCommu;
           const calculatedCorrect = correctSum > 0 ? correctSum : Math.round(answers * (accNum / 100));
 
@@ -304,7 +342,7 @@ export function SpaceQuizPage() {
             accuracy: Math.round(accNum * 10) / 10,
             num: num,
             timestamp: new Date(dateStrRaw).getTime(),
-            platforms: platforms, // ★出題媒体を記録
+            platforms: platforms,
           });
 
           // --- 回答0件の割合集計 (今月・今週) ---
@@ -318,21 +356,14 @@ export function SpaceQuizPage() {
           }
         });
 
-        const zeroRateWeek =
-          thisWeekQuestions > 0
-            ? Math.round((thisWeekZeroAnswers / thisWeekQuestions) * 100)
-            : 0;
-        const zeroRateMonth =
-          thisMonthQuestions > 0
-            ? Math.round((thisMonthZeroAnswers / thisMonthQuestions) * 100)
-            : 0;
+        const totalZeroRate = validRows.length > 0 ? Math.round((totalZeroAnswers / validRows.length) * 100) : 0;
+        const zeroRateWeek = thisWeekQuestions > 0 ? Math.round((thisWeekZeroAnswers / thisWeekQuestions) * 100) : 0;
+        const zeroRateMonth = thisMonthQuestions > 0 ? Math.round((thisMonthZeroAnswers / thisMonthQuestions) * 100) : 0;
 
-        const dailyRecords = Array.from(dailyAgg.values()).sort(
-          (a, b) => a.num - b.num,
-        );
+        const dailyRecords = Array.from(dailyAgg.values()).sort((a, b) => a.num - b.num);
+        
         let cumulativeAnswers = 0;
         let cumDiscord = 0, cumX = 0, cumInsta = 0, cumMyCommu = 0;
-
         const trendData: any[] = [];
         const accuracyData: any[] = [];
 
@@ -365,11 +396,18 @@ export function SpaceQuizPage() {
 
           trendData.push({
             name: day.formattedDate,
-            参加者数: cumulativeAnswers,
-            Discord: cumDiscord,
-            X: cumX,
-            Instagram: cumInsta,
-            マイコミュ: cumMyCommu,
+            // 累計
+            累計_全体: cumulativeAnswers,
+            累計_Discord: cumDiscord,
+            累計_X: cumX,
+            累計_Instagram: cumInsta,
+            累計_マイコミュ: cumMyCommu,
+            // 日別
+            日別_全体: day.answers,
+            日別_Discord: day.discord,
+            日別_X: day.x,
+            日別_Instagram: day.insta,
+            日別_マイコミュ: day.mycommu,
           });
 
           accuracyData.push({
@@ -402,14 +440,7 @@ export function SpaceQuizPage() {
             : Math.round((totalCorrects / totalAnswers) * 100);
 
         const typeColors = [
-          "#38BDF8",
-          "#8B5CF6",
-          "#22C55E",
-          "#F59E0B",
-          "#EF4444",
-          "#EC4899",
-          "#10B981",
-          "#6B7280",
+          "#38BDF8", "#8B5CF6", "#22C55E", "#F59E0B", "#EF4444", "#EC4899", "#10B981", "#6B7280",
         ];
         const typeDistribution = Array.from(typeCounts.entries())
           .filter(([name]) => name !== "未分類")
@@ -429,7 +460,7 @@ export function SpaceQuizPage() {
           .filter((item) => item.value > 0)
           .sort((a, b) => b.value - a.value);
 
-        // --- 難易度別集計 (回答5件超のみ対象) ---
+        // --- 難易度別集計 ---
         const difficultyGroups = [
           { range: "0-20%", min: 0, max: 20, count: 0, totalAns: 0, totalAcc: 0 },
           { range: "21-40%", min: 21, max: 40, count: 0, totalAns: 0, totalAcc: 0 },
@@ -459,21 +490,34 @@ export function SpaceQuizPage() {
             g.count > 0 ? `${Math.round(g.totalAcc / g.count)}%` : "-",
         }));
 
-        // --- ★ 重なり対策: 散布図用データのグループ化 ---
+        // --- 媒体別パフォーマンス集計表 ---
+        const platformMetricsTable = [
+          { platform: "Discord", ...pStats.Discord },
+          { platform: "X", ...pStats.X },
+          { platform: "Instagram", ...pStats.Instagram },
+          { platform: "マイコミュ", ...pStats.マイコミュ },
+        ].map((p) => ({
+          platform: p.platform,
+          qCount: p.qCount,
+          zeroRate: p.qCount > 0 ? `${Math.round((p.zeroCount / p.qCount) * 100)}%` : "0%",
+          avgAns: p.qCount > 0 ? Math.round((p.ans / p.qCount) * 10) / 10 : 0,
+          accuracy: p.ans > 0 ? `${Math.round((p.cor / p.ans) * 100)}%` : "0%"
+        }));
+
+        // --- 重なり対策: 散布図用データのグループ化 ---
         const scatterMap = new Map<string, any>();
 
         const zeroAnswerQuestions = tableDataRaw
           .filter((q) => q.answers === 0)
-          .map((q) => ({ text: q.question, platforms: q.platforms })); // ツールチップ用にオブジェクト化
+          .map((q) => ({ text: q.question, platforms: q.platforms }));
         if (zeroAnswerQuestions.length > 0) {
           scatterMap.set("0-0", {
             answers: 0,
             accuracy: 0,
             questions: zeroAnswerQuestions,
-            isOrigin: true, // 原点判定フラグ
+            isOrigin: true,
           });
         }
-        // 次に、回答1件以上のものをグループ化する
         tableDataRaw
           .filter((q) => q.answers > 0)
           .forEach((q) => {
@@ -482,7 +526,7 @@ export function SpaceQuizPage() {
               scatterMap.set(key, {
                 answers: q.answers,
                 accuracy: q.accuracy,
-                questions: [{ text: q.question, platforms: q.platforms }], // ツールチップ用にオブジェクト化
+                questions: [{ text: q.question, platforms: q.platforms }],
                 isOrigin: false,
               });
             } else {
@@ -507,12 +551,14 @@ export function SpaceQuizPage() {
           summary: {
             totalParticipants: totalAnswers,
             totalQuestions: validRows.length,
+            averageAccuracy: averageAccuracy,
+            totalZeroAnswers,
+            totalZeroRate,
             monthlyParticipants: thisMonthAnswers,
             monthlyParticipantsRate: monthlyRate,
             weeklyParticipants: thisWeekAnswers,
             weeklyParticipantsRate: weeklyRate,
             todayParticipants: todayAnswers,
-            averageAccuracy: averageAccuracy,
             zeroRateWeek,
             zeroRateMonth,
             thisWeekQuestions,
@@ -529,6 +575,7 @@ export function SpaceQuizPage() {
             questionRanking: tableDataRaw,
             difficultyTable,
             attentionQuestions,
+            platformMetricsTable,
           },
         });
       })
@@ -603,6 +650,20 @@ export function SpaceQuizPage() {
           accentColor="primary"
         />
         <KpiCard
+          title="累計 回答0件問題数"
+          value={summary.totalZeroAnswers.toLocaleString()}
+          unit="問"
+          icon={AlertTriangle}
+          accentColor="danger"
+        />
+        <KpiCard
+          title="累計 回答0件割合"
+          value={summary.totalZeroRate}
+          unit="%"
+          icon={HelpCircle}
+          accentColor="danger"
+        />
+        <KpiCard
           title="今月の参加者数"
           value={`+${summary.monthlyParticipants.toLocaleString()}`}
           unit="人"
@@ -619,6 +680,14 @@ export function SpaceQuizPage() {
           trendType="up"
         />
         <KpiCard
+          title="今月の回答0件割合"
+          value={summary.zeroRateMonth}
+          unit="%"
+          icon={HelpCircle}
+          accentColor="danger"
+          description={`出題${summary.thisMonthQuestions}件中`}
+        />
+        <KpiCard
           title="今週の参加者数"
           value={`+${summary.weeklyParticipants.toLocaleString()}`}
           unit="人"
@@ -626,19 +695,13 @@ export function SpaceQuizPage() {
           accentColor="primary"
         />
         <KpiCard
-          title="今日の参加者数"
-          value={`+${summary.todayParticipants.toLocaleString()}`}
-          unit="人"
-          icon={Clock}
-          accentColor="warning"
-        />
-        <KpiCard
-          title="今月の回答0件割合"
-          value={summary.zeroRateMonth}
+          title="参加者数の先週末比"
+          value={summary.weeklyParticipantsRate}
           unit="%"
-          icon={HelpCircle}
-          accentColor="danger"
-          description={`出題${summary.thisMonthQuestions}件中`}
+          icon={TrendingUp}
+          accentColor="success"
+          trendValue={`先週末比`}
+          trendType="up"
         />
         <KpiCard
           title="今週の回答0件割合"
@@ -648,23 +711,68 @@ export function SpaceQuizPage() {
           accentColor="danger"
           description={`出題${summary.thisWeekQuestions}件中`}
         />
+        <KpiCard
+         title="今日の参加者数"
+         value={`+${summary.todayParticipants.toLocaleString()}`}
+         unit="人"
+         icon={Clock}
+         accentColor="warning"
+         />
       </div>
 
+      {/* ★ 新規追加: 媒体別パフォーマンス一覧 */}
+      <div className="grid grid-cols-1 gap-6">
+        <SectionCard 
+          title="媒体別 パフォーマンス" 
+          description="各媒体の出題数、回答0件の割合、平均回答数、平均正答率の比較"
+          icon={Activity}
+        >
+          <ScrollableTable
+            columns={[
+              { key: "platform", label: "媒体", align: "left" },
+              { key: "qCount", label: "出題数", align: "right" },
+              { key: "zeroRate", label: "回答0件割合", align: "right" },
+              { key: "avgAns", label: "平均回答数", align: "right" },
+              { key: "accuracy", label: "正答率", align: "right" },
+            ]}
+            data={tables.platformMetricsTable}
+          />
+        </SectionCard>
+      </div>
+
+      {/* 推移グラフ */}
       <div className="grid grid-cols-1 gap-6">
         <SectionCard title="宇宙クイズ 累計参加者数推移 (全体・媒体別)">
           <ChartContainer height="h-[350px]">
             <LineChartComponent
               data={charts.participantsTrend.slice(-90)}
               lines={[
-                { dataKey: "参加者数", name: "累計(全体)", color: "#38BDF8" },
-                { dataKey: "Discord", name: "Discord", color: "#5865F2" },
-                { dataKey: "X", name: "X", color: "#1DA1F2" },
-                { dataKey: "Instagram", name: "Insta", color: "#E4405F" },
-                { dataKey: "マイコミュ", name: "マイコミュ", color: "#F59E0B" },
+                { dataKey: "累計_全体", name: "全体 (累計)", color: "#38BDF8" },
+                { dataKey: "累計_Discord", name: "Discord", color: "#5865F2" },
+                { dataKey: "累計_X", name: "X", color: "#1DA1F2" },
+                { dataKey: "累計_Instagram", name: "Insta", color: "#E4405F" },
+                { dataKey: "累計_マイコミュ", name: "マイコミュ", color: "#F59E0B" },
               ]}
             />
           </ChartContainer>
         </SectionCard>
+        
+        {/* ★ 新規追加: 日別の回答数推移 */}
+        <SectionCard title="日別 回答数推移 (全体・媒体別)" description="日ごとの回答増減の推移">
+          <ChartContainer height="h-[350px]">
+            <LineChartComponent
+              data={charts.participantsTrend.slice(-90)}
+              lines={[
+                { dataKey: "日別_全体", name: "全体 (日別)", color: "#38BDF8" },
+                { dataKey: "日別_Discord", name: "Discord", color: "#5865F2" },
+                { dataKey: "日別_X", name: "X", color: "#1DA1F2" },
+                { dataKey: "日別_Instagram", name: "Insta", color: "#E4405F" },
+                { dataKey: "日別_マイコミュ", name: "マイコミュ", color: "#F59E0B" },
+              ]}
+            />
+          </ChartContainer>
+        </SectionCard>
+
         <SectionCard title="日別 平均正答率推移">
           <ChartContainer height="h-[350px]">
             <LineChartComponent
