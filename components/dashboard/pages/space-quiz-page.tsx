@@ -13,7 +13,8 @@ import {
   CalendarDays,
   AlertTriangle,
   HelpCircle,
-  BookOpenText, ArrowUpRight,
+  BookOpenText,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   ScatterChart,
@@ -50,6 +51,22 @@ const formatDiff = (num: number) => {
 };
 
 type SortMode = "date_desc" | "answers_desc" | "accuracy_desc" | "accuracy_asc";
+
+// 媒体のバッジを生成する関数
+const renderPlatformBadges = (platforms: string[]) => {
+  if (!platforms || platforms.length === 0) return <span className="text-muted-foreground text-xs">-</span>;
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap min-w-[80px]">
+      {platforms.map((p) => {
+        if (p === "Discord") return <span key={p} className="bg-[#5865F2]/20 text-[#5865F2] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">Discord</span>;
+        if (p === "X") return <span key={p} className="bg-[#1DA1F2]/20 text-[#1DA1F2] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">X</span>;
+        if (p === "Instagram") return <span key={p} className="bg-[#E4405F]/20 text-[#E4405F] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">Instagram</span>;
+        if (p === "マイコミュ") return <span key={p} className="bg-[#F59E0B]/20 text-[#F59E0B] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">マイコミュ</span>;
+        return null;
+      })}
+    </div>
+  );
+};
 
 const ScatterTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -88,7 +105,7 @@ const ScatterTooltip = ({ active, payload }: any) => {
 export function SpaceQuizPage() {
   const [data, setData] = useState<any>(null);
   const [sortMode, setSortMode] = useState<SortMode>("date_desc");
-  const [selectedDot, setSelectedDot] = useState<any>(null); // ★ クリックされた点を保存するステート
+  const [selectedDot, setSelectedDot] = useState<any>(null);
 
   useEffect(() => {
     const csvUrl =
@@ -163,26 +180,25 @@ export function SpaceQuizPage() {
             typeCounts.set(typeStr, (typeCounts.get(typeStr) || 0) + 1);
           }
 
-          const answers =
-            parseInt(String(row["回答数"] || "0").replace(/,/g, ""), 10) || 0;
-          const ansDiscord =
-            parseInt(
-              String(row["回答数(Discord)"] || "0").replace(/,/g, ""),
-              10,
-            ) || 0;
-          const ansX =
-            parseInt(String(row["回答数(X)"] || "0").replace(/,/g, ""), 10) ||
-            0;
-          const ansInsta =
-            parseInt(
-              String(row["回答数(Instagram)"] || "0").replace(/,/g, ""),
-              10,
-            ) || 0;
-          const ansMyCommu =
-            parseInt(
-              String(row["回答数(マイコミュ)"] || "0").replace(/,/g, ""),
-              10,
-            ) || 0;
+          const answers = parseInt(String(row["回答数"] || "0").replace(/,/g, ""), 10) || 0;
+
+          // 媒体別の出題有無と回答数を取得
+          const rawDiscord = String(row["回答数(Discord)"] || "").trim();
+          const rawX = String(row["回答数(X)"] || "").trim();
+          const rawInsta = String(row["回答数(Instagram)"] || "").trim();
+          const rawMyCommu = String(row["回答数(マイコミュ)"] || "").trim();
+
+          const ansDiscord = parseInt(rawDiscord.replace(/,/g, ""), 10) || 0;
+          const ansX = parseInt(rawX.replace(/,/g, ""), 10) || 0;
+          const ansInsta = parseInt(rawInsta.replace(/,/g, ""), 10) || 0;
+          const ansMyCommu = parseInt(rawMyCommu.replace(/,/g, ""), 10) || 0;
+
+          // 空欄でない（出題されている）媒体を記録
+          const platforms: string[] = [];
+          if (rawDiscord !== "") platforms.push("Discord");
+          if (rawX !== "") platforms.push("X");
+          if (rawInsta !== "") platforms.push("Instagram");
+          if (rawMyCommu !== "") platforms.push("マイコミュ");
 
           sumDiscord += ansDiscord;
           sumX += ansX;
@@ -201,27 +217,13 @@ export function SpaceQuizPage() {
             accNum *= 100;
           if (isNaN(accNum)) accNum = 0;
 
-          const corDiscord =
-            parseInt(
-              String(row["正答数(Discord)"] || "0").replace(/,/g, ""),
-              10,
-            ) || 0;
-          const corX =
-            parseInt(String(row["正答数(X)"] || "0").replace(/,/g, ""), 10) ||
-            0;
-          const corInsta =
-            parseInt(
-              String(row["正答数(Instagram)"] || "0").replace(/,/g, ""),
-              10,
-            ) || 0;
-          const corMyCommu =
-            parseInt(
-              String(row["正答数(マイコミュ)"] || "0").replace(/,/g, ""),
-              10,
-            ) || 0;
+          const corDiscord = parseInt(String(row["正答数(Discord)"] || "0").replace(/,/g, ""), 10) || 0;
+          const corX = parseInt(String(row["正答数(X)"] || "0").replace(/,/g, ""), 10) || 0;
+          const corInsta = parseInt(String(row["正答数(Instagram)"] || "0").replace(/,/g, ""), 10) || 0;
+          const corMyCommu = parseInt(String(row["正答数(マイコミュ)"] || "0").replace(/,/g, ""), 10) || 0;
+
           const correctSum = corDiscord + corX + corInsta + corMyCommu;
-          const calculatedCorrect =
-            correctSum > 0 ? correctSum : Math.round(answers * (accNum / 100));
+          const calculatedCorrect = correctSum > 0 ? correctSum : Math.round(answers * (accNum / 100));
 
           totalAnswers += answers;
           totalCorrects += calculatedCorrect;
@@ -232,11 +234,19 @@ export function SpaceQuizPage() {
               formattedDate,
               answers: 0,
               corrects: 0,
+              discord: 0,
+              x: 0,
+              insta: 0,
+              mycommu: 0,
             });
           }
           const dayData = dailyAgg.get(dateKey);
           dayData.answers += answers;
           dayData.corrects += calculatedCorrect;
+          dayData.discord += ansDiscord;
+          dayData.x += ansX;
+          dayData.insta += ansInsta;
+          dayData.mycommu += ansMyCommu;
 
           tableDataRaw.push({
             id: row["番号"],
@@ -247,6 +257,7 @@ export function SpaceQuizPage() {
             accuracy: Math.round(accNum * 10) / 10,
             num: num,
             timestamp: new Date(dateStrRaw).getTime(),
+            platforms: platforms, // ★出題媒体を記録
           });
 
           // --- 回答0件の割合集計 (今月・今週) ---
@@ -273,6 +284,8 @@ export function SpaceQuizPage() {
           (a, b) => a.num - b.num,
         );
         let cumulativeAnswers = 0;
+        let cumDiscord = 0, cumX = 0, cumInsta = 0, cumMyCommu = 0;
+
         const trendData: any[] = [];
         const accuracyData: any[] = [];
 
@@ -298,10 +311,20 @@ export function SpaceQuizPage() {
 
         dailyRecords.forEach((day) => {
           cumulativeAnswers += day.answers;
+          cumDiscord += day.discord;
+          cumX += day.x;
+          cumInsta += day.insta;
+          cumMyCommu += day.mycommu;
+
           trendData.push({
             name: day.formattedDate,
             参加者数: cumulativeAnswers,
+            Discord: cumDiscord,
+            X: cumX,
+            Instagram: cumInsta,
+            マイコミュ: cumMyCommu,
           });
+
           accuracyData.push({
             name: day.formattedDate,
             正答率:
@@ -361,46 +384,11 @@ export function SpaceQuizPage() {
 
         // --- 難易度別集計 (回答5件超のみ対象) ---
         const difficultyGroups = [
-          {
-            range: "0-20%",
-            min: 0,
-            max: 20,
-            count: 0,
-            totalAns: 0,
-            totalAcc: 0,
-          },
-          {
-            range: "21-40%",
-            min: 21,
-            max: 40,
-            count: 0,
-            totalAns: 0,
-            totalAcc: 0,
-          },
-          {
-            range: "41-60%",
-            min: 41,
-            max: 60,
-            count: 0,
-            totalAns: 0,
-            totalAcc: 0,
-          },
-          {
-            range: "61-80%",
-            min: 61,
-            max: 80,
-            count: 0,
-            totalAns: 0,
-            totalAcc: 0,
-          },
-          {
-            range: "81-100%",
-            min: 81,
-            max: 100,
-            count: 0,
-            totalAns: 0,
-            totalAcc: 0,
-          },
+          { range: "0-20%", min: 0, max: 20, count: 0, totalAns: 0, totalAcc: 0 },
+          { range: "21-40%", min: 21, max: 40, count: 0, totalAns: 0, totalAcc: 0 },
+          { range: "41-60%", min: 41, max: 60, count: 0, totalAns: 0, totalAcc: 0 },
+          { range: "61-80%", min: 61, max: 80, count: 0, totalAns: 0, totalAcc: 0 },
+          { range: "81-100%", min: 81, max: 100, count: 0, totalAns: 0, totalAcc: 0 },
         ];
 
         tableDataRaw
@@ -522,10 +510,12 @@ export function SpaceQuizPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
-        <h2 className="text-2xl font-bold text-foreground">宇宙クイズ分析</h2>
-        <p className="text-muted-foreground mt-1">
-          宇宙クイズの参加状況、正答率、プラットフォーム別の回答傾向を確認できます。
-        </p>
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">宇宙クイズ分析</h2>
+          <p className="text-muted-foreground mt-1">
+            宇宙クイズの参加状況、正答率、プラットフォーム別の回答傾向を確認できます。
+          </p>
+        </div>
         <Button
           asChild
           variant="outline"
@@ -614,12 +604,16 @@ export function SpaceQuizPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        <SectionCard title="宇宙クイズ 累計参加者数推移">
+        <SectionCard title="宇宙クイズ 累計参加者数推移 (全体・媒体別)">
           <ChartContainer height="h-[350px]">
             <LineChartComponent
               data={charts.participantsTrend.slice(-90)}
               lines={[
-                { dataKey: "参加者数", name: "累計参加者数", color: "#38BDF8" },
+                { dataKey: "参加者数", name: "累計(全体)", color: "#38BDF8" },
+                { dataKey: "Discord", name: "Discord", color: "#5865F2" },
+                { dataKey: "X", name: "X", color: "#1DA1F2" },
+                { dataKey: "Instagram", name: "Insta", color: "#E4405F" },
+                { dataKey: "マイコミュ", name: "マイコミュ", color: "#F59E0B" },
               ]}
             />
           </ChartContainer>
@@ -712,14 +706,12 @@ export function SpaceQuizPage() {
               />
               <ZAxis type="number" range={[100, 100]} />
 
-              {/* pointerEvents: 'auto' にしてツールチップ内を触れるように設定 */}
               <RechartsTooltip
                 cursor={{ strokeDasharray: "3 3" }}
                 content={<ScatterTooltip />}
                 wrapperStyle={{ pointerEvents: "auto", zIndex: 100 }}
               />
 
-              {/* クリック時に Dialog を開く処理 */}
               <Scatter
                 name="問題"
                 data={charts.scatterData}
@@ -763,6 +755,7 @@ export function SpaceQuizPage() {
           <ScrollableTable
             columns={[
               { key: "question", label: "問題名", align: "left" },
+              { key: "platformsNode", label: "出題媒体", align: "left" },
               { key: "answers", label: "回答数", align: "right" },
               { key: "accuracyStr", label: "正答率", align: "right" },
             ]}
@@ -771,6 +764,7 @@ export function SpaceQuizPage() {
               accuracyStr: (
                 <span className="text-danger font-semibold">{q.accuracy}%</span>
               ),
+              platformsNode: renderPlatformBadges(q.platforms),
             }))}
           />
         </SectionCard>
@@ -811,6 +805,7 @@ export function SpaceQuizPage() {
           columns={[
             { key: "rank", label: "順位", align: "center" },
             { key: "question", label: "問題名", align: "left" },
+            { key: "platformsNode", label: "出題媒体", align: "left" },
             { key: "answers", label: "回答数", align: "right" },
             { key: "correct", label: "正解数", align: "right" },
             { key: "accuracyStr", label: "正答率", align: "right" },
@@ -821,6 +816,7 @@ export function SpaceQuizPage() {
             answers: q.answers.toLocaleString(),
             correct: q.correct.toLocaleString(),
             accuracyStr: `${q.accuracy}%`,
+            platformsNode: renderPlatformBadges(q.platforms),
           }))}
         />
       </SectionCard>

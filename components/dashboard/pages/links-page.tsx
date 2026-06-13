@@ -795,7 +795,7 @@ function LinkCard({
 }
 
 export function LinksPage() {
-  const [activeCategory, setActiveCategory] = useState('member');
+  const [activeCategory, setActiveCategory] = useState('general');
   const currentCategory = initialLinkCategories.find((cat) => cat.id === activeCategory);
 
   // 選択されたタブのリンクをサブカテゴリでグループ化
