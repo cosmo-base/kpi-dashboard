@@ -611,7 +611,7 @@ export function SpaceQuizPage() {
   // ★ グラフの線を出し分けするための配列を生成
   const getTrendLines = (prefix: "累計_" | "日別_") => {
     const lines = [];
-    if (visibleLines["全体"]) lines.push({ dataKey: `${prefix}全体`, name: "全体", color: "#38BDF8" });
+    if (visibleLines["全体"]) lines.push({ dataKey: `${prefix}全体`, name: "全体", color: "fuchsia-400" });
     if (visibleLines["Discord"]) lines.push({ dataKey: `${prefix}Discord`, name: "Discord", color: "#5865F2" });
     if (visibleLines["X"]) lines.push({ dataKey: `${prefix}X`, name: "X", color: "#1DA1F2" });
     if (visibleLines["Instagram"]) lines.push({ dataKey: `${prefix}Instagram`, name: "Insta", color: "#E4405F" });
@@ -780,7 +780,7 @@ export function SpaceQuizPage() {
           </span>
           <div className="flex flex-wrap gap-2">
             {[
-              { key: "全体", color: "bg-[#38BDF8]" },
+              { key: "全体", color: "bg-fuchsia-400" },
               { key: "Discord", color: "bg-[#5865F2]" },
               { key: "X", color: "bg-[#1DA1F2]" },
               { key: "Instagram", color: "bg-[#E4405F]" },
