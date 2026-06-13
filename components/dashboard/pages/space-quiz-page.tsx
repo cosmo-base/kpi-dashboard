@@ -2,54 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import {
-  Users,
-  Calendar,
-  TrendingUp,
-  Clock,
-  Target,
-  ArrowUpDown,
-  CalendarDays,
-  AlertTriangle,
-  HelpCircle,
-  BookOpenText,
-  ArrowUpRight,
-  Activity,
-  PieChart
-} from "lucide-react";
-import {
-  ScatterChart,
-  Scatter,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  ZAxis,
-} from "recharts";
+import { Users, Clock, Calendar, TrendingUp, Target, ArrowUpDown, CalendarDays, AlertTriangle, HelpCircle, BookOpenText, ArrowUpRight, Activity,} from "lucide-react";
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ZAxis,} from "recharts";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";
 import { ScrollableTable } from "../scrollable-table";
 import { LineChartComponent } from "../charts/line-chart";
+import { LinearChartComponent } from "../charts/linear-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle,} from "@/components/ui/dialog";
 
 const getJSTDate = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-
-const formatDiff = (num: number) => {
-  if (num > 0) return `+${num.toLocaleString()}`;
-  if (num < 0) return num.toLocaleString();
-  return "0";
-};
 
 type SortMode = "date_desc" | "answers_desc" | "accuracy_desc" | "accuracy_asc";
 
@@ -58,11 +25,11 @@ const renderPlatformBadges = (platforms: string[]) => {
   if (!platforms || platforms.length === 0)
     return <span className="text-muted-foreground text-xs">-</span>;
 
-  // ★ 4媒体すべての場合は「すべて」にまとめる
+  // ★ 4媒体すべての場合は専用の色に変更（Xの青とかぶらない紫系グラデーション風）
   if (platforms.length === 4) {
     return (
       <div className="flex items-center gap-1.5 flex-wrap min-w-[80px]">
-        <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">
+        <span className="bg-fuchsia-500/20 text-fuchsia-400 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap border border-fuchsia-500/30">
           すべて
         </span>
       </div>
@@ -96,7 +63,7 @@ const renderPlatformBadges = (platforms: string[]) => {
               key={p}
               className="bg-[#E4405F]/20 text-[#E4405F] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
             >
-              Insta
+              Instagram
             </span>
           );
         if (p === "マイコミュ")
@@ -156,6 +123,22 @@ export function SpaceQuizPage() {
   const [sortMode, setSortMode] = useState<SortMode>("date_desc");
   const [selectedDot, setSelectedDot] = useState<any>(null);
 
+  // ★ グラフ表示のON/OFFステート
+  const [visibleLines, setVisibleLines] = useState<Record<string, boolean>>({
+    全体: true,
+    Discord: true,
+    X: true,
+    Instagram: true,
+    マイコミュ: true,
+  });
+
+  const toggleLine = (lineKey: string) => {
+    setVisibleLines((prev) => ({
+      ...prev,
+      [lineKey]: !prev[lineKey],
+    }));
+  };
+
   useEffect(() => {
     const csvUrl =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVq2TSYbOibnTUUyYqHJmrEfspQ1KQn8JpaTsvkrC8oekSogURY1N9yqocitnAbEXewzPIQVyj59rf/pub?gid=0&single=true&output=csv";
@@ -177,14 +160,13 @@ export function SpaceQuizPage() {
 
         let totalAnswers = 0,
           totalCorrects = 0,
-          totalZeroAnswers = 0; // ★累積0件問題数
+          totalZeroAnswers = 0;
 
         let sumDiscord = 0,
           sumX = 0,
           sumInstagram = 0,
           sumMyCommu = 0;
 
-        // ★媒体別のパフォーマンス用オブジェクト
         const pStats = {
           Discord: { qCount: 0, zeroCount: 0, ans: 0, cor: 0 },
           X: { qCount: 0, zeroCount: 0, ans: 0, cor: 0 },
@@ -231,7 +213,6 @@ export function SpaceQuizPage() {
           const dateKey = `${y}/${String(m).padStart(2, "0")}/${String(d).padStart(2, "0")}`;
           const formattedDate = `${m}/${d}`;
 
-          // --- 種別の集計 ---
           const typeStr = String(
             row["クイズの分類"] || row["種別"] || row["カテゴリ"] || "未分類",
           ).trim();
@@ -239,10 +220,10 @@ export function SpaceQuizPage() {
             typeCounts.set(typeStr, (typeCounts.get(typeStr) || 0) + 1);
           }
 
-          const answers = parseInt(String(row["回答数"] || "0").replace(/,/g, ""), 10) || 0;
+          const answers =
+            parseInt(String(row["回答数"] || "0").replace(/,/g, ""), 10) || 0;
           if (answers === 0) totalZeroAnswers++;
-          
-          // 媒体別の出題有無と回答数を取得
+
           const rawDiscord = String(row["回答数(Discord)"] || "").trim();
           const rawX = String(row["回答数(X)"] || "").trim();
           const rawInsta = String(row["回答数(Instagram)"] || "").trim();
@@ -253,13 +234,18 @@ export function SpaceQuizPage() {
           const ansInsta = parseInt(rawInsta.replace(/,/g, ""), 10) || 0;
           const ansMyCommu = parseInt(rawMyCommu.replace(/,/g, ""), 10) || 0;
 
-          // 正答数の取得
-          const corDiscord = parseInt(String(row["正答数(Discord)"] || "0").replace(/,/g, ""), 10) || 0;
-          const corX = parseInt(String(row["正答数(X)"] || "0").replace(/,/g, ""), 10) || 0;
-          const corInsta = parseInt(String(row["正答数(Instagram)"] || "0").replace(/,/g, ""), 10) || 0;
-          const corMyCommu = parseInt(String(row["正答数(マイコミュ)"] || "0").replace(/,/g, ""), 10) || 0;
+          const corDiscord =
+            parseInt(String(row["正答数(Discord)"] || "0").replace(/,/g, ""), 10) ||
+            0;
+          const corX =
+            parseInt(String(row["正答数(X)"] || "0").replace(/,/g, ""), 10) || 0;
+          const corInsta =
+            parseInt(String(row["正答数(Instagram)"] || "0").replace(/,/g, ""), 10) ||
+            0;
+          const corMyCommu =
+            parseInt(String(row["正答数(マイコミュ)"] || "0").replace(/,/g, ""), 10) ||
+            0;
 
-          // 媒体別パフォーマンス集計
           const platforms: string[] = [];
           if (rawDiscord !== "") {
             platforms.push("Discord");
@@ -306,9 +292,10 @@ export function SpaceQuizPage() {
           )
             accNum *= 100;
           if (isNaN(accNum)) accNum = 0;
-          
+
           const correctSum = corDiscord + corX + corInsta + corMyCommu;
-          const calculatedCorrect = correctSum > 0 ? correctSum : Math.round(answers * (accNum / 100));
+          const calculatedCorrect =
+            correctSum > 0 ? correctSum : Math.round(answers * (accNum / 100));
 
           totalAnswers += answers;
           totalCorrects += calculatedCorrect;
@@ -345,7 +332,6 @@ export function SpaceQuizPage() {
             platforms: platforms,
           });
 
-          // --- 回答0件の割合集計 (今月・今週) ---
           if (num >= startOfThisMonthNum && num <= todayNum) {
             thisMonthQuestions++;
             if (answers === 0) thisMonthZeroAnswers++;
@@ -356,14 +342,28 @@ export function SpaceQuizPage() {
           }
         });
 
-        const totalZeroRate = validRows.length > 0 ? Math.round((totalZeroAnswers / validRows.length) * 100) : 0;
-        const zeroRateWeek = thisWeekQuestions > 0 ? Math.round((thisWeekZeroAnswers / thisWeekQuestions) * 100) : 0;
-        const zeroRateMonth = thisMonthQuestions > 0 ? Math.round((thisMonthZeroAnswers / thisMonthQuestions) * 100) : 0;
+        const totalZeroRate =
+          validRows.length > 0
+            ? Math.round((totalZeroAnswers / validRows.length) * 100)
+            : 0;
+        const zeroRateWeek =
+          thisWeekQuestions > 0
+            ? Math.round((thisWeekZeroAnswers / thisWeekQuestions) * 100)
+            : 0;
+        const zeroRateMonth =
+          thisMonthQuestions > 0
+            ? Math.round((thisMonthZeroAnswers / thisMonthQuestions) * 100)
+            : 0;
 
-        const dailyRecords = Array.from(dailyAgg.values()).sort((a, b) => a.num - b.num);
-        
+        const dailyRecords = Array.from(dailyAgg.values()).sort(
+          (a, b) => a.num - b.num,
+        );
+
         let cumulativeAnswers = 0;
-        let cumDiscord = 0, cumX = 0, cumInsta = 0, cumMyCommu = 0;
+        let cumDiscord = 0,
+          cumX = 0,
+          cumInsta = 0,
+          cumMyCommu = 0;
         const trendData: any[] = [];
         const accuracyData: any[] = [];
 
@@ -440,7 +440,14 @@ export function SpaceQuizPage() {
             : Math.round((totalCorrects / totalAnswers) * 100);
 
         const typeColors = [
-          "#38BDF8", "#8B5CF6", "#22C55E", "#F59E0B", "#EF4444", "#EC4899", "#10B981", "#6B7280",
+          "#38BDF8",
+          "#8B5CF6",
+          "#22C55E",
+          "#F59E0B",
+          "#EF4444",
+          "#EC4899",
+          "#10B981",
+          "#6B7280",
         ];
         const typeDistribution = Array.from(typeCounts.entries())
           .filter(([name]) => name !== "未分類")
@@ -460,7 +467,6 @@ export function SpaceQuizPage() {
           .filter((item) => item.value > 0)
           .sort((a, b) => b.value - a.value);
 
-        // --- 難易度別集計 ---
         const difficultyGroups = [
           { range: "0-20%", min: 0, max: 20, count: 0, totalAns: 0, totalAcc: 0 },
           { range: "21-40%", min: 21, max: 40, count: 0, totalAns: 0, totalAcc: 0 },
@@ -490,7 +496,6 @@ export function SpaceQuizPage() {
             g.count > 0 ? `${Math.round(g.totalAcc / g.count)}%` : "-",
         }));
 
-        // --- 媒体別パフォーマンス集計表 ---
         const platformMetricsTable = [
           { platform: "Discord", ...pStats.Discord },
           { platform: "X", ...pStats.X },
@@ -499,12 +504,12 @@ export function SpaceQuizPage() {
         ].map((p) => ({
           platform: p.platform,
           qCount: p.qCount,
-          zeroRate: p.qCount > 0 ? `${Math.round((p.zeroCount / p.qCount) * 100)}%` : "0%",
+          zeroRate:
+            p.qCount > 0 ? `${Math.round((p.zeroCount / p.qCount) * 100)}%` : "0%",
           avgAns: p.qCount > 0 ? Math.round((p.ans / p.qCount) * 10) / 10 : 0,
-          accuracy: p.ans > 0 ? `${Math.round((p.cor / p.ans) * 100)}%` : "0%"
+          accuracy: p.ans > 0 ? `${Math.round((p.cor / p.ans) * 100)}%` : "0%",
         }));
 
-        // --- 重なり対策: 散布図用データのグループ化 ---
         const scatterMap = new Map<string, any>();
 
         const zeroAnswerQuestions = tableDataRaw
@@ -530,12 +535,14 @@ export function SpaceQuizPage() {
                 isOrigin: false,
               });
             } else {
-              scatterMap.get(key).questions.push({ text: q.question, platforms: q.platforms });
+              scatterMap.get(key).questions.push({
+                text: q.question,
+                platforms: q.platforms,
+              });
             }
           });
         const scatterData = Array.from(scatterMap.values());
 
-        // --- 要注意問題の抽出 ---
         const avgAnswersOverall =
           tableDataRaw.length > 0 ? totalAnswers / tableDataRaw.length : 0;
         const attentionQuestions = tableDataRaw
@@ -601,6 +608,17 @@ export function SpaceQuizPage() {
     return b.num - a.num;
   });
 
+  // ★ グラフの線を出し分けするための配列を生成
+  const getTrendLines = (prefix: "累計_" | "日別_") => {
+    const lines = [];
+    if (visibleLines["全体"]) lines.push({ dataKey: `${prefix}全体`, name: "全体", color: "#38BDF8" });
+    if (visibleLines["Discord"]) lines.push({ dataKey: `${prefix}Discord`, name: "Discord", color: "#5865F2" });
+    if (visibleLines["X"]) lines.push({ dataKey: `${prefix}X`, name: "X", color: "#1DA1F2" });
+    if (visibleLines["Instagram"]) lines.push({ dataKey: `${prefix}Instagram`, name: "Insta", color: "#E4405F" });
+    if (visibleLines["マイコミュ"]) lines.push({ dataKey: `${prefix}マイコミュ`, name: "マイコミュ", color: "#F59E0B" });
+    return lines;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
@@ -627,7 +645,7 @@ export function SpaceQuizPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-6 gap-4">
         <KpiCard
           title="総参加者数 (累計)"
           value={summary.totalParticipants.toLocaleString()}
@@ -720,10 +738,9 @@ export function SpaceQuizPage() {
          />
       </div>
 
-      {/* ★ 新規追加: 媒体別パフォーマンス一覧 */}
       <div className="grid grid-cols-1 gap-6">
-        <SectionCard 
-          title="媒体別 パフォーマンス" 
+        <SectionCard
+          title="媒体別 パフォーマンス"
           description="各媒体の出題数、回答0件の割合、平均回答数、平均正答率の比較"
           icon={Activity}
         >
@@ -742,46 +759,68 @@ export function SpaceQuizPage() {
 
       {/* 推移グラフ */}
       <div className="grid grid-cols-1 gap-6">
+        {/* ★ グラフ切り替えボタン共通コントロール */}
+        <div className="bg-secondary/20 p-4 rounded-2xl border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <span className="text-sm font-bold text-foreground">
+            グラフの表示切り替え:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: "全体", color: "bg-[#38BDF8]" },
+              { key: "Discord", color: "bg-[#5865F2]" },
+              { key: "X", color: "bg-[#1DA1F2]" },
+              { key: "Instagram", color: "bg-[#E4405F]" },
+              { key: "マイコミュ", color: "bg-[#F59E0B]" },
+            ].map((btn) => (
+              <Button
+                key={btn.key}
+                variant="outline"
+                size="sm"
+                onClick={() => toggleLine(btn.key)}
+                className={cn(
+                  "transition-all duration-200 border-border/50 flex items-center gap-2",
+                  visibleLines[btn.key]
+                    ? "bg-secondary/80 text-foreground"
+                    : "bg-background text-muted-foreground opacity-50"
+                )}
+              >
+                <div className={`w-2.5 h-2.5 rounded-full ${btn.color}`} />
+                {btn.key}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         <SectionCard title="宇宙クイズ 累計参加者数推移 (全体・媒体別)">
           <ChartContainer height="h-[350px]">
-            <LineChartComponent
-              data={charts.participantsTrend.slice(-90)}
-              lines={[
-                { dataKey: "累計_全体", name: "全体 (累計)", color: "#38BDF8" },
-                { dataKey: "累計_Discord", name: "Discord", color: "#5865F2" },
-                { dataKey: "累計_X", name: "X", color: "#1DA1F2" },
-                { dataKey: "累計_Instagram", name: "Insta", color: "#E4405F" },
-                { dataKey: "累計_マイコミュ", name: "マイコミュ", color: "#F59E0B" },
-              ]}
-            />
-          </ChartContainer>
-        </SectionCard>
-        
-        {/* ★ 新規追加: 日別の回答数推移 */}
-        <SectionCard title="日別 回答数推移 (全体・媒体別)" description="日ごとの回答増減の推移">
-          <ChartContainer height="h-[350px]">
-            <LineChartComponent
-              data={charts.participantsTrend.slice(-90)}
-              lines={[
-                { dataKey: "日別_全体", name: "全体 (日別)", color: "#38BDF8" },
-                { dataKey: "日別_Discord", name: "Discord", color: "#5865F2" },
-                { dataKey: "日別_X", name: "X", color: "#1DA1F2" },
-                { dataKey: "日別_Instagram", name: "Insta", color: "#E4405F" },
-                { dataKey: "日別_マイコミュ", name: "マイコミュ", color: "#F59E0B" },
-              ]}
-            />
+            {getTrendLines("累計_").length > 0 ? (
+              <LineChartComponent
+                data={charts.participantsTrend.slice(-90)}
+                lines={getTrendLines("累計_")}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                表示するグラフを選択してください
+              </div>
+            )}
           </ChartContainer>
         </SectionCard>
 
-        <SectionCard title="日別 平均正答率推移">
+        <SectionCard
+          title="日別 回答数推移 (全体・媒体別)"
+          description="日ごとの回答増減の推移"
+        >
           <ChartContainer height="h-[350px]">
-            <LineChartComponent
-              data={charts.accuracyTrend.slice(-90)}
-              lines={[
-                { dataKey: "正答率", name: "平均正答率", color: "#8B5CF6" },
-              ]}
-              yAxisUnit="%"
-            />
+            {getTrendLines("日別_").length > 0 ? (
+              <LinearChartComponent
+                data={charts.participantsTrend.slice(-90)}
+                lines={getTrendLines("日別_")}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                表示するグラフを選択してください
+              </div>
+            )}
           </ChartContainer>
         </SectionCard>
       </div>
