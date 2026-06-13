@@ -19,6 +19,7 @@ import { DonutChart } from "../charts/donut-chart";
 import { ScrollableTable } from "../scrollable-table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { StackedBarChart } from "../charts/stacked-bar-chart";
 
 const CSV_URLS = {
   trend:
@@ -31,6 +32,8 @@ const CSV_URLS = {
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRSBX8EEqFoTdtvrQ32gTdwF1_vsT1_2yfZaVUzzHOH7RBaHDTcTKjB7rxL8f3zkF29DmwKwazp6q3r/pub?gid=472061508&single=true&output=csv",
   conversions:
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRSBX8EEqFoTdtvrQ32gTdwF1_vsT1_2yfZaVUzzHOH7RBaHDTcTKjB7rxL8f3zkF29DmwKwazp6q3r/pub?gid=16174631&single=true&output=csv",
+  demographics:
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRSBX8EEqFoTdtvrQ32gTdwF1_vsT1_2yfZaVUzzHOH7RBaHDTcTKjB7rxL8f3zkF29DmwKwazp6q3r/pub?gid=160182027&single=true&output=csv",
 };
 
 const SOURCE_COLORS = [
@@ -148,8 +151,9 @@ export function CBHPPage() {
       fetch(CSV_URLS.pages).then((res) => res.text()),
       fetch(CSV_URLS.region).then((res) => res.text()),
       fetch(CSV_URLS.conversions).then((res) => res.text()),
+      fetch(CSV_URLS.demographics).then((res) => res.text()),
     ])
-      .then(([trendTxt, sourceTxt, pagesTxt, regionTxt, convTxt]) => {
+      .then(([trendTxt, sourceTxt, pagesTxt, regionTxt, convTxt, demoTxt]) => {
         const nowJst = getJSTDate();
         const currentY = nowJst.getFullYear();
         const currentM = nowJst.getMonth() + 1;
@@ -404,7 +408,48 @@ export function CBHPPage() {
             else regionDistribution[othersIdx].value += val;
           }
         });
+        // --- 6. 性別・年齢層の処理 ---
+        const demoRows = Papa.parse(demoTxt, { header: true, skipEmptyLines: true }).data as any[];
+        const genderMap = new Map<string, number>();
+        const ageMap = new Map<string, number>();
 
+        demoRows.forEach((row) => {
+          const gender = String(row.userGender || "unknown");
+          const age = String(row.userAgeBracket || "unknown");
+          const users = parseInt(row.activeUsers, 10) || 0;
+
+          if (users <= 0) return;
+
+          // 日本語に変換
+          const jpGender = gender === "male" ? "男性" : gender === "female" ? "女性" : "不明";
+          const jpAge = age === "unknown" ? "不明" : age;
+
+          genderMap.set(jpGender, (genderMap.get(jpGender) || 0) + users);
+          ageMap.set(jpAge, (ageMap.get(jpAge) || 0) + users);
+        });
+
+        // 性別の円グラフ用データ
+        const genderData = Array.from(genderMap.entries())
+          .map(([name, value], i) => ({
+            name,
+            value,
+            // 男性は水色、女性はピンク、不明はグレー
+            color: name === "男性" ? "#38BDF8" : name === "女性" ? "#EC4899" : "#6B7280",
+          }))
+          .sort((a, b) => b.value - a.value);
+
+        // 年齢の棒グラフ用データ
+        const ageDataForChart = Array.from(ageMap.entries())
+          .map(([name, value]) => ({
+            name: name,
+            ユーザー数: value,
+          }))
+          // 年齢順にソート（不明は最後に）
+          .sort((a, b) => {
+            if (a.name === "不明") return 1;
+            if (b.name === "不明") return -1;
+            return a.name.localeCompare(b.name);
+          });
         setData({
           summary: {
             totalPVs,
@@ -414,7 +459,7 @@ export function CBHPPage() {
             avgDuration: formatSeconds(avgDuration),
             totalDiscordJoins,
           },
-          charts: { trendData, sourceData, regionDistribution },
+          charts: { trendData, sourceData, regionDistribution, genderData, ageDataForChart },
           tables: { pageDataRaw: pageData, regionData },
         });
       })
@@ -646,6 +691,30 @@ export function CBHPPage() {
             ]}
             data={tables.regionData}
           />
+        </SectionCard>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SectionCard title="性別 割合" description="アクセスユーザーの性別分布">
+          <ChartContainer height="h-[300px]">
+            {charts.genderData && charts.genderData.length > 0 ? (
+              <DonutChart data={charts.genderData} centerLabel="ユーザー" />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>
+            )}
+          </ChartContainer>
+        </SectionCard>
+
+        <SectionCard title="年齢層 分布" description="アクセスユーザーの年齢層別割合">
+          <ChartContainer height="h-[300px]">
+            {charts.ageDataForChart && charts.ageDataForChart.length > 0 ? (
+              <StackedBarChart
+                data={charts.ageDataForChart}
+                bars={[{ dataKey: "ユーザー数", name: "ユーザー数", color: "#8B5CF6" }]}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">データがありません</div>
+            )}
+          </ChartContainer>
         </SectionCard>
       </div>
     </div>
