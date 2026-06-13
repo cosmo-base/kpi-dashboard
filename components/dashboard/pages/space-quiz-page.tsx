@@ -1,4 +1,3 @@
-// components\dashboard\pages\space-quiz-page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -54,14 +53,59 @@ type SortMode = "date_desc" | "answers_desc" | "accuracy_desc" | "accuracy_asc";
 
 // 媒体のバッジを生成する関数
 const renderPlatformBadges = (platforms: string[]) => {
-  if (!platforms || platforms.length === 0) return <span className="text-muted-foreground text-xs">-</span>;
+  if (!platforms || platforms.length === 0)
+    return <span className="text-muted-foreground text-xs">-</span>;
+
+  // ★ 4媒体すべての場合は「すべて」にまとめる
+  if (platforms.length === 4) {
+    return (
+      <div className="flex items-center gap-1.5 flex-wrap min-w-[80px]">
+        <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">
+          すべて
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-1.5 flex-wrap min-w-[80px]">
       {platforms.map((p) => {
-        if (p === "Discord") return <span key={p} className="bg-[#5865F2]/20 text-[#5865F2] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">Discord</span>;
-        if (p === "X") return <span key={p} className="bg-[#1DA1F2]/20 text-[#1DA1F2] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">X</span>;
-        if (p === "Instagram") return <span key={p} className="bg-[#E4405F]/20 text-[#E4405F] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">Instagram</span>;
-        if (p === "マイコミュ") return <span key={p} className="bg-[#F59E0B]/20 text-[#F59E0B] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">マイコミュ</span>;
+        if (p === "Discord")
+          return (
+            <span
+              key={p}
+              className="bg-[#5865F2]/20 text-[#5865F2] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
+            >
+              Discord
+            </span>
+          );
+        if (p === "X")
+          return (
+            <span
+              key={p}
+              className="bg-[#1DA1F2]/20 text-[#1DA1F2] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
+            >
+              X
+            </span>
+          );
+        if (p === "Instagram")
+          return (
+            <span
+              key={p}
+              className="bg-[#E4405F]/20 text-[#E4405F] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
+            >
+              Insta
+            </span>
+          );
+        if (p === "マイコミュ")
+          return (
+            <span
+              key={p}
+              className="bg-[#F59E0B]/20 text-[#F59E0B] px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
+            >
+              マイコミュ
+            </span>
+          );
         return null;
       })}
     </div>
@@ -73,14 +117,17 @@ const ScatterTooltip = ({ active, payload }: any) => {
     const data = payload[0].payload;
     return (
       <div className="bg-slate-900 border border-white/10 p-3 rounded-xl shadow-xl z-50 max-w-xs cursor-default">
-        <div className="max-h-[150px] overflow-y-auto custom-scrollbar pr-2 mb-2 space-y-1">
-          {data.questions.map((q: string, i: number) => (
-            <p
+        <div className="max-h-[150px] overflow-y-auto custom-scrollbar pr-2 mb-2 space-y-2">
+          {data.questions.map((q: any, i: number) => (
+            <div
               key={i}
-              className="text-white font-bold text-sm leading-tight border-b border-white/10 pb-1.5 pt-0.5 last:border-0"
+              className="border-b border-white/10 pb-2 pt-0.5 last:border-0"
             >
-              {q}
-            </p>
+              <p className="text-white font-bold text-sm leading-tight mb-1.5">
+                {q.text}
+              </p>
+              {renderPlatformBadges(q.platforms)}
+            </div>
           ))}
         </div>
         <div className="flex justify-between items-end border-t border-white/10 pt-2">
@@ -181,7 +228,7 @@ export function SpaceQuizPage() {
           }
 
           const answers = parseInt(String(row["回答数"] || "0").replace(/,/g, ""), 10) || 0;
-
+          
           // 媒体別の出題有無と回答数を取得
           const rawDiscord = String(row["回答数(Discord)"] || "").trim();
           const rawX = String(row["回答数(X)"] || "").trim();
@@ -221,7 +268,7 @@ export function SpaceQuizPage() {
           const corX = parseInt(String(row["正答数(X)"] || "0").replace(/,/g, ""), 10) || 0;
           const corInsta = parseInt(String(row["正答数(Instagram)"] || "0").replace(/,/g, ""), 10) || 0;
           const corMyCommu = parseInt(String(row["正答数(マイコミュ)"] || "0").replace(/,/g, ""), 10) || 0;
-
+          
           const correctSum = corDiscord + corX + corInsta + corMyCommu;
           const calculatedCorrect = correctSum > 0 ? correctSum : Math.round(answers * (accNum / 100));
 
@@ -285,7 +332,7 @@ export function SpaceQuizPage() {
         );
         let cumulativeAnswers = 0;
         let cumDiscord = 0, cumX = 0, cumInsta = 0, cumMyCommu = 0;
-
+        
         const trendData: any[] = [];
         const accuracyData: any[] = [];
 
@@ -324,7 +371,7 @@ export function SpaceQuizPage() {
             Instagram: cumInsta,
             マイコミュ: cumMyCommu,
           });
-
+          
           accuracyData.push({
             name: day.formattedDate,
             正答率:
@@ -417,7 +464,7 @@ export function SpaceQuizPage() {
 
         const zeroAnswerQuestions = tableDataRaw
           .filter((q) => q.answers === 0)
-          .map((q) => q.question);
+          .map((q) => ({ text: q.question, platforms: q.platforms })); // ツールチップ用にオブジェクト化
         if (zeroAnswerQuestions.length > 0) {
           scatterMap.set("0-0", {
             answers: 0,
@@ -435,11 +482,11 @@ export function SpaceQuizPage() {
               scatterMap.set(key, {
                 answers: q.answers,
                 accuracy: q.accuracy,
-                questions: [q.question],
+                questions: [{ text: q.question, platforms: q.platforms }], // ツールチップ用にオブジェクト化
                 isOrigin: false,
               });
             } else {
-              scatterMap.get(key).questions.push(q.question);
+              scatterMap.get(key).questions.push({ text: q.question, platforms: q.platforms });
             }
           });
         const scatterData = Array.from(scatterMap.values());
@@ -848,14 +895,15 @@ export function SpaceQuizPage() {
           )}
 
           <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-2">
-            {selectedDot?.questions.map((q: string, i: number) => (
+            {selectedDot?.questions.map((q: any, i: number) => (
               <div
                 key={i}
-                className="p-3 bg-secondary/30 rounded-lg border border-border/30"
+                className="p-3 bg-secondary/30 rounded-lg border border-border/30 flex flex-col gap-2"
               >
                 <p className="text-foreground font-medium text-sm leading-snug">
-                  {q}
+                  {q.text}
                 </p>
+                {renderPlatformBadges(q.platforms)}
               </div>
             ))}
           </div>
