@@ -15,6 +15,7 @@ import { SNSPage } from './pages/sns-page';
 import { CBHPPage } from './pages/cbhp-page';
 import { LoadingSkeleton } from './chart-container';
 import { dashboardTabs } from '@/lib/mock-data';
+import { ShittokuPage } from './pages/shittoku-page';
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState('community');
@@ -72,6 +73,8 @@ export function Dashboard() {
         return <CBLPage />;
       case 'space-diagnosis':
         return <SpaceDiagnosisPage />;
+      case 'shittoku':
+        return <ShittokuPage />;
       case 'links':
         return <LinksPage />;
       default:

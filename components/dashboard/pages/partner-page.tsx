@@ -292,7 +292,7 @@ export function PartnerPage() {
         </Button>
       </div>
 
-      <div className="grid-cols-1 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-6 gap-4">
         <KpiCard
           title="のべパートナー企業団体数"
           value={summary.totalPartners.toLocaleString()}

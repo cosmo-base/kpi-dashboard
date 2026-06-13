@@ -8,6 +8,7 @@ export const dashboardTabs = [
   { id: 'cbed', label: 'CBED分析' },
   { id: 'cbmd', label: 'CBMD分析' },
   { id: 'cbl', label: 'CBL分析' },
-  { id: 'space-diagnosis', label: '宇宙タイプ診断分析' },
+  { id: 'space-diagnosis', label: '宇宙タイプ診断分析' },  
+  { id: 'shittoku', label: 'CBで宇宙知っトク'},
   { id: 'links', label: 'リンク管理' },
 ];
