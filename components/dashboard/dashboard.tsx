@@ -17,9 +17,10 @@ import { LoadingSkeleton } from './chart-container';
 import { dashboardTabs } from '@/lib/mock-data';
 import { ShittokuPage } from './pages/shittoku-page';
 
-// ★ グループと表示名の定義
+// ★ 1段目と2段目の階層データを定義
 const tabGroups = [
   {
+    id: 'general',
     name: '全体',
     tabs: [
       { id: 'community', label: 'Discord' },
@@ -29,6 +30,7 @@ const tabGroups = [
     ],
   },
   {
+    id: 'content',
     name: 'コンテンツ',
     tabs: [
       { id: 'space-quiz', label: '宇宙クイズ' },
@@ -40,6 +42,7 @@ const tabGroups = [
     ],
   },
   {
+    id: 'links',
     name: 'リンク',
     tabs: [
       { id: 'links', label: 'リンク' },
@@ -48,21 +51,32 @@ const tabGroups = [
 ];
 
 export function Dashboard() {
-  const [activeTab, setActiveTab] = useState('community');
+  const [activeCategory, setActiveCategory] = useState('general'); // 1段目のステート
+  const [activeTab, setActiveTab] = useState('community');         // 2段目のステート
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(
     new Date().toISOString()
   );
 
+  // 1段目（親カテゴリ）を変更した時の処理
+  const handleCategoryChange = useCallback((categoryId: string) => {
+    setActiveCategory(categoryId);
+    const group = tabGroups.find((g) => g.id === categoryId);
+    if (group && group.tabs.length > 0) {
+      // 1段目を切り替えたら、自動的にそのカテゴリの先頭のタブを選択する
+      setActiveTab(group.tabs[0].id);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // 2段目（子タブ）を変更した時の処理
   const handleTabChange = useCallback((tabId: string) => {
     setActiveTab(tabId);
-    // Scroll to top when tab changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setLastUpdated(new Date().toISOString());
     setIsLoading(false);
@@ -120,38 +134,52 @@ export function Dashboard() {
         onRefresh={handleRefresh}
       />
 
-      {/* Tab Navigation (★ 複数段に分けて表示するよう改修) */}
-      <div className="sticky top-16 z-40 backdrop-blur-md bg-background/60 border-b border-border/30">
-        <div className="max-w-[1440px] mx-auto px-2 sm:px-6 lg:px-8 py-2 sm:py-3 space-y-1.5 sm:space-y-2">
-          {tabGroups.map((group) => (
-            <div key={group.name} className="flex items-center gap-1 sm:gap-3">
-              {/* 左側の見出しラベル */}
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground w-12 sm:w-16 shrink-0">
+      {/* Tab Navigation (階層型) */}
+      {/* 1段目: 大カテゴリ (スクロールで上に隠れる) */}
+      <div className="pt-4 pb-2 border-b border-border/10">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
+            {tabGroups.map((group) => (
+              <button
+                key={group.id}
+                onClick={() => handleCategoryChange(group.id)}
+                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeCategory === group.id
+                    ? 'bg-primary text-white shadow-md shadow-primary/30'
+                    : 'bg-secondary/40 text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
+                  }`}
+              >
                 {group.name}
-              </span>
-              {/* 各行のタブ群 */}
-              <div className="flex-1 min-w-0">
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 2段目: 選択されたカテゴリのサブタブ (スクロール時に上部で固定される) */}
+      <div className="sticky top-16 z-40 backdrop-blur-md bg-background/80 border-b border-border/30">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex-1 min-w-0">
+            {tabGroups
+              .filter((g) => g.id === activeCategory)
+              .map((group) => (
                 <RibbonTabs
+                  key={group.id}
                   tabs={group.tabs.map((tab) => {
-                    // 既存のアイコンデータを引き継ぎつつ、ラベルだけを上書き
                     const existing = dashboardTabs.find((t) => t.id === tab.id);
                     return existing ? { ...existing, label: tab.label } : (tab as any);
                   })}
                   activeTab={activeTab}
                   onChange={handleTabChange}
                 />
-              </div>
-            </div>
-          ))}
+              ))}
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
       <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderPage()}
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border/30 py-6 mt-12">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-muted-foreground">

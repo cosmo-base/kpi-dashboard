@@ -28,7 +28,7 @@ interface LinkCategory {
 const initialLinkCategories: LinkCategory[] = [
   {
     id: 'general',
-    label: '一般ページ',
+    label: '一般',
     icon: Users,
     links: [
       {
@@ -91,7 +91,7 @@ const initialLinkCategories: LinkCategory[] = [
   },
   {
     id: 'member',
-    label: '参加者ページ',
+    label: '参加者',
     icon: Users,
     links: [
       {
@@ -130,7 +130,7 @@ const initialLinkCategories: LinkCategory[] = [
   },
   {
     id: 'partner',
-    label: 'パートナーページ',
+    label: 'パートナー',
     icon: Handshake,
     links: [
       {
@@ -153,7 +153,7 @@ const initialLinkCategories: LinkCategory[] = [
   },
   {
     id: 'admin',
-    label: '運営ページ',
+    label: '運営',
     icon: Settings,
     links: [
       {
@@ -256,7 +256,7 @@ const initialLinkCategories: LinkCategory[] = [
   },
   {
     id: 'admin2',
-    label: '運営ページ(開発)',
+    label: '開発',
     icon: Settings,
     links: [
       {
@@ -303,7 +303,7 @@ const initialLinkCategories: LinkCategory[] = [
   },
   {
     id: 'manage',
-    label: 'ダッシュボード原本',
+    label: '原本',
     icon: Wrench,
     links: [      
       {

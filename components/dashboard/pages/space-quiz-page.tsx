@@ -759,6 +759,20 @@ export function SpaceQuizPage() {
 
       {/* 推移グラフ */}
       <div className="grid grid-cols-1 gap-6">
+        <SectionCard title="宇宙クイズ 累計参加者数推移 (全体・媒体別)">
+          <ChartContainer height="h-[350px]">
+            {getTrendLines("累計_").length > 0 ? (
+              <LineChartComponent
+                data={charts.participantsTrend.slice(-90)}
+                lines={getTrendLines("累計_")}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                表示するグラフを選択してください
+              </div>
+            )}
+          </ChartContainer>
+        </SectionCard>
         {/* ★ グラフ切り替えボタン共通コントロール */}
         <div className="bg-secondary/20 p-4 rounded-2xl border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <span className="text-sm font-bold text-foreground">
@@ -790,22 +804,6 @@ export function SpaceQuizPage() {
             ))}
           </div>
         </div>
-
-        <SectionCard title="宇宙クイズ 累計参加者数推移 (全体・媒体別)">
-          <ChartContainer height="h-[350px]">
-            {getTrendLines("累計_").length > 0 ? (
-              <LineChartComponent
-                data={charts.participantsTrend.slice(-90)}
-                lines={getTrendLines("累計_")}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-                表示するグラフを選択してください
-              </div>
-            )}
-          </ChartContainer>
-        </SectionCard>
-
         <SectionCard
           title="日別 回答数推移 (全体・媒体別)"
           description="日ごとの回答増減の推移"
