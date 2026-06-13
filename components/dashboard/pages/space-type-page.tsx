@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import { Users, TrendingUp, Sparkles, Zap, HelpCircle, ArrowUpRight } from "lucide-react";
-import { KpiCard } from "../kpi-card";
+import { Users, TrendingUp, Sparkles, Zap, HelpCircle, ArrowUpRight, Clock, CalendarDays, Calendar } from "lucide-react"; import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";
 import { ScrollableTable } from "../scrollable-table";
@@ -296,7 +295,10 @@ export function SpaceDiagnosisPage() {
         const currentD = nowJst.getDate();
         const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
         const todayNum = currentY * 10000 + currentM * 100 + currentD;
-
+        const startOfWeekJst = new Date(nowJst.getTime());
+        const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
+        startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
+        const startOfWeekNum = startOfWeekJst.getFullYear() * 10000 + (startOfWeekJst.getMonth() + 1) * 100 + startOfWeekJst.getDate();
         const endOfPrevMonthJst = new Date(nowJst.getTime());
         endOfPrevMonthJst.setDate(0);
         const endOfPrevMonthNum =
@@ -507,35 +509,31 @@ export function SpaceDiagnosisPage() {
 
         const latest = dailyRecords[dailyRecords.length - 1];
 
-        let thisMonthTotal = 0,
-          thisMonthSimple = 0,
-          thisMonthDetailed = 0;
-        let endOfPrevMonthTotal = 0,
-          endOfPrevMonthSimple = 0,
-          endOfPrevMonthDetailed = 0;
-        let todayTotal = 0;
-        let todaySimpleCbhp = 0;
-        let todaySimplePart = 0;
-        let todaySimpleTotal = 0;
-        let todayDetailed = 0;
-
+        let thisMonthTotal = 0, thisMonthSimpleTotal = 0, thisMonthSimpleCbhp = 0, thisMonthSimplePart = 0, thisMonthDetailed = 0;
+        let thisWeekTotal = 0, thisWeekSimpleTotal = 0, thisWeekSimpleCbhp = 0, thisWeekSimplePart = 0, thisWeekDetailed = 0;
+        let todayTotal = 0, todaySimpleTotal = 0, todaySimpleCbhp = 0, todaySimplePart = 0, todayDetailed = 0;
+        let endOfPrevMonthTotal = 0, endOfPrevMonthSimple = 0, endOfPrevMonthDetailed = 0;
         dailyRecords.forEach((d) => {
           const num = d.num;
-          if (num >= startOfThisMonthNum) {
+          if (num >= startOfThisMonthNum && num <= todayNum) {
             thisMonthTotal += d.incTotal;
-            thisMonthSimple += d.incSimpleTotal;
+            thisMonthSimpleTotal += d.incSimpleTotal;
+            thisMonthSimpleCbhp += d.incSimpleCbhp;
+            thisMonthSimplePart += d.incSimplePart;
             thisMonthDetailed += d.incDetailed;
           }
-          if (num <= endOfPrevMonthNum) {
-            endOfPrevMonthTotal = d.total;
-            endOfPrevMonthSimple = d.simpleTotal;
-            endOfPrevMonthDetailed = d.detailedTotal;
+          if (num >= startOfWeekNum && num <= todayNum) {
+            thisWeekTotal += d.incTotal;
+            thisWeekSimpleTotal += d.incSimpleTotal;
+            thisWeekSimpleCbhp += d.incSimpleCbhp;
+            thisWeekSimplePart += d.incSimplePart;
+            thisWeekDetailed += d.incDetailed;
           }
           if (num === todayNum) {
             todayTotal += d.incTotal;
+            todaySimpleTotal += d.incSimpleTotal;
             todaySimpleCbhp += d.incSimpleCbhp;
             todaySimplePart += d.incSimplePart;
-            todaySimpleTotal += d.incSimpleTotal;
             todayDetailed += d.incDetailed;
           }
         });
@@ -709,6 +707,8 @@ export function SpaceDiagnosisPage() {
         setData({
           summary: {
             totalParticipants: latest.total,
+            thisWeek: { total: thisWeekTotal, simple: thisWeekSimpleTotal, cbhp: thisWeekSimpleCbhp, part: thisWeekSimplePart, detailed: thisWeekDetailed },
+            thisMonth: { total: thisMonthTotal, simple: thisMonthSimpleTotal, cbhp: thisMonthSimpleCbhp, part: thisMonthSimplePart, detailed: thisMonthDetailed },
             todayTotal: todayTotal,
             todaySimpleCbhp: todaySimpleCbhp,
             todaySimplePart: todaySimplePart,
@@ -834,7 +834,7 @@ export function SpaceDiagnosisPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
         <KpiCard
           title="総参加者数"
           value={summary.totalParticipants?.toLocaleString() || 0}
@@ -843,11 +843,12 @@ export function SpaceDiagnosisPage() {
           accentColor="primary"
         />
         <KpiCard
-          title="今月の増加数"
-          value={formatDiff(summary.monthlyIncrease || 0)}
+          title="今月の参加数"
+          value={`+${summary.thisMonth?.total || 0}`}
           unit="人"
-          icon={TrendingUp}
+          icon={Calendar}
           accentColor="success"
+          description={`簡易版: +${summary.thisMonth?.simple || 0} (CBHP: +${summary.thisMonth?.cbhp || 0} / 参加者: +${summary.thisMonth?.part || 0}) | 完全版: +${summary.thisMonth?.detailed || 0}`}
         />
         <KpiCard
           title="全体の先月末比"
@@ -859,15 +860,21 @@ export function SpaceDiagnosisPage() {
           accentColor="success"
         />
         <KpiCard
-          title="今日の参加数 (合計)"
+          title="今週の参加数"
+          value={`+${summary.thisWeek?.total || 0}`}
+          unit="人"
+          icon={CalendarDays}
+          accentColor="primary"
+          description={`簡易版: +${summary.thisWeek?.simple || 0} (CBHP: +${summary.thisWeek?.cbhp || 0} / 参加者: +${summary.thisWeek?.part || 0}) | 完全版: +${summary.thisWeek?.detailed || 0}`}
+        />
+        <KpiCard
+          title="今日の参加数"
           value={`+${summary.todayTotal || 0}`}
           unit="人"
           icon={Users}
           accentColor="warning"
-          description={`簡易版合計: +${summary.todaySimpleTotal || 0} (CBHP: +${summary.todaySimpleCbhp || 0} / 参加者: +${summary.todaySimplePart || 0}) | 完全版: +${summary.todayDetailed || 0}`}
+          description={`簡易版: +${summary.todaySimpleTotal || 0} (CBHP: +${summary.todaySimpleCbhp || 0} / 参加者: +${summary.todaySimplePart || 0}) | 完全版: +${summary.todayDetailed || 0}`}
         />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="簡易版の参加者数 (合計)"
           value={summary.simpleVersionParticipants?.toLocaleString() || 0}

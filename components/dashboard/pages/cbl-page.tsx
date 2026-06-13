@@ -139,7 +139,7 @@ export function CBLPage() {
           </a>
         </Button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
         <KpiCard title="総記事数" value={summary.totalArticles?.toLocaleString() || 0} unit="記事" icon={BookOpen} accentColor="primary" />
         <KpiCard title="総ビュー数" value={summary.totalViews?.toLocaleString() || 0} unit="views" icon={Eye} accentColor="success" />
         <KpiCard title="おすすめ記事数" value={summary.recommendCount?.toLocaleString() || 0} unit="記事" icon={Star} accentColor="warning" />

@@ -243,7 +243,7 @@ export function SNSPage() {
       <div className="space-y-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4"><div className="p-2.5 rounded-xl bg-[#1DA1F2]/10 border border-[#1DA1F2]/20"><XIcon className="h-5 w-5 text-[#1DA1F2]" /></div><span className="text-lg font-semibold text-foreground">X (Twitter)</span></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             <KpiCard title="フォロワー数" value={platforms.x.followers.toLocaleString()} icon={Users} accentColor="primary" />
             <KpiCard title="今月の増加数" value={formatDiff(platforms.x.monthlyIncrease)} icon={TrendingUp} accentColor="success" />
             <KpiCard title="1カ月比" value={platforms.x.monthlyRate} unit="%" trendValue="先月末比" trendType="up" icon={Calendar} accentColor="primary" />
@@ -255,7 +255,7 @@ export function SNSPage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4"><div className="p-2.5 rounded-xl bg-[#d640e4]/10 border border-[#d640e4]/20"><InstagramIcon className="h-5 w-5 text-[#d640e4]" /></div><span className="text-lg font-semibold text-foreground">Instagram</span></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             <KpiCard title="フォロワー数" value={platforms.instagram.followers.toLocaleString()} icon={Users} accentColor="danger" />
             <KpiCard title="今月の増加数" value={formatDiff(platforms.instagram.monthlyIncrease)} icon={TrendingUp} accentColor="success" />
             <KpiCard title="1カ月比" value={platforms.instagram.monthlyRate} unit="%" trendValue="先月末比" trendType="up" icon={Calendar} accentColor="primary" />
@@ -267,7 +267,7 @@ export function SNSPage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4"><div className="p-2.5 rounded-xl bg-[#41C9B4]/10 border border-[#41C9B4]/20"><NoteIcon className="h-5 w-5 text-[#41C9B4]" /></div><span className="text-lg font-semibold text-foreground">note</span></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             <KpiCard title="フォロワー数" value={platforms.note.followers.toLocaleString()} icon={Users} accentColor="success" />
             <KpiCard title="今月の増加数" value={formatDiff(platforms.note.monthlyIncrease)} icon={TrendingUp} accentColor="success" />
             <KpiCard title="1カ月比" value={platforms.note.monthlyRate} unit="%" trendValue="先月末比" trendType="up" icon={Calendar} accentColor="primary" />

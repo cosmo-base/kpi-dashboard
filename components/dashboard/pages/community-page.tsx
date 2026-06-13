@@ -22,7 +22,7 @@ const formatDiff = (num: number) => {
 
 export function CommunityPage() {
   const [data, setData] = useState<any>(null);
-  const [showSns, setShowSns] = useState(false); // SNS表示のON/OFF
+  const [showSns, setShowSns] = useState(false);
 
   useEffect(() => {
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRoX91AuTR9uVSNcCSqr0ir_SIP-6ZtNpOqBHaLEwXDMA99w1Rws-5L7crTpqBY_JqHa-n0Ie4PxWLq/pub?gid=0&single=true&output=csv';
@@ -48,7 +48,6 @@ export function CommunityPage() {
 
         const dailyRecords = rawData.slice(headerRowIndex + 1)
           .map(row => {
-            // SNSのフォロワー数合計を計算
             const snsTotal = (Number(row[xIdx]) || 0) + (Number(row[instaIdx]) || 0) + (Number(row[noteIdx]) || 0);
             return {
               date: `${row[monthIdx]}/${row[dayIdx]}`,
@@ -153,8 +152,8 @@ export function CommunityPage() {
             const prevCumulative = monthlyTableRaw[idx - 1].cumulative;
             rate = prevCumulative <= 0 ? 100 : Math.round((item.cumulative / prevCumulative) * 100);
           }
-          return { month: item.month, increase: item.increase, rate: `${rate}%`, cumulative: item.cumulative };
-        }).reverse();
+          return { month: item.month, increase: item.increase, rateRaw: rate, rate: `${rate}%`, cumulative: item.cumulative };
+        });
 
         const weeklyMap = new Map<string, { increase: number; cumulative: number; startStr: string; endStr: string }>();
         let currentYear = nowJst.getFullYear();
@@ -194,11 +193,14 @@ export function CommunityPage() {
             const prevCumulative = weeklyTableRaw[idx - 1].cumulative;
             rate = prevCumulative <= 0 ? 100 : Math.round((item.cumulative / prevCumulative) * 100);
           }
-          return { week: item.week, increase: item.increase, rate: `${rate}%`, cumulative: item.cumulative };
-        }).reverse();
+          return { week: item.week, shortWeek: item.shortWeek, increase: item.increase, rateRaw: rate, rate: `${rate}%`, cumulative: item.cumulative };
+        });
 
         const monthlyByTotal = [...monthlyTableRaw].slice(-4).map(item => ({ name: item.month, 増加数: item.increase }));
         const weeklyByTotal = [...weeklyTableRaw].slice(-4).map(item => ({ name: item.shortWeek, 増加数: item.increase }));
+
+        const monthlyRateTrend = monthlyTable.map(item => ({ name: item.month, 先月比: item.rateRaw }));
+        const weeklyRateTrend = weeklyTable.map(item => ({ name: item.shortWeek, 先週比: item.rateRaw }));
 
         setData({
           summary: {
@@ -213,9 +215,13 @@ export function CommunityPage() {
               累計人数: record.total,
               SNS総フォロワー数: record.snsTotal > 0 ? record.snsTotal : undefined
             })),
-            monthlyByTotal, weeklyByTotal, sourceDistribution
+            monthlyByTotal, weeklyByTotal, sourceDistribution,
+            monthlyRateTrend, weeklyRateTrend // ★ 追加
           },
-          tables: { monthlyTable, weeklyTable }
+          tables: {
+            monthlyTable: [...monthlyTable].reverse(),
+            weeklyTable: [...weeklyTable].reverse()
+          }
         });
       })
       .catch(err => console.error('CSV Fetch Error:', err));
@@ -228,7 +234,7 @@ export function CommunityPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
-        <div className="mb-6"><h2 className="text-2xl font-bold text-foreground">Discord登録数</h2><p className="text-muted-foreground mt-1">Cosmo Base全体の登録者数、増加推移、詳細な期間集計を確認できます。</p></div>
+        <div><h2 className="text-2xl font-bold text-foreground">Discord登録数</h2><p className="text-muted-foreground mt-1">Cosmo Base全体の登録者数、増加推移、詳細な期間集計を確認できます。</p></div>
         <Button
           asChild
           variant="outline"
@@ -246,7 +252,7 @@ export function CommunityPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
         <KpiCard title="全体の人数" value={summary.totalMembers.toLocaleString()} unit="人" icon={Users} accentColor="primary" />
         <KpiCard title="今月の増加数" value={formatDiff(summary.thisMonthIncrease)} unit="人" icon={TrendingUp} accentColor="success" />
         <KpiCard title="1カ月比" value={`${summary.monthlyIncreaseRate}`} unit="%" trendValue="先月末比" trendType="up" icon={Calendar} accentColor="accent" />
@@ -276,6 +282,28 @@ export function CommunityPage() {
           />
         </ChartContainer>
       </SectionCard>
+
+      {/* ★ 追加：比率の折れ線グラフセクション */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SectionCard title="月間 登録数 先月比の推移" description="前月の累計人数に対するパーセンテージ">
+          <ChartContainer height="h-[300px]">
+            <LineChartComponent
+              data={charts.monthlyRateTrend.slice(-12)}
+              lines={[{ dataKey: '先月比', name: '先月比', color: '#10B981' }]}
+              yAxisUnit="%"
+            />
+          </ChartContainer>
+        </SectionCard>
+        <SectionCard title="週間 登録数 先週比の推移" description="前週の累計人数に対するパーセンテージ">
+          <ChartContainer height="h-[300px]">
+            <LineChartComponent
+              data={charts.weeklyRateTrend.slice(-12)}
+              lines={[{ dataKey: '先週比', name: '先週比', color: '#F59E0B' }]}
+              yAxisUnit="%"
+            />
+          </ChartContainer>
+        </SectionCard>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SectionCard title="月別増加人数" description="直近4か月の推移"><ChartContainer height="h-[300px]"><StackedBarChart data={charts.monthlyByTotal} bars={[{ dataKey: '増加数', name: '増加人数', color: '#38BDF8' }]} /></ChartContainer></SectionCard>

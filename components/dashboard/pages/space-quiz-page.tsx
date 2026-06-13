@@ -228,7 +228,7 @@ export function SpaceQuizPage() {
           }
 
           const answers = parseInt(String(row["回答数"] || "0").replace(/,/g, ""), 10) || 0;
-          
+
           // 媒体別の出題有無と回答数を取得
           const rawDiscord = String(row["回答数(Discord)"] || "").trim();
           const rawX = String(row["回答数(X)"] || "").trim();
@@ -268,7 +268,7 @@ export function SpaceQuizPage() {
           const corX = parseInt(String(row["正答数(X)"] || "0").replace(/,/g, ""), 10) || 0;
           const corInsta = parseInt(String(row["正答数(Instagram)"] || "0").replace(/,/g, ""), 10) || 0;
           const corMyCommu = parseInt(String(row["正答数(マイコミュ)"] || "0").replace(/,/g, ""), 10) || 0;
-          
+
           const correctSum = corDiscord + corX + corInsta + corMyCommu;
           const calculatedCorrect = correctSum > 0 ? correctSum : Math.round(answers * (accNum / 100));
 
@@ -332,7 +332,7 @@ export function SpaceQuizPage() {
         );
         let cumulativeAnswers = 0;
         let cumDiscord = 0, cumX = 0, cumInsta = 0, cumMyCommu = 0;
-        
+
         const trendData: any[] = [];
         const accuracyData: any[] = [];
 
@@ -371,7 +371,7 @@ export function SpaceQuizPage() {
             Instagram: cumInsta,
             マイコミュ: cumMyCommu,
           });
-          
+
           accuracyData.push({
             name: day.formattedDate,
             正答率:
@@ -580,7 +580,7 @@ export function SpaceQuizPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
         <KpiCard
           title="総参加者数 (累計)"
           value={summary.totalParticipants.toLocaleString()}

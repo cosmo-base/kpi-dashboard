@@ -292,8 +292,7 @@ export function PartnerPage() {
         </Button>
       </div>
 
-      {/* KPI Cards - First Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid-cols-1 sm:grid-cols-4 lg:grid-cols-6 gap-4">
         <KpiCard
           title="のべパートナー企業団体数"
           value={summary.totalPartners.toLocaleString()}
@@ -329,10 +328,6 @@ export function PartnerPage() {
           icon={FileCheck}
           accentColor="primary"
         />
-      </div>
-
-      {/* KPI Cards - Second Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="連絡済み"
           value={summary.contacted}
