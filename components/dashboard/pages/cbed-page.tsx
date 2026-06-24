@@ -9,7 +9,8 @@ import {
   Globe,
   TrendingUp,
   ArrowUpDown,
-  Clock, ArrowUpRight
+  Clock,
+  ArrowUpRight,
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
@@ -19,6 +20,7 @@ import { RankingList } from "../ranking-list";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { JapanMap } from "../charts/japan-map";
 
 const getJSTDate = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -73,21 +75,19 @@ const REGION_MAP: Record<string, string> = {
   沖縄: "九州・沖縄",
 };
 
-// ★ 地方ごとに色を固定
 const REGION_COLOR_MAP: Record<string, string> = {
-  北海道: "#38BDF8", // Light Blue
-  東北: "#8B5CF6", // Purple
-  関東: "#22C55E", // Green
-  中部: "#F59E0B", // Orange
-  近畿: "#EF4444", // Red
-  中国: "#EC4899", // Pink
-  四国: "#10B981", // Emerald
-  "九州・沖縄": "#F43F5E", // Rose
-  オンライン: "#06B6D4", // Cyan
-  その他: "#6B7280", // Gray
+  北海道: "#38BDF8",
+  東北: "#8B5CF6",
+  関東: "#22C55E",
+  中部: "#F59E0B",
+  近畿: "#EF4444",
+  中国: "#EC4899",
+  四国: "#10B981",
+  "九州・沖縄": "#F43F5E",
+  オンライン: "#06B6D4",
+  その他: "#6B7280",
 };
 
-// ★ 月ごとに色を固定 (1月〜12月)
 const MONTH_COLORS = [
   "#38BDF8",
   "#8B5CF6",
@@ -162,6 +162,10 @@ type SortMode = "listings" | "upcoming" | "completed" | "north";
 export function CBEDPage() {
   const [data, setData] = useState<any>(null);
   const [prefSortMode, setPrefSortMode] = useState<SortMode>("listings");
+  // ★ マップとランキングの表示切り替えステート
+  const [mapViewMode, setMapViewMode] = useState<
+    "total" | "upcoming" | "completed"
+  >("total");
 
   useEffect(() => {
     const csvUrl =
@@ -189,7 +193,6 @@ export function CBEDPage() {
           headers.indexOf("lng") !== -1 ? headers.indexOf("lng") : 7;
         let prefIdx = headers.indexOf("都道府県");
         if (prefIdx === -1) prefIdx = 16;
-
         let updateIdx = headers.indexOf("更新日時");
         if (updateIdx === -1) updateIdx = headers.indexOf("updatedAt");
         if (updateIdx === -1) updateIdx = 17;
@@ -217,8 +220,10 @@ export function CBEDPage() {
           onlineCount = 0,
           offlineCount = 0,
           todayUpdateCount = 0;
-
-        const regionCounts = new Map<string, number>();
+        const regionCounts = new Map<
+          string,
+          { total: number; upcoming: number; completed: number }
+        >();
         const prefCounts = new Map<
           string,
           { total: number; upcoming: number; completed: number; region: string }
@@ -284,10 +289,16 @@ export function CBEDPage() {
 
           if (isOnline) {
             onlineCount++;
-            regionCounts.set(
-              "オンライン",
-              (regionCounts.get("オンライン") || 0) + 1,
-            );
+            if (!regionCounts.has("オンライン"))
+              regionCounts.set("オンライン", {
+                total: 0,
+                upcoming: 0,
+                completed: 0,
+              });
+            const rData = regionCounts.get("オンライン")!;
+            rData.total++;
+            if (isUpcoming) rData.upcoming++;
+            else rData.completed++;
           } else {
             offlineCount++;
             const rawPref = String(row[prefIdx] || "").trim();
@@ -298,7 +309,13 @@ export function CBEDPage() {
               PREFECTURES_FULL.find((p) => p.startsWith(cleanPref)) ||
               (rawPref ? rawPref : "未設定");
 
-            regionCounts.set(region, (regionCounts.get(region) || 0) + 1);
+            if (!regionCounts.has(region))
+              regionCounts.set(region, { total: 0, upcoming: 0, completed: 0 });
+            const rData = regionCounts.get(region)!;
+            rData.total++;
+            if (isUpcoming) rData.upcoming++;
+            else rData.completed++;
+
             if (!prefCounts.has(displayPref))
               prefCounts.set(displayPref, {
                 total: 0,
@@ -332,11 +349,10 @@ export function CBEDPage() {
           }
         });
 
-        // ★ 色を名前ベースで完全に固定する処理
         const regionDistribution = Array.from(regionCounts.entries())
-          .map(([name, value]) => ({
+          .map(([name, data]) => ({
             name,
-            value,
+            value: data.total,
             color: REGION_COLOR_MAP[name] || "#6B7280",
           }))
           .sort((a, b) => b.value - a.value);
@@ -363,25 +379,13 @@ export function CBEDPage() {
           .map(([name, value]) => ({ name, value, color: getMonthColor(name) }))
           .sort((a, b) => (parseInt(a.name) || 0) - (parseInt(b.name) || 0));
 
-        const regionRanking = regionDistribution
-          .filter((r) => r.name !== "オンライン" && r.name !== "その他")
-          .map((r, i) => ({
-            rank: i + 1,
-            name: r.name,
-            count: r.value,
-            percentage: Math.round((r.value / offlineCount) * 100) || 0,
-          }));
-
-        const prefectureRanking = Array.from(prefCounts.entries())
-          .filter(([name, data]) => name !== "未設定" && data.total > 0)
-          .sort((a, b) => b[1].total - a[1].total)
-          .slice(0, 10)
-          .map(([name, data], i) => ({
-            rank: i + 1,
-            name,
-            count: data.total,
-            percentage: Math.round((data.total / offlineCount) * 100) || 0,
-          }));
+        // ★ ランキング生成用データ（全件・未開催・開催済の切り替えに対応するため、全てのデータを保持）
+        const regionRankingData = Array.from(regionCounts.entries()).filter(
+          ([name]) => name !== "オンライン" && name !== "その他",
+        );
+        const prefRankingData = Array.from(prefCounts.entries()).filter(
+          ([name]) => name !== "未設定",
+        );
 
         const prefectureTableRaw = Array.from(prefCounts.entries()).map(
           ([prefecture, data]) => ({
@@ -420,6 +424,7 @@ export function CBEDPage() {
             onlineListings: onlineCount,
             monthlyIncrease: currentMonthCount - prevMonthCount,
             todayUpdateCount,
+            offlineCount, // パーセンテージ計算用
           },
           charts: {
             regionDistribution,
@@ -427,7 +432,7 @@ export function CBEDPage() {
             upcomingRegionDistribution,
             upcomingMonthDistribution,
           },
-          rankings: { regionRanking, prefectureRanking },
+          rankingsData: { regionRankingData, prefRankingData },
           tables: { prefectureTableRaw, onlineTable },
         });
       })
@@ -443,6 +448,7 @@ export function CBEDPage() {
     const validItems = table.filter((t) =>
       PREFECTURES_FULL.includes(t.prefecture),
     );
+
     if (prefSortMode === "north") {
       validItems.sort(
         (a, b) =>
@@ -462,6 +468,50 @@ export function CBEDPage() {
     return [...validItems, ...undefinedItems];
   }, [data, prefSortMode]);
 
+  // ★ マップとランキングのデータを動的に生成する
+  const displayRankings = useMemo(() => {
+    if (!data || !data.rankingsData)
+      return { region: [], pref: [], mapData: [] };
+
+    const key =
+      mapViewMode === "total"
+        ? "total"
+        : mapViewMode === "upcoming"
+          ? "upcoming"
+          : "completed";
+
+    // 地方ランキング
+    const region = data.rankingsData.regionRankingData
+      .map(([name, counts]: any) => ({ name, count: counts[key] }))
+      .filter((r: any) => r.count > 0)
+      .sort((a: any, b: any) => b.count - a.count)
+      .map((r: any, i: number) => ({
+        rank: i + 1,
+        name: r.name,
+        count: r.count,
+        percentage:
+          Math.round((r.count / data.summary.offlineCount) * 100) || 0,
+      }));
+
+    // 都道府県ランキング (※ sliceを外して全件表示に変更)
+    const pref = data.rankingsData.prefRankingData
+      .map(([name, counts]: any) => ({ name, count: counts[key] }))
+      .filter((r: any) => r.count > 0)
+      .sort((a: any, b: any) => b.count - a.count)
+      .map((r: any, i: number) => ({
+        rank: i + 1,
+        name: r.name,
+        count: r.count,
+        percentage:
+          Math.round((r.count / data.summary.offlineCount) * 100) || 0,
+      }));
+
+    // マップ用データ
+    const mapData = pref.map((p: any) => ({ name: p.name, value: p.count }));
+
+    return { region, pref, mapData };
+  }, [data, mapViewMode]);
+
   if (!data)
     return (
       <div className="flex h-[400px] items-center justify-center text-muted-foreground">
@@ -472,7 +522,7 @@ export function CBEDPage() {
       </div>
     );
 
-  const { summary, charts, rankings, tables } = data;
+  const { summary, charts, tables } = data;
 
   return (
     <div className="space-y-6">
@@ -618,12 +668,57 @@ export function CBEDPage() {
         </SectionCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="地方別掲載件数ランキング">
-          <RankingList items={rankings?.regionRanking || []} />
+      {/* ★ マップとランキングの共通切り替えボタン */}
+      <div className="bg-secondary/20 p-4 rounded-2xl border border-border/50 flex flex-wrap gap-2 items-center">
+        <span className="text-sm font-bold text-foreground mr-2">
+          表示データの切り替え:
+        </span>
+        {[
+          { key: "total", label: "総件数" },
+          { key: "upcoming", label: "未開催" },
+          { key: "completed", label: "開催済" },
+        ].map((btn) => (
+          <Button
+            key={btn.key}
+            variant="outline"
+            size="sm"
+            onClick={() => setMapViewMode(btn.key as any)}
+            className={cn(
+              "transition-all duration-200",
+              mapViewMode === btn.key
+                ? "bg-primary text-primary-foreground border-transparent"
+                : "bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground",
+            )}
+          >
+            {btn.label}
+          </Button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SectionCard
+          title={`地方別掲載件数ランキング (${mapViewMode === "total" ? "総件数" : mapViewMode === "upcoming" ? "未開催" : "開催済"})`}
+        >
+          {/* 高さを固定してスクロールできるようにする */}
+          <div className="max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+            <RankingList items={displayRankings.region} />
+          </div>
         </SectionCard>
-        <SectionCard title="都道府県別掲載件数ランキング">
-          <RankingList items={rankings?.prefectureRanking || []} />
+        <SectionCard
+          title={`都道府県別掲載件数ランキング (${mapViewMode === "total" ? "総件数" : mapViewMode === "upcoming" ? "未開催" : "開催済"})`}
+        >
+          {/* 都道府県は件数が多いのでスクロールエリアに配置 */}
+          <div className="max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+            <RankingList items={displayRankings.pref} />
+          </div>
+        </SectionCard>
+        {/* ★ 日本地図 */}
+        <SectionCard
+          title={`都道府県別 イベント分布ヒートマップ (${mapViewMode === "total" ? "総件数" : mapViewMode === "upcoming" ? "未開催" : "開催済"})`}
+        >
+          <div className="h-[400px]">
+            <JapanMap data={displayRankings.mapData} colorMax="#22C55E" />
+          </div>
         </SectionCard>
       </div>
 
@@ -679,6 +774,6 @@ export function CBEDPage() {
           />
         </SectionCard>
       </div>
-    </div >
+    </div>
   );
 }

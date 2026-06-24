@@ -1,61 +1,72 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { DashboardHeader } from './dashboard-header';
-import { RibbonTabs } from './ribbon-tabs';
-import { CommunityPage } from './pages/community-page';
-import { PartnerPage } from './pages/partner-page';
-import { SpaceQuizPage } from './pages/space-quiz-page';
-import { CBEDPage } from './pages/cbed-page';
-import { CBMDPage } from './pages/cbmd-page';
-import { CBLPage } from './pages/cbl-page';
-import { SpaceDiagnosisPage } from './pages/space-type-page';
-import { LinksPage } from './pages/links-page';
-import { SNSPage } from './pages/sns-page';
-import { CBHPPage } from './pages/cbhp-page';
-import { LoadingSkeleton } from './chart-container';
-import { dashboardTabs } from '@/lib/mock-data';
-import { ShittokuPage } from './pages/shittoku-page';
+import { useState, useCallback } from "react";
+import { DashboardHeader } from "./dashboard-header";
+import { RibbonTabs } from "./ribbon-tabs";
+import { Discord } from "./pages/discord";
+import { PartnerPage } from "./pages/partner-page";
+import { SpaceQuizPage } from "./pages/quiz-page";
+import { CBEDPage } from "./pages/cbed-page";
+import { CBMDPage } from "./pages/cbmd-page";
+import { CBLPage } from "./pages/cbl-page";
+import { SpaceDiagnosisPage } from "./pages/type-page";
+import { LinksPage } from "./pages/links-page";
+import { SNSPage } from "./pages/sns-page";
+import { CBHPPage } from "./pages/cbhp-page";
+import { LoadingSkeleton } from "./chart-container";
+import { ShittokuPage } from "./pages/shittoku-page";
+
+ const dashboardTabs = [
+  { id: 'community', label: 'Discord' },
+  { id: 'sns', label: 'SNS' },
+  { id: 'cbhp', label: 'CBHP'},
+  { id: 'partners', label: 'パートナー' },
+  { id: 'space-quiz', label: '宇宙クイズ' },
+  { id: 'cbed', label: 'CBED' },
+  { id: 'cbmd', label: 'CBMD' },
+  { id: 'cbl', label: 'CBL' },
+  { id: 'space-diagnosis', label: '宇宙タイプ診断' },  
+  { id: 'shittoku', label: '宇宙知っトク'},
+  { id: 'links', label: 'リンク' },
+];
 
 // ★ 1段目と2段目の階層データを定義
 const tabGroups = [
   {
-    id: 'general',
-    name: '全体',
+    id: "general",
+    name: "全体",
     tabs: [
-      { id: 'community', label: 'Discord' },
-      { id: 'sns', label: 'SNS' },
-      { id: 'cbhp', label: 'CBHP' },
-      { id: 'partners', label: 'パートナー' },
+      { id: "discord", label: "Discord" },
+      { id: "sns", label: "SNS" },
+      { id: "cbhp", label: "CBHP" },
+      { id: "partners", label: "パートナー" },
     ],
   },
   {
-    id: 'content',
-    name: 'コンテンツ',
+    id: "content",
+    name: "コンテンツ",
     tabs: [
-      { id: 'space-quiz', label: '宇宙クイズ' },
-      { id: 'cbed', label: 'CBED' },
-      { id: 'cbmd', label: 'CBMD' },
-      { id: 'cbl', label: 'CBL' },
-      { id: 'space-diagnosis', label: '宇宙タイプ診断' },
-      { id: 'shittoku', label: '宇宙知っトク' },
+      { id: "space-quiz", label: "宇宙クイズ" },
+      { id: "cbed", label: "CBED" },
+      { id: "cbmd", label: "CBMD" },
+      { id: "cbl", label: "CBL" },
+      { id: "space-diagnosis", label: "宇宙タイプ診断" },
+      { id: "shittoku", label: "宇宙知っトク" },
     ],
   },
   {
-    id: 'links',
-    name: 'リンク',
-    tabs: [
-      { id: 'links', label: 'リンク' },
-    ],
+    id: "links",
+    name: "リンク",
+    tabs: [{ id: "links", label: "リンク" }],
   },
 ];
 
 export function Dashboard() {
-  const [activeCategory, setActiveCategory] = useState('general'); // 1段目のステート
-  const [activeTab, setActiveTab] = useState('community');         // 2段目のステート
+  const [activeCategory, setActiveCategory] = useState("general"); // 1段目のステート
+  const [activeTab, setActiveTab] = useState("community"); // 2段目のステート
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(
-    new Date().toISOString()
+    new Date().toISOString(),
   );
 
   // 1段目（親カテゴリ）を変更した時の処理
@@ -66,13 +77,13 @@ export function Dashboard() {
       // 1段目を切り替えたら、自動的にそのカテゴリの先頭のタブを選択する
       setActiveTab(group.tabs[0].id);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   // 2段目（子タブ）を変更した時の処理
   const handleTabChange = useCallback((tabId: string) => {
     setActiveTab(tabId);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -99,30 +110,30 @@ export function Dashboard() {
     }
 
     switch (activeTab) {
-      case 'community':
-        return <CommunityPage />;
-      case 'sns':
+      case "discord":
+        return <Discord />;
+      case "sns":
         return <SNSPage />;
-      case 'cbhp':
+      case "cbhp":
         return <CBHPPage />;
-      case 'partners':
+      case "partners":
         return <PartnerPage />;
-      case 'space-quiz':
+      case "space-quiz":
         return <SpaceQuizPage />;
-      case 'cbed':
+      case "cbed":
         return <CBEDPage />;
-      case 'cbmd':
+      case "cbmd":
         return <CBMDPage />;
-      case 'cbl':
+      case "cbl":
         return <CBLPage />;
-      case 'space-diagnosis':
+      case "space-diagnosis":
         return <SpaceDiagnosisPage />;
-      case 'shittoku':
+      case "shittoku":
         return <ShittokuPage />;
-      case 'links':
+      case "links":
         return <LinksPage />;
       default:
-        return <CommunityPage />;
+        return <Discord />;
     }
   };
 
@@ -143,10 +154,11 @@ export function Dashboard() {
               <button
                 key={group.id}
                 onClick={() => handleCategoryChange(group.id)}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeCategory === group.id
-                    ? 'bg-primary text-white shadow-md shadow-primary/30'
-                    : 'bg-secondary/40 text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
-                  }`}
+                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${
+                  activeCategory === group.id
+                    ? "bg-primary text-white shadow-md shadow-primary/30"
+                    : "bg-secondary/40 text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                }`}
               >
                 {group.name}
               </button>
@@ -166,7 +178,9 @@ export function Dashboard() {
                   key={group.id}
                   tabs={group.tabs.map((tab) => {
                     const existing = dashboardTabs.find((t) => t.id === tab.id);
-                    return existing ? { ...existing, label: tab.label } : (tab as any);
+                    return existing
+                      ? { ...existing, label: tab.label }
+                      : (tab as any);
                   })}
                   activeTab={activeTab}
                   onChange={handleTabChange}

@@ -14,7 +14,7 @@ export function RankingList({ items, maxVisible = 6, className }: RankingListPro
 
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1">
+      <div className="max-h-[400px] overflow-y-auto space-y-2 pr-1">
         {items.map((item, index) => (
           <div
             key={item.name}

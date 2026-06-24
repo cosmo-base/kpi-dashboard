@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/gkina/Downloads/CB/kpi-dashboard-main/lib/utils.ts"],"sourcesContent":["import { clsx, type ClassValue } from 'clsx'\nimport { twMerge } from 'tailwind-merge'\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs))\n}\n"],"names":["cn","inputs"],"mappings":";;;;AAAA;AACA;;;AAEO,SAASA,GAAG,GAAGC,MAAoB;IACxC,OAAO,IAAA,yKAAO,EAAC,IAAA,gJAAI,EAACA;AACtB"}}]
+}

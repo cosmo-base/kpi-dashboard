@@ -2,15 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import {
-  MousePointerClick,
-  Users,
-  Eye,
-  Globe,
-  MapPin,
-  MessageCircle,
-  ArrowUpDown, ArrowUpRight
-} from "lucide-react";
+import { MousePointerClick, Users, Eye, Globe, MapPin, MessageCircle, ArrowUpDown, ArrowUpRight} from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";

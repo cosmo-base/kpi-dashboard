@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import {
-  Users,
-  Calendar,
-  Target,
-  UserPlus,
-  ArrowUpRight,
-  BookOpen,
-} from "lucide-react";
+import { Users, Calendar, Target, UserPlus, ArrowUpRight, BookOpen,} from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";
@@ -17,6 +10,7 @@ import { LineChartComponent } from "../charts/line-chart";
 import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
+import { ScrollableTable } from "../scrollable-table";
 
 export function ShittokuPage() {
   const [data, setData] = useState<any>(null);
@@ -139,6 +133,14 @@ export function ShittokuPage() {
           });
         });
 
+        const monthlyTable = Array.from(monthlyAgg.entries()).map(([month, val]) => ({
+          month,
+          events: val.events,
+          participants: val.participants.toLocaleString(),
+          avgParticipants: Math.round((val.participants / val.events) * 10) / 10,
+          avgSat: val.satResponses > 0 ? (Math.round((val.satSum / val.satResponses) * 100) / 100).toFixed(2) : "-",
+        })).reverse();
+
         // 形式別円グラフ用データ
         const typeColors = ["#38BDF8", "#8B5CF6", "#22C55E", "#F59E0B", "#EF4444", "#EC4899", "#10B981"];
         const formatDistribution = Array.from(formatCounts.entries())
@@ -175,6 +177,9 @@ export function ShittokuPage() {
             monthlyAvgSatData,
             formatDistribution,
           },
+          tables: {
+            monthlyTable, 
+          }
         });
       })
       .catch((err) => console.error("CSV Fetch Error:", err));
@@ -190,7 +195,7 @@ export function ShittokuPage() {
       </div>
     );
 
-  const { summary, charts } = data;
+  const { summary, charts ,tables } = data;
 
   return (
     <div className="space-y-6">
@@ -320,6 +325,20 @@ export function ShittokuPage() {
               </div>
             )}
           </ChartContainer>
+        </SectionCard>
+      </div>
+      <div className="grid grid-cols-1 gap-6">
+        <SectionCard title="月別 集計データ一覧" description="各月の開催数、参加者数、平均満足度の詳細データ">
+          <ScrollableTable
+            columns={[
+              { key: "month", label: "月", align: "left" },
+              { key: "events", label: "開催数", align: "right" },
+              { key: "participants", label: "合計参加者数", align: "right" },
+              { key: "avgParticipants", label: "平均参加者数", align: "right" },
+              { key: "avgSat", label: "平均満足度", align: "right" },
+            ]}
+            data={tables.monthlyTable}
+          />
         </SectionCard>
       </div>
     </div>

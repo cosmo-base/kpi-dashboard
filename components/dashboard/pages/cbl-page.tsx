@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { BookOpen, Eye, Star, TrendingUp, Calendar, BarChart3, ArrowUpRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { BookOpen, Eye, Star, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { KpiCard } from '../kpi-card';
 import { SectionCard } from '../section-card';
 import { ChartContainer } from '../chart-container';
@@ -14,12 +13,6 @@ import { RankingList } from '../ranking-list';
 import { Button } from '@/components/ui/button';
 
 const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-
-const formatDiff = (num: number) => {
-  if (num > 0) return `+${num.toLocaleString()}`;
-  if (num < 0) return num.toLocaleString();
-  return '0';
-};
 
 const CATEGORY_COLORS: string[] = ['#38BDF8', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444', '#EC4899', '#10B981', '#6B7280'];
 const TYPE_COLORS: string[] = ['#8B5CF6', '#38BDF8', '#F59E0B', '#22C55E', '#EC4899'];

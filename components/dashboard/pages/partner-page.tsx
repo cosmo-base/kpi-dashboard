@@ -10,14 +10,15 @@ import {
   TrendingUp,
   XCircle,
   Phone,
-  HelpCircle, ArrowUpRight
+  HelpCircle,
+  ArrowUpRight,
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";
 import { ScrollableTable } from "../scrollable-table";
 import { DonutChart } from "../charts/donut-chart";
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 
 // カテゴリ用カラーパレット
 const CATEGORY_COLORS: Record<string, string> = {
@@ -77,11 +78,13 @@ export function PartnerPage() {
         const s3_catMap = new Map<string, number>();
 
         const monthlyMap = new Map<string, number>();
+        const monthlyMap2 = new Map<string, number>();
 
         rows.forEach((row) => {
           const status = String(row["status"] || "").trim();
           const category = String(row["category"] || "").trim();
           const releaseDate = String(row["ReleaseDate"] || "").trim();
+          const contactedDate = String(row["ContactedDate"] || "").trim();
 
           // --- KPIの集計 ---
           if (status === "公開") totalPartners++;
@@ -140,19 +143,66 @@ export function PartnerPage() {
               monthlyMap.set(ym, (monthlyMap.get(ym) || 0) + 1);
             }
           }
+
+          // --- 月別連絡数の集計（ContactedDateがあるもの） ---
+          if (contactedDate) {
+            const dateObj = new Date(contactedDate.replace(/\-/g, "/"));
+            if (!isNaN(dateObj.getTime())) {
+              const ym = `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
+              monthlyMap2.set(ym, (monthlyMap2.get(ym) || 0) + 1);
+            }
+          }
         });
 
-        // --- 月別テーブルデータの作成（古い順にソート） ---
-        const sortedMonths = Array.from(monthlyMap.keys()).sort();
-        let cumulative = 0;
-        const monthlyTableRaw = sortedMonths.map((m) => {
-          const count = monthlyMap.get(m)!;
-          cumulative += count;
-          return { month: m, announced: count, cumulative };
+        // --- 月別テーブルデータの作成（発表数・連絡数を統合） ---
+        const allMonthsSet = new Set([
+          ...monthlyMap.keys(),
+          ...monthlyMap2.keys(),
+        ]);
+        const existingMonths = Array.from(allMonthsSet).sort();
+
+        // 間の月（データが0件の月）が抜けないように、最初の月から最後の月までを補完する
+        const sortedAllMonths: string[] = [];
+        if (existingMonths.length > 0) {
+          const first = existingMonths[0];
+          const last = existingMonths[existingMonths.length - 1];
+          let [currY, currM] = first.split("/").map(Number);
+          const [lastY, lastM] = last.split("/").map(Number);
+
+          while (currY < lastY || (currY === lastY && currM <= lastM)) {
+            sortedAllMonths.push(`${currY}/${String(currM).padStart(2, "0")}`);
+            currM++;
+            if (currM > 12) {
+              currM = 1;
+              currY++;
+            }
+          }
+        }
+
+        let cumulativeAnnounced = 0;
+        let cumulativeContacted = 0;
+
+        const combinedMonthlyTableRaw = sortedAllMonths.map((m) => {
+          const announced = monthlyMap.get(m) || 0;
+          const contacted = monthlyMap2.get(m) || 0;
+          cumulativeAnnounced += announced;
+          cumulativeContacted += contacted;
+
+          return {
+            month: m,
+            announced,
+            contacted,
+            cumulativeAnnounced,
+            cumulativeContacted,
+          };
         });
 
-        const latestMonthItem = monthlyTableRaw[monthlyTableRaw.length - 1];
-        const prevMonthItem = monthlyTableRaw[monthlyTableRaw.length - 2];
+        const latestMonthItem =
+          combinedMonthlyTableRaw[combinedMonthlyTableRaw.length - 1];
+        const prevMonthItem =
+          combinedMonthlyTableRaw[combinedMonthlyTableRaw.length - 2];
+
+        // 発表数のKPI計算
         const monthlyAnnounced = latestMonthItem
           ? latestMonthItem.announced
           : 0;
@@ -164,24 +214,42 @@ export function PartnerPage() {
             ? 100
             : Math.round((monthlyAnnounced / prevMonthlyAnnounced) * 100);
 
-        const monthlyTable = monthlyTableRaw
+        // 連絡数のKPI計算
+        const monthlyContacted = latestMonthItem
+          ? latestMonthItem.contacted
+          : 0;
+        const prevMonthlyContacted = prevMonthItem
+          ? prevMonthItem.contacted
+          : 0;
+        const monthlyContactedRate =
+          prevMonthlyContacted === 0
+            ? 100
+            : Math.round((monthlyContacted / prevMonthlyContacted) * 100);
+
+        // 表示用テーブルデータのフォーマット
+        const monthlyTable = combinedMonthlyTableRaw
           .map((item, idx) => {
-            let rate = 100;
+            let announcedRate = 100;
             if (idx > 0) {
-              const prevCumulative = monthlyTableRaw[idx - 1].cumulative;
-              rate =
-                prevCumulative === 0
+              const prevCumAnnounced =
+                combinedMonthlyTableRaw[idx - 1].cumulativeAnnounced;
+              announcedRate =
+                prevCumAnnounced === 0
                   ? 100
-                  : Math.round((item.cumulative / prevCumulative) * 100);
+                  : Math.round(
+                      (item.cumulativeAnnounced / prevCumAnnounced) * 100,
+                    );
             }
             return {
               month: item.month,
+              contacted: `+${item.contacted}`,
               announced: `+${item.announced}`,
-              cumulative: item.cumulative,
-              rate: `${rate}%`,
+              cumulativeContacted: item.cumulativeContacted,
+              cumulativeAnnounced: item.cumulativeAnnounced,
+              rate: `${announcedRate}%`, // 発表数の累計成長率
             };
           })
-          .reverse();
+          .reverse(); // 新しい月を一番上に
 
         // --- 各段のグラフデータ生成関数 ---
         const makeChartData = (
@@ -224,6 +292,7 @@ export function PartnerPage() {
             declined,
             monthlyAnnounced,
             monthlyAnnouncedRate,
+            monthlyContactedRate,
           },
           charts: {
             stage1: makeChartData(
@@ -292,7 +361,7 @@ export function PartnerPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <KpiCard
           title="のべパートナー企業団体数"
           value={summary.totalPartners.toLocaleString()}
@@ -322,6 +391,17 @@ export function PartnerPage() {
           accentColor="accent"
         />
         <KpiCard
+          title="締結発表の先月比"
+          value={summary.monthlyAnnouncedRate}
+          unit="%"
+          icon={TrendingUp}
+          accentColor="success"
+          trendValue={`前月比`}
+          trendType="up"
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <KpiCard
           title="検討中"
           value={summary.pendingContract}
           unit="団体"
@@ -350,8 +430,8 @@ export function PartnerPage() {
           accentColor="success"
         />
         <KpiCard
-          title="締結発表の先月比"
-          value={summary.monthlyAnnouncedRate}
+          title="連絡済み団体の先月比"
+          value={summary.monthlyContactedRate}
           unit="%"
           icon={TrendingUp}
           accentColor="success"
@@ -523,13 +603,20 @@ export function PartnerPage() {
       </div>
 
       {/* Monthly Table */}
-      <SectionCard title="月ごとのパートナー締結発表数">
+      {/* Monthly Table */}
+      <SectionCard title="月ごとのパートナー連絡・発表推移">
         <ScrollableTable
           columns={[
             { key: "month", label: "月", align: "left" },
+            { key: "contacted", label: "連絡数", align: "right" },
+            { key: "cumulativeContacted", label: "累計連絡数", align: "right" },
             { key: "announced", label: "締結発表数", align: "right" },
-            { key: "cumulative", label: "累計パートナー数", align: "right" },
-            { key: "rate", label: "前月比", align: "right" },
+            {
+              key: "cumulativeAnnounced",
+              label: "累計パートナー数",
+              align: "right",
+            },
+            { key: "rate", label: "パートナー数 前月比", align: "right" },
           ]}
           data={tables.monthlyTable}
         />

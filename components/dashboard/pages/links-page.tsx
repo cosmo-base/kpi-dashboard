@@ -2,10 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Link as LinkIcon,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,
-  type LucideIcon
-} from 'lucide-react';
+import { Link as LinkIcon,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,type LucideIcon} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -199,7 +196,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-6',
         title: 'パートナー公開チェックリスト',
-        url: 'https://docs.google.com/spreadsheets/d/1SoZ2O92aYnMXRBuFU7-vV7gX4vItVbxnIoKhGVxpo4s/edit',
+        url: 'https://docs.google.com/spreadsheets/d/1SoZ2O92aYnMXRBuFU7-vV7gX4vItVbxnIoKhGVxpo4s/edit?gid=1104332422#gid=1104332422',
         description: '',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -252,6 +249,14 @@ const initialLinkCategories: LinkCategory[] = [
         icon: Building,
         subCategory: ''
       },
+      {
+        id: "admin-13",
+        title: "自動化率計算",
+        url:"https://docs.google.com/spreadsheets/d/1E4jZU_L3FDT-1ZGlneUTu3Wbry9zJeZipk96p5NV7l8/edit",
+        description:"",
+        icon: Building,
+        subCategory:"管理・運用シート"
+      }
     ],
   },
   {
