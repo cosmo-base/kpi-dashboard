@@ -1102,17 +1102,17 @@ export function SpaceQuizPage() {
           accentColor="primary"
         />
         <KpiCard
-          title="累計 回答0件問題数"
-          value={summary.totalZeroAnswers.toLocaleString()}
-          unit="問"
-          icon={AlertTriangle}
-          accentColor="danger"
-        />
-        <KpiCard
           title="累計 回答0件割合"
           value={format(summary.totalZeroRate)}
           unit="%"
           icon={HelpCircle}
+          accentColor="danger"
+        />
+        <KpiCard
+          title="累計 回答0件問題数"
+          value={summary.totalZeroAnswers.toLocaleString()}
+          unit="問"
+          icon={AlertTriangle}
           accentColor="danger"
         />
       </div>
