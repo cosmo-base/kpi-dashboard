@@ -705,12 +705,15 @@ export function SpaceQuizPage() {
           .map(([key, v]) => ({
             name: key,
             回答数: v.ans,
-            正答率: v.ans > 0 ? Math.round((v.cor / v.ans) * 100 * 100) / 100 : 0,
+            正答率:
+              v.ans > 0 ? Math.round((v.cor / v.ans) * 100 * 100) / 100 : 0,
             "0件割合":
               v.qCount > 0
                 ? Math.round((v.zeroCount / v.qCount) * 100 * 100) / 100
                 : 0,
             qCount: v.qCount,
+            aveNun:
+              v.ans > 0 ? Math.round((v.qCount / v.ans) * 100 * 100) / 100 : 0,
           }));
 
         const quizWeeklyTrend = Array.from(quizWeeklyMap.entries())
@@ -718,12 +721,15 @@ export function SpaceQuizPage() {
           .map(([key, v]) => ({
             name: v.label,
             回答数: v.ans,
-            正答率: v.ans > 0 ? Math.round((v.cor / v.ans) * 100 * 100) / 100 : 0,
+            正答率:
+              v.ans > 0 ? Math.round((v.cor / v.ans) * 100 * 100) / 100 : 0,
             "0件割合":
               v.qCount > 0
                 ? Math.round((v.zeroCount / v.qCount) * 100 * 100) / 100
                 : 0,
             qCount: v.qCount,
+            aveNun:
+              v.ans > 0 ? Math.round((v.qCount / v.ans) * 100 * 100) / 100 : 0,
           }));
 
         const quizMonthlyTable = [...quizMonthlyTrend].reverse();
@@ -739,7 +745,9 @@ export function SpaceQuizPage() {
               sumAns: o.ans,
               avgAns: o.qCount > 0 ? o.ans / o.qCount : 0,
               accuracy:
-                o.ans > 0 ? `${Math.round((o.cor / o.ans) * 100 * 100) / 100}%` : "0%",
+                o.ans > 0
+                  ? `${Math.round((o.cor / o.ans) * 100 * 100) / 100}%`
+                  : "0%",
               zeroRate:
                 o.qCount > 0
                   ? `${Math.round((o.zeroCount / o.qCount) * 100 * 100) / 100}%`
@@ -857,7 +865,10 @@ export function SpaceQuizPage() {
               ? `${Math.round((p.zeroCount / p.qCount) * 100 * 100) / 100}%`
               : "0%",
           avgAns: p.qCount > 0 ? p.ans / p.qCount : 0,
-          accuracy: p.ans > 0 ? `${Math.round((p.cor / p.ans) * 100 * 100) / 100}%` : "0%",
+          accuracy:
+            p.ans > 0
+              ? `${Math.round((p.cor / p.ans) * 100 * 100) / 100}%`
+              : "0%",
         }));
 
         const scatterMap = new Map<string, any>();
@@ -1425,7 +1436,7 @@ export function SpaceQuizPage() {
               { key: "month", label: "月", align: "left" },
               { key: "qCountStr", label: "出題数", align: "right" },
               { key: "answersStr", label: "総回答数", align: "right" },
-              { key: "averageStr", label: "平均回答数", alien: "right" },
+              { key: "averageStr", label: "平均回答数", align: "right" },
               { key: "accuracyStr", label: "平均正答率", align: "right" },
               { key: "zeroRateStr", label: "回答0件割合", align: "right" },
             ]}
@@ -1434,7 +1445,7 @@ export function SpaceQuizPage() {
               month: row.name,
               qCountStr: `${row.qCount}問`,
               answersStr: `${row.回答数.toLocaleString()}件`,
-              averageSt: `${row.qCount}/${row.回答数.toLocaleString()}件`,
+              averageStr: `${row.aveNun}件`,
               accuracyStr: `${row.正答率}%`,
               zeroRateStr: `${row["0件割合"]}%`,
             }))}
@@ -1450,6 +1461,7 @@ export function SpaceQuizPage() {
               { key: "week", label: "週 (月〜日)", align: "left" },
               { key: "qCountStr", label: "出題数", align: "right" },
               { key: "answersStr", label: "総回答数", align: "right" },
+              { key: "averageStr", label: "平均回答数", align: "right" },
               { key: "accuracyStr", label: "平均正答率", align: "right" },
               { key: "zeroRateStr", label: "回答0件割合", align: "right" },
             ]}
@@ -1458,6 +1470,7 @@ export function SpaceQuizPage() {
               week: row.name,
               qCountStr: `${row.qCount}問`,
               answersStr: `${row.回答数.toLocaleString()}件`,
+              averageStr: `${row.aveNun}件`,
               accuracyStr: `${row.正答率}%`,
               zeroRateStr: `${row["0件割合"]}%`,
             }))}
