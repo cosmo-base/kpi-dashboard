@@ -1425,6 +1425,7 @@ export function SpaceQuizPage() {
               { key: "month", label: "月", align: "left" },
               { key: "qCountStr", label: "出題数", align: "right" },
               { key: "answersStr", label: "総回答数", align: "right" },
+              { key: "averageStr", label: "平均回答数", alien: "right" },
               { key: "accuracyStr", label: "平均正答率", align: "right" },
               { key: "zeroRateStr", label: "回答0件割合", align: "right" },
             ]}
@@ -1433,6 +1434,7 @@ export function SpaceQuizPage() {
               month: row.name,
               qCountStr: `${row.qCount}問`,
               answersStr: `${row.回答数.toLocaleString()}件`,
+              averageSt: `${row.qCount}/${row.回答数.toLocaleString()}件`,
               accuracyStr: `${row.正答率}%`,
               zeroRateStr: `${row["0件割合"]}%`,
             }))}
