@@ -17,11 +17,13 @@ import { LoadingSkeleton } from "./chart-container";
 import { ShittokuPage } from "./pages/shittoku-page";
 import { MatchPage } from "./pages/match-page";
 import { AutomationPage } from "./pages/automation-page";
+import { ParticipantsPage } from "./pages/participants-page";
 
 const dashboardTabs = [
   { id: 'community', label: 'Discord' },
   { id: 'sns', label: 'SNS' },
   { id: 'cbhp', label: 'CBHP' },
+  { id: 'participants', label: '参加者ページ' },
   { id: 'partners', label: 'パートナー' },
   { id: 'automation', label: '自動化率' },
   { id: 'space-quiz', label: '宇宙クイズ' },
@@ -43,6 +45,7 @@ const tabGroups = [
       { id: "discord", label: "Discord" },
       { id: "sns", label: "SNS" },
       { id: "cbhp", label: "CBHP" },
+      { id: 'participants', label: '参加者ページ' },
       { id: 'automation', label: '自動化率' },
       { id: "partners", label: "パートナー" },
     ],
@@ -122,6 +125,8 @@ export function Dashboard() {
         return <SNSPage />;
       case "cbhp":
         return <CBHPPage />;
+      case "participants":
+        return <ParticipantsPage />;
       case "partners":
         return <PartnerPage />;
       case "automation":
@@ -165,8 +170,8 @@ export function Dashboard() {
                 key={group.id}
                 onClick={() => handleCategoryChange(group.id)}
                 className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeCategory === group.id
-                    ? "bg-primary text-white shadow-md shadow-primary/30"
-                    : "bg-secondary/40 text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                  ? "bg-primary text-white shadow-md shadow-primary/30"
+                  : "bg-secondary/40 text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
                   }`}
               >
                 {group.name}
