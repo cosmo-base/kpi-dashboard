@@ -10,6 +10,7 @@ import {
   Percent,
   ArrowUpRight,
   Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
@@ -49,6 +50,12 @@ const RESULT_COLORS = [
   "#D946EF",
 ];
 
+interface QuestionConfig {
+  key: string;
+  text: string;
+  choices: string[];
+}
+
 // ★ 新しい診断コンテンツを増やす場合は、この配列に追加するだけでタブが自動で増えます
 interface CosmoMatchVariantConfig {
   key: string;
@@ -59,15 +66,188 @@ interface CosmoMatchVariantConfig {
   resultColumn: string;
   resultLabel: string;
   axisColumns: string[];
+  questions: QuestionConfig[];
   color: string;
 }
+
+const ROCKET_QUESTIONS: QuestionConfig[] = [
+  {
+    key: "Q1",
+    text: "一番ワクワクするのは？",
+    choices: [
+      "圧倒的な迫力やスケール",
+      "「どうやって実現したの？」と思う技術",
+      "長い歴史や受け継がれてきた物語",
+      "新しい時代を切り開く挑戦",
+    ],
+  },
+  {
+    key: "Q2",
+    text: "応援したくなるのは？",
+    choices: [
+      "頼れる王道の存在",
+      "失敗しても挑み続ける存在",
+      "独自の道を進む個性派",
+      "長い間活躍してきたベテラン",
+    ],
+  },
+  {
+    key: "Q3",
+    text: "もし打ち上げを見に行くなら？",
+    choices: [
+      "誰もが注目する大型ミッション",
+      "新型ロケットの初飛行",
+      "特別な技術が使われたミッション",
+      "歴史に残る名機の活躍",
+    ],
+  },
+  {
+    key: "Q4",
+    text: "宇宙開発で一番大事だと思うのは？",
+    choices: [
+      "信頼性と実績の積み重ね",
+      "コストを下げて誰でも使えること",
+      "技術の限界に挑むこと",
+      "国の威信をかけた力強さ",
+    ],
+  },
+  {
+    key: "Q5",
+    text: "あなたが惹かれるのは？（二択）",
+    choices: ["積み重ねてきた長い実績", "前例のない未知への挑戦"],
+  },
+  {
+    key: "Q6",
+    text: "直感的にどちらが好き？（二択）",
+    choices: ["みんなに愛される王道", "唯一無二の尖った個性"],
+  },
+  {
+    key: "Q7",
+    text: "好きなストーリーは？",
+    choices: [
+      "幾多の失敗を乗り越えた逆転劇",
+      "誰も真似できない技術を磨き続けた職人技",
+      "時代を超えて愛され続ける不朽の名作",
+      "世界を驚かせた大きすぎる夢の実現",
+    ],
+  },
+  {
+    key: "Q8",
+    text: "ロケットに例えるなら、あなたは？",
+    choices: [
+      "黙々と使命を果たす縁の下の力持ち",
+      "誰よりも高く、誰よりも速く",
+      "新しい道を誰よりも先に切り開く先駆者",
+      "長年培った技と知恵で挑む熟練者",
+    ],
+  },
+];
+
+const CONSTELLATION_QUESTIONS: QuestionConfig[] = [
+  {
+    key: "Q1",
+    text: "新しいプロジェクトや趣味を始める時、あなたの原動力は？",
+    choices: [
+      "まずは歴史やデータを徹底的に調べ上げ、勝算と計画を立ててから動きたい。",
+      "「面白そう！」という直感のままに、前例のない未知の領域へ飛び込みたい。",
+    ],
+  },
+  {
+    key: "Q2",
+    text: "チームでの仕事や文化祭の準備。あなたが一番実力を発揮できるポジションは？",
+    choices: [
+      "方向性をバシッと決めて、みんなの前に立ってプロジェクトを引っ張る役。",
+      "必要な機材の調達やタスクの整理など、プロジェクトを裏から確実に支える役。",
+    ],
+  },
+  {
+    key: "Q3",
+    text: "初対面の人ばかりが集まる交流会やキックオフ。あなたの振る舞いは？",
+    choices: [
+      "自分からフランクに声をかけ、いろんな背景を持つ人と広くワイワイ打ち解ける。",
+      "たまたま隣になった数人と、お互いの価値観や専門分野について静かに深く語り合う。",
+    ],
+  },
+  {
+    key: "Q4",
+    text: "仕事や作業で使う「新しいツール」を導入するなら、どちらを選ぶ？",
+    choices: [
+      "長く愛され、多くの人を助けてきた実績のある、信頼できる定番ツール。",
+      "まだ誰も使いこなしていない、最新鋭の機能を持った挑戦的なツール。",
+    ],
+  },
+  {
+    key: "Q5",
+    text: "業務中に想定外のトラブル発生！チームが焦る中、あなたの行動は？",
+    choices: [
+      "自ら率先して動き、その場の直感と判断力でスピーディに火消しに走る。",
+      "一歩引いて原因のデータを整理し、リーダーが正しい指示を出せるようサポートする。",
+    ],
+  },
+  {
+    key: "Q6",
+    text: "大きな目標を達成した時、その成果をどうやって周りに共有する？",
+    choices: [
+      "「最高だった！」という熱量や感動を、エモーショナルな言葉やデザインで発信する。",
+      "どんな成果が出たのかを、正確な数値や客観的なレポートとして冷静にまとめる。",
+    ],
+  },
+  {
+    key: "Q7",
+    text: "プロジェクト成功の打ち上げ・飲み会。あなたはどのポジションにいる？",
+    choices: [
+      "中心のテーブルに陣取り、たくさんの人とグラスを交わして場を盛り上げる。",
+      "隅の席で、苦労を共にした数人のコアメンバーと静かに達成感を分かち合う。",
+    ],
+  },
+  {
+    key: "Q8",
+    text: "次の仕事を選ぶなら、どちらの依頼を受けたい？",
+    choices: [
+      "確実な成果と正確性が求められる、地に足のついたルーティンワーク。",
+      "リスクはあるが胸が熱くなる、まだ誰も成功したことのない新規開拓。",
+    ],
+  },
+  {
+    key: "Q9",
+    text: "チームに余った予算が支給されました。何に投資する？",
+    choices: [
+      "メンバーのモチベーションが上がるような、イベントやリフレッシュ空間の充実。",
+      "今後の業務効率や成功率を論理的に引き上げる、高価な分析ソフトや機材。",
+    ],
+  },
+  {
+    key: "Q10",
+    text: "チームに新しく入ったメンバーが、上手く馴染めず悩んでいます。どう助ける？",
+    choices: [
+      "自分がハブになって全員に声をかけ、みんなで歓迎するオープンな場を作る。",
+      "1対1でじっくり話を聞き、その人が得意な作業に集中できるよう裏から環境を整える。",
+    ],
+  },
+  {
+    key: "Q11",
+    text: "あなたの活躍が社内報（またはメディア）で紹介されることに。理想の紹介のされ方は？",
+    choices: [
+      "自分の顔写真や熱いインタビューが、プロジェクトの「顔」として大々的に載る。",
+      "自分が裏で組み上げた完璧なシステムや仕組みが、プロジェクトの「成果」として渋く紹介される。",
+    ],
+  },
+  {
+    key: "Q12",
+    text: "最後に。あなたにとって、チームで働く（活動する）最大の意義とは？",
+    choices: [
+      "自らが先陣を切り、次々と新しい価値や前例をアクティブに生み出し続けること。",
+      "自分の得意な役割を全うし、チーム全体が確実に前へ進むのを縁の下で支えること。",
+    ],
+  },
+];
 
 const VARIANTS: CosmoMatchVariantConfig[] = [
   {
     key: "rocket",
     label: "日本のロケット編",
     csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQENBPEZ3ep1J54G09l7I-vPMaMC6wNxr55bXBsdAdj_xp6gy5ksoM27EyITCuGObi0Kzxbzu2HpLM1/pub?gid=1977317423&single=true&output=csv",
-    sheetUrl: "",
+    sheetUrl: "https://docs.google.com/spreadsheets/d/1-Zpc-AbelO2orxbVMP2TzG9Bkqf0SI1MJ1nRbiy2B8M/edit?gid=1977317423#gid=1977317423",
     resultColumn: "判定ロケット",
     resultLabel: "判定ロケット",
     axisColumns: [
@@ -80,19 +260,42 @@ const VARIANTS: CosmoMatchVariantConfig[] = [
       "未来",
       "信頼",
     ],
+    questions: ROCKET_QUESTIONS,
     color: "#38BDF8",
   },
   {
     key: "constellation",
     label: "88星座編",
     csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTbfWKxGFEmOkuaszkGJNUcX4FySkqmdxKJtaXG0esrjJoHSo5zmEoOGLTmzH09YJd9BZY1DyqNc7P/pub?gid=1977317423&single=true&output=csv",
-    sheetUrl: "",
+    sheetUrl: "https://docs.google.com/spreadsheets/d/1XIVQ1ID91XG4AT7jBeAw1QGbu4EvGUYdnrjferIxN4M/edit?gid=1977317423#gid=1977317423",
     resultColumn: "判定",
     resultLabel: "判定星座",
     axisColumns: ["物語", "活動", "役割", "関係", "対象", "温度", "存在"],
+    questions: CONSTELLATION_QUESTIONS,
     color: "#8B5CF6",
   },
 ];
+
+interface MonthlyOrWeeklyRow {
+  increase: string;
+  rate: string;
+  cumulative: string;
+  avgSyncRate: string;
+}
+
+interface QuestionOption {
+  label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+interface QuestionResult {
+  key: string;
+  question: string;
+  count: number;
+  options: QuestionOption[];
+}
 
 interface VariantData {
   summary: {
@@ -112,14 +315,10 @@ interface VariantData {
     monthlySyncRateTrend: { name: string; 平均同調率: number }[];
   };
   tables: {
-    monthlyTable: {
-      month: string;
-      increase: string;
-      rate: string;
-      cumulative: string;
-      avgSyncRate: string;
-    }[];
+    monthlyTable: ({ month: string } & MonthlyOrWeeklyRow & Record<string, string | number>)[];
+    weeklyTable: ({ week: string } & MonthlyOrWeeklyRow & Record<string, string | number>)[];
     resultRanking: { rank: number; name: string; count: number; percentage: string }[];
+    questionsData: QuestionResult[];
   };
   growthHistory: { month: string; cumulative: number }[];
 }
@@ -155,12 +354,17 @@ function parseVariantCsv(
         axisValues[col] = parseFloat(String(row[col] || "0")) || 0;
       });
 
-      return { num, y, m, d, dateKey, monthKey, result, syncRate, axisValues };
+      const answers: Record<string, string> = {};
+      config.questions.forEach((q) => {
+        answers[q.key] = String(row[q.key] || "").trim();
+      });
+
+      return { num, y, m, d, dateKey, monthKey, result, syncRate, axisValues, answers };
     })
     .filter((r): r is NonNullable<typeof r> => r !== null && r.result !== "")
     .sort((a, b) => a.num - b.num);
 
-  if (validRows.length === 0) return null;
+  if (rows.length === 0) return null;
 
   const nowJst = getJSTDate();
   const currentY = nowJst.getFullYear();
@@ -168,6 +372,7 @@ function parseVariantCsv(
   const currentD = nowJst.getDate();
   const todayNum = currentY * 10000 + currentM * 100 + currentD;
   const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
+  const currentMonthKey = `${currentY}/${String(currentM).padStart(2, "0")}`;
   const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
   const startOfWeekJst = new Date(nowJst.getTime());
   startOfWeekJst.setDate(nowJst.getDate() - dayOfWeek + 1);
@@ -199,7 +404,7 @@ function parseVariantCsv(
     d.count++;
     d.syncSum += r.syncRate;
   });
-  const dailyRecords = Array.from(dailyMap.values()).sort((a, b) => a.num - b.num);
+  const dailyEntries = Array.from(dailyMap.entries()).sort((a, b) => a[1].num - b[1].num);
 
   let cumulative = 0;
   let endOfPrevMonthCum = 0;
@@ -209,10 +414,9 @@ function parseVariantCsv(
   let todayIncrease = 0;
   const participantsTrend: { name: string; 累計診断数: number }[] = [];
 
-  dailyRecords.forEach((d) => {
+  dailyEntries.forEach(([dateKey, d]) => {
     cumulative += d.count;
-    const dateEntry = Array.from(dailyMap.entries()).find(([, v]) => v === d)?.[0];
-    participantsTrend.push({ name: dateEntry || "", 累計診断数: cumulative });
+    participantsTrend.push({ name: dateKey, 累計診断数: cumulative });
     if (d.num >= startOfThisMonthNum) monthlyIncrease += d.count;
     if (d.num <= endOfPrevMonthNum) endOfPrevMonthCum = cumulative;
     if (d.num >= startOfWeekNum) weeklyIncrease += d.count;
@@ -252,7 +456,8 @@ function parseVariantCsv(
       rank: i + 1,
       name,
       count,
-      percentage: `${Math.round((count / validRows.length) * 1000) / 10}%`,
+      percentage:
+        validRows.length > 0 ? `${Math.round((count / validRows.length) * 1000) / 10}%` : "0%",
     }));
 
   // 軸別 平均スコア
@@ -260,11 +465,38 @@ function parseVariantCsv(
     const sum = validRows.reduce((acc, r) => acc + r.axisValues[col], 0);
     return {
       name: col,
-      平均スコア: Math.round((sum / validRows.length) * 100) / 100,
+      平均スコア: validRows.length > 0 ? Math.round((sum / validRows.length) * 100) / 100 : 0,
     };
   });
 
-  // 月別集計
+  // 設問別 回答割合
+  const questionsData: QuestionResult[] = config.questions.map((q) => {
+    const counts = new Map<string, number>();
+    let total = 0;
+    validRows.forEach((r) => {
+      const val = r.answers[q.key];
+      if (val) {
+        counts.set(val, (counts.get(val) || 0) + 1);
+        total++;
+      }
+    });
+    const orderedLabels = [
+      ...q.choices,
+      ...Array.from(counts.keys()).filter((k) => !q.choices.includes(k)),
+    ];
+    const options: QuestionOption[] = orderedLabels
+      .map((label, i) => ({
+        label,
+        count: counts.get(label) || 0,
+        percentage: total > 0 ? Math.round(((counts.get(label) || 0) / total) * 100) : 0,
+        color: RESULT_COLORS[i % RESULT_COLORS.length],
+      }))
+      .filter((o) => o.count > 0 || q.choices.includes(o.label));
+
+    return { key: q.key, question: q.text, count: total, options };
+  });
+
+  // 月別集計（当月の実績が0件でも最新月として表示されるようにする）
   const monthlyMap = new Map<string, { count: number; syncSum: number; cumulative: number }>();
   let runningCum = 0;
   validRows.forEach((r) => {
@@ -276,12 +508,15 @@ function parseVariantCsv(
     m.syncSum += r.syncRate;
     m.cumulative = runningCum;
   });
+  if (!monthlyMap.has(currentMonthKey)) {
+    monthlyMap.set(currentMonthKey, { count: 0, syncSum: 0, cumulative });
+  }
   const monthlyEntries = Array.from(monthlyMap.entries()).sort((a, b) =>
     a[0].localeCompare(b[0]),
   );
   const monthlySyncRateTrend = monthlyEntries.map(([month, v]) => ({
     name: month,
-    平均同調率: Math.round((v.syncSum / v.count) * 10) / 10,
+    平均同調率: v.count > 0 ? Math.round((v.syncSum / v.count) * 10) / 10 : 0,
   }));
   const monthlyTableRaw = monthlyEntries.map(([month, v], idx) => {
     let rate = 100;
@@ -294,7 +529,7 @@ function parseVariantCsv(
       increase: formatDiff(v.count),
       rate: `${rate}%`,
       cumulative: v.cumulative.toLocaleString(),
-      avgSyncRate: `${Math.round((v.syncSum / v.count) * 10) / 10}%`,
+      avgSyncRate: v.count > 0 ? `${Math.round((v.syncSum / v.count) * 10) / 10}%` : "-",
     };
   });
 
@@ -302,6 +537,69 @@ function parseVariantCsv(
     month,
     cumulative: v.cumulative,
   }));
+
+  // 週別集計（月曜始まり、当週の実績が0件でも最新週として表示されるようにする）
+  const weeklyMap = new Map<
+    string,
+    { count: number; syncSum: number; cumulative: number; startStr: string; endStr: string; endTime: number }
+  >();
+  let runningCumWeekly = 0;
+  const buildWeekMeta = (y: number, m: number, d: number) => {
+    const dateObj = new Date(y, m - 1, d);
+    const dow = dateObj.getDay() === 0 ? 7 : dateObj.getDay();
+    const endOfWeek = new Date(dateObj.getTime());
+    endOfWeek.setDate(dateObj.getDate() + (7 - dow));
+    const startOfWeek = new Date(endOfWeek.getTime());
+    startOfWeek.setDate(endOfWeek.getDate() - 6);
+    const weekKey = `${endOfWeek.getFullYear()}-${endOfWeek.getMonth() + 1}-${endOfWeek.getDate()}`;
+    return {
+      weekKey,
+      startStr: `${startOfWeek.getMonth() + 1}/${startOfWeek.getDate()}`,
+      endStr: `${endOfWeek.getMonth() + 1}/${endOfWeek.getDate()}`,
+      endTime: endOfWeek.getTime(),
+    };
+  };
+
+  validRows.forEach((r) => {
+    runningCumWeekly++;
+    const { weekKey, startStr, endStr, endTime } = buildWeekMeta(r.y, r.m, r.d);
+    if (!weeklyMap.has(weekKey))
+      weeklyMap.set(weekKey, { count: 0, syncSum: 0, cumulative: 0, startStr, endStr, endTime });
+    const w = weeklyMap.get(weekKey)!;
+    w.count++;
+    w.syncSum += r.syncRate;
+    w.cumulative = runningCumWeekly;
+  });
+  const { weekKey: currentWeekKey, startStr: curStartStr, endStr: curEndStr, endTime: curEndTime } =
+    buildWeekMeta(currentY, currentM, currentD);
+  if (!weeklyMap.has(currentWeekKey)) {
+    weeklyMap.set(currentWeekKey, {
+      count: 0,
+      syncSum: 0,
+      cumulative,
+      startStr: curStartStr,
+      endStr: curEndStr,
+      endTime: curEndTime,
+    });
+  }
+  const weeklyEntries = Array.from(weeklyMap.values()).sort((a, b) => a.endTime - b.endTime);
+  const weeklyTableRaw = weeklyEntries.map((v, idx) => {
+    let rate = 100;
+    if (idx > 0) {
+      const prev = weeklyEntries[idx - 1].count;
+      rate = prev <= 0 ? 100 : Math.round((v.count / prev) * 100);
+    }
+    const endMonth = parseInt(v.endStr.split("/")[0], 10);
+    const endDay = parseInt(v.endStr.split("/")[1], 10);
+    const weekNum = Math.ceil(endDay / 7);
+    return {
+      week: `${endMonth}月第${weekNum}週 (${v.startStr}-${v.endStr})`,
+      increase: formatDiff(v.count),
+      rate: `${rate}%`,
+      cumulative: v.cumulative.toLocaleString(),
+      avgSyncRate: v.count > 0 ? `${Math.round((v.syncSum / v.count) * 10) / 10}%` : "-",
+    };
+  });
 
   return {
     summary: {
@@ -322,10 +620,45 @@ function parseVariantCsv(
     },
     tables: {
       monthlyTable: [...monthlyTableRaw].reverse(),
+      weeklyTable: [...weeklyTableRaw].reverse(),
       resultRanking: resultRankingTable,
+      questionsData,
     },
     growthHistory,
   };
+}
+
+function AnswerDistributionBar({ options }: { options: QuestionOption[] }) {
+  return (
+    <div className="w-full min-w-[280px] py-1">
+      <div className="flex w-full h-3 rounded-full overflow-hidden bg-secondary/30 mb-2">
+        {options.map((opt, i) =>
+          opt.percentage > 0 ? (
+            <div
+              key={i}
+              style={{ width: `${opt.percentage}%`, backgroundColor: opt.color }}
+              className="border-r border-background/20 last:border-none"
+              title={`${opt.label}: ${opt.percentage}% (${opt.count}件)`}
+            />
+          ) : null,
+        )}
+      </div>
+      <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+        {options.map((opt, i) => (
+          <span key={i} className="flex items-center gap-1.5">
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: opt.color }}
+            />
+            <span className="truncate">{opt.label}</span>
+            <span className="ml-auto font-medium text-foreground whitespace-nowrap">
+              {opt.percentage}% ({opt.count}件)
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function CosmoMatchVariantSection({
@@ -497,18 +830,75 @@ function CosmoMatchVariantSection({
             data={tables.monthlyTable}
           />
         </SectionCard>
-        <SectionCard title={`${config.resultLabel} ランキング`}>
+        <SectionCard title="週単位の診断数一覧" description="月〜日の週区切り">
           <ScrollableTable
             columns={[
-              { key: "rank", label: "順位", align: "center" },
-              { key: "name", label: config.resultLabel, align: "left" },
-              { key: "count", label: "件数", align: "right" },
-              { key: "percentage", label: "割合", align: "right" },
+              { key: "week", label: "週 (月〜日)", align: "left" },
+              { key: "increase", label: "診断数", align: "right" },
+              { key: "rate", label: "前週比", align: "right" },
+              { key: "avgSyncRate", label: "平均同調率", align: "right" },
+              { key: "cumulative", label: "累計", align: "right" },
             ]}
-            data={tables.resultRanking}
+            data={tables.weeklyTable}
           />
         </SectionCard>
       </div>
+
+      <SectionCard title={`${config.resultLabel} ランキング`}>
+        <ScrollableTable
+          columns={[
+            { key: "rank", label: "順位", align: "center" },
+            { key: "name", label: config.resultLabel, align: "left" },
+            { key: "count", label: "件数", align: "right" },
+            { key: "percentage", label: "割合", align: "right" },
+          ]}
+          data={tables.resultRanking}
+        />
+      </SectionCard>
+
+      <SectionCard
+        title="設問別 回答割合"
+        description="各設問ごとに選択された回答の分布状況です"
+        icon={HelpCircle}
+      >
+        <div className="w-full overflow-x-auto mt-2">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-muted-foreground bg-secondary/50 border-b border-border/50">
+              <tr>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">ID</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">設問内容</th>
+                <th className="px-4 py-3 font-medium text-right whitespace-nowrap">
+                  回答数
+                </th>
+                <th className="px-4 py-3 font-medium">回答割合</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {tables.questionsData.map((q) => (
+                <tr key={q.key} className="hover:bg-secondary/20 transition-colors">
+                  <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
+                    {q.key}
+                  </td>
+                  <td className="px-4 py-3 text-foreground font-medium">{q.question}</td>
+                  <td className="px-4 py-3 text-right text-muted-foreground">
+                    {q.count.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 min-w-[300px]">
+                    <AnswerDistributionBar options={q.options} />
+                  </td>
+                </tr>
+              ))}
+              {tables.questionsData.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                    データがありません
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
 
       <GrowthProjectionSection
         title={`${config.label} 診断数の成長予測`}

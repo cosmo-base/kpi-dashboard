@@ -12,7 +12,7 @@ interface LinkItem {
   url: string;
   description: string;
   icon: LucideIcon;
-  subCategory?: string; // ★ 追加：下の階層（グループ）を分けるためのプロパティ
+  subCategory?: string;
 }
 
 interface LinkCategory {
@@ -110,7 +110,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'member-3',
         title: 'CBED',
-        url: 'https://cosmo-base.github.io/member_only/CBED/',
+        url: 'https://cosmo-base.github.io/event_database/',
         description: 'Cosmo Base Event Database',
         icon: Calendar,
         subCategory: ''
@@ -298,6 +298,14 @@ const initialLinkCategories: LinkCategory[] = [
       },
       {
         id: 'admin2-5',
+        title: 'CB参加者ページ analytics',
+        url: 'https://analytics.google.com/analytics/web/?utm_source=marketingplatform.google.com&utm_medium=et&utm_campaign=marketingplatform.google.com%2Fabout%2Fanalytics%2F#/a385612556p541593058/reports/intelligenthome?params=_u..nav%3Dmaui',
+        description: 'GA4解析ツール',
+        icon: ChartSpline,
+        subCategory: ''
+      },
+      {
+        id: 'admin2-6',
         title: 'パートナーロゴ格納箱',
         url: 'https://supabase.com/dashboard/project/oqomwuhrvqoozfujgtsj/storage/files/buckets/library',
         description: '',
@@ -414,6 +422,22 @@ const initialLinkCategories: LinkCategory[] = [
         description: '知っトク管理リスト(参加者ページ反映)',
         icon: Database,
         subCategory: '宇宙知っトク'
+      },
+      {
+        id: 'manage-14',
+        title: 'Cosmo Match 日本のロケット編 スプレッドシート',
+        url: 'https://docs.google.com/spreadsheets/d/1-Zpc-AbelO2orxbVMP2TzG9Bkqf0SI1MJ1nRbiy2B8M/edit?gid=0#gid=0',
+        description: '',
+        icon: Database,
+        subCategory: 'Cosmo Match'
+      },
+      {
+        id: 'manage-15',
+        title: 'Cosmo Match 88星座編 スプレッドシート',
+        url: 'https://docs.google.com/spreadsheets/d/1XIVQ1ID91XG4AT7jBeAw1QGbu4EvGUYdnrjferIxN4M/edit?gid=0#gid=0',
+        description: '',
+        icon: Database,
+        subCategory: 'Cosmo Match'
       },
     ]
   }, 
