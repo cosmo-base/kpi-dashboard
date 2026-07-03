@@ -37,7 +37,8 @@
   --success: oklch(0.65 0.2 145);
   --warning: oklch(0.75 0.18 85);
   --info: oklch(0.7 0.12 200);
-  
+  --danger: oklch(0.55 0.22 25);
+
   /* Glass Effect */
   --glass-bg: oklch(0.15 0.025 250 / 0.72);
   --glass-border: oklch(0.98 0 0 / 0.08);
@@ -69,6 +70,7 @@
   --chart-3: oklch(0.65 0.18 175);
   --chart-4: oklch(0.75 0.18 85);
   --chart-5: oklch(0.6 0.22 25);
+  --danger: oklch(0.55 0.22 25);
 }
 
 @theme inline {
@@ -101,6 +103,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
+  --color-danger: var(--danger);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
