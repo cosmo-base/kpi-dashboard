@@ -15,6 +15,7 @@ import { SNSPage } from "./pages/sns-page";
 import { CBHPPage } from "./pages/cbhp-page";
 import { LoadingSkeleton } from "./chart-container";
 import { ShittokuPage } from "./pages/shittoku-page";
+import { MatchPage } from "./pages/match-page"
 
  const dashboardTabs = [
   { id: 'community', label: 'Discord' },
@@ -27,6 +28,7 @@ import { ShittokuPage } from "./pages/shittoku-page";
   { id: 'cbl', label: 'CBL' },
   { id: 'space-diagnosis', label: '宇宙タイプ診断' },  
   { id: 'shittoku', label: '宇宙知っトク'},
+  { id: 'match', label: 'Cosmo Match'},
   { id: 'links', label: 'リンク' },
 ];
 
@@ -52,6 +54,7 @@ const tabGroups = [
       { id: "cbl", label: "CBL" },
       { id: "space-diagnosis", label: "宇宙タイプ診断" },
       { id: "shittoku", label: "宇宙知っトク" },
+      { id: "match", label: "Cosmo Match"}
     ],
   },
   {
@@ -132,6 +135,8 @@ export function Dashboard() {
         return <ShittokuPage />;
       case "links":
         return <LinksPage />;
+      case "match":
+        return <MatchPage />;
       default:
         return <Discord />;
     }
