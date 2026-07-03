@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   Sparkles,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
@@ -169,10 +170,13 @@ export function AutomationPage() {
     const needsImprovement =
       c.targetLevel != null && (c.currentLevel == null || c.currentLevel < c.targetLevel);
     return {
-      name: (
-        <span className={needsImprovement ? "text-danger font-semibold" : "text-foreground"}>
+     name: needsImprovement ? (
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-danger/15 px-2 py-1 text-danger font-semibold">
+          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
           {c.name}
         </span>
+      ) : (
+        <span className="text-foreground">{c.name}</span>
       ),
       current: <LevelBadge level={c.currentLevel} />,
       target: <LevelBadge level={c.targetLevel} />,
@@ -241,7 +245,8 @@ export function AutomationPage() {
           unit="pt"
           icon={TrendingUp}
           accentColor="accent"
-          description={totals ? `現状比 ${formatSigned(totals.target - totals.current)}pt` : undefined}
+          trendValue={totals ? `現状比 ${formatSigned(totals.target - totals.current)}pt` : undefined}
+          trendType="up"
         />
         <KpiCard
           title="目標達成率"
