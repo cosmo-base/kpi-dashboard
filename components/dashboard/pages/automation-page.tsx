@@ -265,7 +265,7 @@ export function AutomationPage() {
             { key: "target", label: "目標レベル", align: "center" },
           ]}
           data={contentTableData}
-          maxVisibleRows={12}
+          maxVisibleRows={contentTableData.length}
         />
       </SectionCard>
       <SectionCard
