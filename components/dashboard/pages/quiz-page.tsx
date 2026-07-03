@@ -42,6 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { GrowthProjectionSection } from "../growth-projection-section";
 
 const getJSTDate = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -963,6 +964,7 @@ export function SpaceQuizPage() {
             quizMonthlyTable,
             quizWeeklyTable,
           },
+          growthHistory,
         });
       })
       .catch((err) => console.error("CSV Fetch Error:", err));
@@ -978,7 +980,7 @@ export function SpaceQuizPage() {
       </div>
     );
 
-  const { summary, charts, tables } = data;
+  const { summary, charts, tables, growthHistory } = data;
 
   const sortedQuestions = [...tables.questionRanking].sort((a, b) => {
     if (sortMode === "accuracy_desc") return b.accuracy - a.accuracy;
@@ -1861,7 +1863,13 @@ export function SpaceQuizPage() {
           }))}
         />
       </SectionCard>
-
+      <GrowthProjectionSection
+        title="累計回答数の成長予測"
+        description="月別の回答数の伸びから、今月末〜1年後までの想定累計回答数を算出します。"
+        unit="件"
+        history={growthHistory}
+        color="#38BDF8"
+      />
       <Dialog
         open={!!selectedDot}
         onOpenChange={(open) => !open && setSelectedDot(null)}

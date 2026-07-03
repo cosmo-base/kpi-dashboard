@@ -20,6 +20,7 @@ import { DonutChart } from "../charts/donut-chart";
 import { LineChartComponent } from "../charts/line-chart";
 import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { Button } from "@/components/ui/button";
+import { GrowthProjectionSection } from "../growth-projection-section";
 
 const getJSTDate = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -823,6 +824,8 @@ export function SpaceDiagnosisPage() {
                 incSimplePart: 0,
                 incDetailed: 0,
                 cum: 0,
+                cumSimple: 0,
+                cumDetailed: 0,
               });
             }
             const mAgg = monthlyAgg.get(mLabel)!;
@@ -832,6 +835,8 @@ export function SpaceDiagnosisPage() {
             mAgg.incSimplePart += dayData.incSimplePart;
             mAgg.incDetailed += dayData.incDetailed;
             mAgg.cum = cumTotal;
+            mAgg.cumSimple = cumSimple;
+            mAgg.cumDetailed = cumDetailed;
 
             // 週単位集計 (確実に月曜日始まりにする計算)
             const dw =
@@ -981,6 +986,33 @@ export function SpaceDiagnosisPage() {
             };
           });
 
+        const growthHistorySeries = [
+          {
+            key: "total",
+            label: "全体",
+            color: "#38BDF8",
+            history: Array.from(monthlyAgg.entries())
+              .sort((a, b) => a[0].localeCompare(b[0]))
+              .map(([month, v]) => ({ month, cumulative: v.cum })),
+          },
+          {
+            key: "simple",
+            label: "簡易版",
+            color: "#8B5CF6",
+            history: Array.from(monthlyAgg.entries())
+              .sort((a, b) => a[0].localeCompare(b[0]))
+              .map(([month, v]) => ({ month, cumulative: v.cumSimple })),
+          },
+          {
+            key: "detailed",
+            label: "完全版",
+            color: "#22C55E",
+            history: Array.from(monthlyAgg.entries())
+              .sort((a, b) => a[0].localeCompare(b[0]))
+              .map(([month, v]) => ({ month, cumulative: v.cumDetailed })),
+          },
+        ];
+
         const monthlySimpleTypeTrend = Array.from(monthlySimpleTypeMap.values())
           .sort((a, b) => a.name.localeCompare(b.name))
           .slice(-6);
@@ -1040,6 +1072,7 @@ export function SpaceDiagnosisPage() {
           axisCounts,
           simpleAxisCounts,
           tables: { monthlyTable, weeklyTable, questionsData },
+          growthHistorySeries,
         });
       })
       .catch((err) => console.error("Data Load Error:", err));
@@ -1067,6 +1100,7 @@ export function SpaceDiagnosisPage() {
       P: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
     },
     tables = {},
+    growthHistorySeries = [],
   } = data;
   const pSegments = [
     { label: "P=1", count: simpleAxisCounts?.P?.[1] || 0, color: "#fed7aa" },
@@ -1522,6 +1556,13 @@ export function SpaceDiagnosisPage() {
           </table>
         </div>
       </SectionCard>
+      <GrowthProjectionSection
+        title="診断参加者数の成長予測"
+        description="全体・簡易版・完全版それぞれの直近の月次増加ペースから、今月末〜1年後までの想定参加者数を算出します。「全体を重ねて表示」で比較、各ボタンで単体表示に切り替えられます。"
+        unit="人"
+        series={growthHistorySeries}
+        primarySeriesKey="total"
+      />
     </div>
   );
 }
