@@ -15,20 +15,22 @@ import { SNSPage } from "./pages/sns-page";
 import { CBHPPage } from "./pages/cbhp-page";
 import { LoadingSkeleton } from "./chart-container";
 import { ShittokuPage } from "./pages/shittoku-page";
-import { MatchPage } from "./pages/match-page"
+import { MatchPage } from "./pages/match-page";
+import { AutomationPage } from "./pages/automation-page";
 
- const dashboardTabs = [
+const dashboardTabs = [
   { id: 'community', label: 'Discord' },
   { id: 'sns', label: 'SNS' },
-  { id: 'cbhp', label: 'CBHP'},
+  { id: 'cbhp', label: 'CBHP' },
   { id: 'partners', label: 'パートナー' },
+  { id: 'automation', label: '自動化率' },
   { id: 'space-quiz', label: '宇宙クイズ' },
   { id: 'cbed', label: 'CBED' },
   { id: 'cbmd', label: 'CBMD' },
   { id: 'cbl', label: 'CBL' },
-  { id: 'space-diagnosis', label: '宇宙タイプ診断' },  
-  { id: 'shittoku', label: '宇宙知っトク'},
-  { id: 'match', label: 'Cosmo Match'},
+  { id: 'space-diagnosis', label: '宇宙タイプ診断' },
+  { id: 'shittoku', label: '宇宙知っトク' },
+  { id: 'match', label: 'Cosmo Match' },
   { id: 'links', label: 'リンク' },
 ];
 
@@ -41,6 +43,7 @@ const tabGroups = [
       { id: "discord", label: "Discord" },
       { id: "sns", label: "SNS" },
       { id: "cbhp", label: "CBHP" },
+      { id: 'automation', label: '自動化率' },
       { id: "partners", label: "パートナー" },
     ],
   },
@@ -54,7 +57,7 @@ const tabGroups = [
       { id: "cbl", label: "CBL" },
       { id: "space-diagnosis", label: "宇宙タイプ診断" },
       { id: "shittoku", label: "宇宙知っトク" },
-      { id: "match", label: "Cosmo Match"}
+      { id: "match", label: "Cosmo Match" }
     ],
   },
   {
@@ -121,6 +124,8 @@ export function Dashboard() {
         return <CBHPPage />;
       case "partners":
         return <PartnerPage />;
+      case "automation":
+        return <AutomationPage />;
       case "space-quiz":
         return <SpaceQuizPage />;
       case "cbed":
@@ -159,11 +164,10 @@ export function Dashboard() {
               <button
                 key={group.id}
                 onClick={() => handleCategoryChange(group.id)}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${
-                  activeCategory === group.id
+                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeCategory === group.id
                     ? "bg-primary text-white shadow-md shadow-primary/30"
                     : "bg-secondary/40 text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
-                }`}
+                  }`}
               >
                 {group.name}
               </button>
