@@ -9,26 +9,26 @@ import {
   ListChecks,
   ArrowUpRight,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
-import { ChartContainer } from "../chart-container";
 import { ScrollableTable } from "../scrollable-table";
-import { StackedBarChart } from "../charts/stacked-bar-chart";
-import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUAhEPxwv1Vw-8yN5A8MHaS0jW_7l0hkGc9e_AuXym9q-rSjbv2lrzaY2yzC_ybQONC52dBJTEp0WV/pub?gid=0&single=true&output=csv";
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1E4jZU_L3FDT-1ZGlneUTu3Wbry9zJeZipk96p5NV7l8/edit?gid=0#gid=0";
 
+// 1:赤, 2:橙, 3:黄, 4:緑, 5:青
 const LEVEL_COLORS: Record<number, string> = {
   1: "#EF4444",
   2: "#F59E0B",
-  3: "#FBBF24",
-  4: "#38BDF8",
-  5: "#22C55E",
+  3: "#EAB308",
+  4: "#22C55E",
+  5: "#38BDF8",
 };
 
 interface LevelDef {
@@ -123,6 +123,19 @@ function parseAutomationCsv(csvText: string): AutomationData | null {
   return { contents, levelDefs, totals, rates };
 }
 
+function LevelBadge({ level }: { level: number | null }) {
+  if (level == null) return <span className="text-muted-foreground">-</span>;
+  const color = LEVEL_COLORS[level] ?? "#6B7280";
+  return (
+    <span
+      className="inline-block w-full text-center rounded-md px-2 py-1 text-xs font-bold text-white"
+      style={{ backgroundColor: color }}
+    >
+      Lv{level}
+    </span>
+  );
+}
+
 export function AutomationPage() {
   const [data, setData] = useState<AutomationData | null>(null);
 
@@ -145,28 +158,26 @@ export function AutomationPage() {
 
   const { contents, levelDefs, totals, rates } = data;
 
-  const levelDistribution = (key: "currentCount" | "targetCount") =>
-    levelDefs
-      .filter((l) => l[key] > 0)
-      .map((l) => ({
-        name: `Lv${l.level} ${l.status}`,
-        value: l[key],
-        color: LEVEL_COLORS[l.level] ?? "#6B7280",
-      }));
+  const achievedCount = contents.filter(
+    (c) => c.targetLevel != null && c.currentLevel != null && c.currentLevel >= c.targetLevel,
+  ).length;
+  const totalCount = contents.length;
+  const achievedRate =
+    totalCount > 0 ? Math.round((achievedCount / totalCount) * 1000) / 10 : 0;
 
-  const levelCompareChart = levelDefs.map((l) => ({
-    name: `Lv${l.level} ${l.status}`,
-    現状の数: l.currentCount,
-    目標の数: l.targetCount,
-  }));
-
-  const contentTableData = contents.map((c) => ({
-    name: c.name,
-    current: c.currentLevel != null ? `Lv${c.currentLevel}` : "-",
-    currentPoints: c.currentPoints ?? "-",
-    target: c.targetLevel != null ? `Lv${c.targetLevel}` : "-",
-    targetPoints: c.targetPoints ?? "-",
-  }));
+  const contentTableData: Record<string, any>[] = contents.map((c) => {
+    const needsImprovement =
+      c.targetLevel != null && (c.currentLevel == null || c.currentLevel < c.targetLevel);
+    return {
+      name: (
+        <span className={needsImprovement ? "text-danger font-semibold" : "text-foreground"}>
+          {c.name}
+        </span>
+      ),
+      current: <LevelBadge level={c.currentLevel} />,
+      target: <LevelBadge level={c.targetLevel} />,
+    };
+  });
 
   const levelTableData = levelDefs.map((l) => ({
     level: `レベル${l.level}`,
@@ -199,7 +210,7 @@ export function AutomationPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <KpiCard
           title="現状の自動化率"
           value={rates ? rates.current : "-"}
@@ -213,7 +224,7 @@ export function AutomationPage() {
           unit="%"
           icon={Target}
           accentColor="success"
-          trendValue={rates ? `+${Math.round((rates.target - rates.current) * 100) / 100}pt` : undefined}
+          trendValue={rates ? `-${Math.round((rates.target - rates.current) * 100) / 100}pt` : undefined}
           trendType="up"
         />
         <KpiCard
@@ -232,8 +243,26 @@ export function AutomationPage() {
           accentColor="accent"
           description={totals ? `現状比 ${formatSigned(totals.target - totals.current)}pt` : undefined}
         />
+        <KpiCard
+          title="目標達成率"
+          value={achievedRate}
+          unit="%"
+          icon={CheckCircle2}
+          accentColor="success"
+          description={`${achievedCount}/${totalCount}件`}
+        />
       </div>
-
+      <SectionCard title="コンテンツ別 現状・目標一覧" icon={ListChecks}>
+        <ScrollableTable
+          columns={[
+            { key: "name", label: "コンテンツ名", align: "left" },
+            { key: "current", label: "現状レベル", align: "center" },
+            { key: "target", label: "目標レベル", align: "center" },
+          ]}
+          data={contentTableData}
+          maxVisibleRows={12}
+        />
+      </SectionCard>
       <SectionCard
         title="レベル定義"
         description="ポイントが低いほど自動化度が高い（作業時間が短い）状態を表します"
@@ -249,57 +278,6 @@ export function AutomationPage() {
             { key: "targetCount", label: "目標の数", align: "right" },
           ]}
           data={levelTableData}
-        />
-      </SectionCard>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="現状レベル分布" description="コンテンツが現在どのレベルに集中しているか">
-          <ChartContainer height="h-[320px]">
-            {levelDistribution("currentCount").length > 0 ? (
-              <DonutChart data={levelDistribution("currentCount")} centerLabel="コンテンツ数" />
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                データがありません
-              </div>
-            )}
-          </ChartContainer>
-        </SectionCard>
-        <SectionCard title="目標レベル分布" description="コンテンツの目標レベルの分布">
-          <ChartContainer height="h-[320px]">
-            {levelDistribution("targetCount").length > 0 ? (
-              <DonutChart data={levelDistribution("targetCount")} centerLabel="コンテンツ数" />
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                データがありません
-              </div>
-            )}
-          </ChartContainer>
-        </SectionCard>
-      </div>
-
-      <SectionCard title="レベル別 現状 vs 目標" description="各レベルに何件のコンテンツが該当するか">
-        <ChartContainer height="h-[320px]">
-          <StackedBarChart
-            data={levelCompareChart}
-            bars={[
-              { dataKey: "現状の数", name: "現状の数", color: "#38BDF8" },
-              { dataKey: "目標の数", name: "目標の数", color: "#22C55E" },
-            ]}
-          />
-        </ChartContainer>
-      </SectionCard>
-
-      <SectionCard title="コンテンツ別 現状・目標一覧" icon={ListChecks}>
-        <ScrollableTable
-          columns={[
-            { key: "name", label: "コンテンツ名", align: "left" },
-            { key: "current", label: "現状レベル", align: "center" },
-            { key: "currentPoints", label: "現状ポイント", align: "right" },
-            { key: "target", label: "目標レベル", align: "center" },
-            { key: "targetPoints", label: "目標ポイント", align: "right" },
-          ]}
-          data={contentTableData}
-          maxVisibleRows={12}
         />
       </SectionCard>
     </div>
