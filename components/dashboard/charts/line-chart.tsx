@@ -17,7 +17,8 @@ interface LineChartComponentProps {
   lines: {
     dataKey: string;
     name: string;
-    color: string;
+    color: string;    
+    dashed?: boolean;
   }[];
   xAxisKey?: string;
   yAxisLabel?: string;
@@ -88,7 +89,8 @@ export function LineChartComponent({
             dataKey={line.dataKey}
             name={line.name}
             stroke={line.color}
-            strokeWidth={2}
+            strokeWidth={2}            
+            strokeDasharray={line.dashed ? '6 4' : undefined}
             dot={false}
             activeDot={{ r: 6, fill: line.color, stroke: 'white', strokeWidth: 2 }}
           />

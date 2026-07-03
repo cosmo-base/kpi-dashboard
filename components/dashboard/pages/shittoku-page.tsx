@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import { Users, Calendar, Target, UserPlus, ArrowUpRight, BookOpen,} from "lucide-react";
+import {
+  Users,
+  Calendar,
+  Target,
+  UserPlus,
+  ArrowUpRight,
+  BookOpen,
+  Zap,
+} from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";
@@ -11,6 +19,7 @@ import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { ScrollableTable } from "../scrollable-table";
+import { GrowthProjectionSection } from "../growth-projection-section";
 
 export function ShittokuPage() {
   const [data, setData] = useState<any>(null);
@@ -40,7 +49,12 @@ export function ShittokuPage() {
         const formatCounts = new Map<string, number>();
         const monthlyAgg = new Map<
           string,
-          { events: number; participants: number; satSum: number; satResponses: number }
+          {
+            events: number;
+            participants: number;
+            satSum: number;
+            satResponses: number;
+          }
         >();
         const cumulativeTrend: any[] = [];
 
@@ -62,7 +76,8 @@ export function ShittokuPage() {
 
           const satTotalResponses = s5 + s4 + s3 + s2 + s1;
           const satSum = s5 * 5 + s4 * 4 + s3 * 3 + s2 * 2 + s1 * 1;
-          const avgSat = satTotalResponses > 0 ? satSum / satTotalResponses : null;
+          const avgSat =
+            satTotalResponses > 0 ? satSum / satTotalResponses : null;
 
           // 月ラベルの生成
           let monthLabel = "";
@@ -98,7 +113,12 @@ export function ShittokuPage() {
 
           // 月別集計
           if (!monthlyAgg.has(monthLabel)) {
-            monthlyAgg.set(monthLabel, { events: 0, participants: 0, satSum: 0, satResponses: 0 });
+            monthlyAgg.set(monthLabel, {
+              events: 0,
+              participants: 0,
+              satSum: 0,
+              satResponses: 0,
+            });
           }
           const mData = monthlyAgg.get(monthLabel)!;
           mData.events += 1;
@@ -129,20 +149,47 @@ export function ShittokuPage() {
           });
           monthlyAvgSatData.push({
             name: key,
-            平均満足度: val.satResponses > 0 ? Math.round((val.satSum / val.satResponses) * 100) / 100 : 0,
+            平均満足度:
+              val.satResponses > 0
+                ? Math.round((val.satSum / val.satResponses) * 100) / 100
+                : 0,
           });
         });
 
-        const monthlyTable = Array.from(monthlyAgg.entries()).map(([month, val]) => ({
-          month,
-          events: val.events,
-          participants: val.participants.toLocaleString(),
-          avgParticipants: Math.round((val.participants / val.events) * 10) / 10,
-          avgSat: val.satResponses > 0 ? (Math.round((val.satSum / val.satResponses) * 100) / 100).toFixed(2) : "-",
-        })).reverse();
+        let runningParticipants = 0;
+        const growthHistory = Array.from(monthlyAgg.entries()).map(
+          ([month, val]) => {
+            runningParticipants += val.participants;
+            return { month, cumulative: runningParticipants };
+          },
+        );
+
+        const monthlyTable = Array.from(monthlyAgg.entries())
+          .map(([month, val]) => ({
+            month,
+            events: val.events,
+            participants: val.participants.toLocaleString(),
+            avgParticipants:
+              Math.round((val.participants / val.events) * 10) / 10,
+            avgSat:
+              val.satResponses > 0
+                ? (
+                    Math.round((val.satSum / val.satResponses) * 100) / 100
+                  ).toFixed(2)
+                : "-",
+          }))
+          .reverse();
 
         // 形式別円グラフ用データ
-        const typeColors = ["#38BDF8", "#8B5CF6", "#22C55E", "#F59E0B", "#EF4444", "#EC4899", "#10B981"];
+        const typeColors = [
+          "#38BDF8",
+          "#8B5CF6",
+          "#22C55E",
+          "#F59E0B",
+          "#EF4444",
+          "#EC4899",
+          "#10B981",
+        ];
         const formatDistribution = Array.from(formatCounts.entries())
           .map(([name, value], i) => ({
             name,
@@ -154,11 +201,20 @@ export function ShittokuPage() {
         // 各種KPIの計算
         const lastEvent = events.length > 0 ? events[events.length - 1] : null;
         const lastParticipants = lastEvent ? lastEvent.participants : 0;
-        const lastAvgSat = lastEvent && lastEvent.avgSat !== null ? Math.round(lastEvent.avgSat * 100) / 100 : "-";
+        const lastAvgSat =
+          lastEvent && lastEvent.avgSat !== null
+            ? Math.round(lastEvent.avgSat * 100) / 100
+            : "-";
         const lastEventDate = lastEvent ? lastEvent.date : "";
 
-        const avgParticipants = events.length > 0 ? Math.round((totalParticipants / events.length) * 10) / 10 : 0;
-        const avgSatOverall = totalSatResponses > 0 ? Math.round((totalSatSum / totalSatResponses) * 100) / 100 : "-";
+        const avgParticipants =
+          events.length > 0
+            ? Math.round((totalParticipants / events.length) * 10) / 10
+            : 0;
+        const avgSatOverall =
+          totalSatResponses > 0
+            ? Math.round((totalSatSum / totalSatResponses) * 100) / 100
+            : "-";
 
         setData({
           summary: {
@@ -178,8 +234,9 @@ export function ShittokuPage() {
             formatDistribution,
           },
           tables: {
-            monthlyTable, 
-          }
+            monthlyTable,
+          },
+          growthHistory,
         });
       })
       .catch((err) => console.error("CSV Fetch Error:", err));
@@ -195,13 +252,15 @@ export function ShittokuPage() {
       </div>
     );
 
-  const { summary, charts ,tables } = data;
+  const { summary, charts, tables, growthHistory } = data;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-border/50 pb-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">宇宙知っトク 分析</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            宇宙知っトク 分析
+          </h2>
           <p className="text-muted-foreground mt-1">
             イベントの参加者数推移、形式別の傾向、満足度の変化を確認できます。
           </p>
@@ -258,7 +317,9 @@ export function ShittokuPage() {
           unit="人"
           icon={UserPlus}
           accentColor="primary"
-          description={summary.lastEventDate ? `${summary.lastEventDate} 開催` : ""}
+          description={
+            summary.lastEventDate ? `${summary.lastEventDate} 開催` : ""
+          }
         />
         <KpiCard
           title="前回の平均満足度"
@@ -266,17 +327,26 @@ export function ShittokuPage() {
           unit=""
           icon={Target}
           accentColor="warning"
-          description={summary.lastEventDate ? `${summary.lastEventDate} 開催` : ""}
+          description={
+            summary.lastEventDate ? `${summary.lastEventDate} 開催` : ""
+          }
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="累計参加者数の推移" description="各イベント開催ごとの参加者合計の推移">
+        <SectionCard
+          title="累計参加者数の推移"
+          description="各イベント開催ごとの参加者合計の推移"
+        >
           <ChartContainer height="h-[350px]">
             <LineChartComponent
               data={charts.cumulativeTrend}
               lines={[
-                { dataKey: "累計参加者数", name: "累計参加者数", color: "#38BDF8" },
+                {
+                  dataKey: "累計参加者数",
+                  name: "累計参加者数",
+                  color: "#38BDF8",
+                },
               ]}
             />
           </ChartContainer>
@@ -285,24 +355,36 @@ export function ShittokuPage() {
           <ChartContainer height="h-[350px]">
             <StackedBarChart
               data={charts.monthlyParticipantsData}
-              bars={[{ dataKey: "参加者数", name: "参加者数", color: "#8B5CF6" }]}
+              bars={[
+                { dataKey: "参加者数", name: "参加者数", color: "#8B5CF6" },
+              ]}
             />
           </ChartContainer>
         </SectionCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SectionCard title="月別 平均参加者数の推移" description="1イベントあたりの平均人数">
+        <SectionCard
+          title="月別 平均参加者数の推移"
+          description="1イベントあたりの平均人数"
+        >
           <ChartContainer height="h-[300px]">
             <LineChartComponent
               data={charts.monthlyAvgParticipantsData}
               lines={[
-                { dataKey: "平均参加者数", name: "平均参加者数", color: "#22C55E" },
+                {
+                  dataKey: "平均参加者数",
+                  name: "平均参加者数",
+                  color: "#22C55E",
+                },
               ]}
             />
           </ChartContainer>
         </SectionCard>
-        <SectionCard title="月別 平均満足度の推移" description="月間の平均満足度 (5段階)">
+        <SectionCard
+          title="月別 平均満足度の推移"
+          description="月間の平均満足度 (5段階)"
+        >
           <ChartContainer height="h-[300px]">
             <LineChartComponent
               data={charts.monthlyAvgSatData}
@@ -318,7 +400,10 @@ export function ShittokuPage() {
         >
           <ChartContainer height="h-[300px]">
             {charts.formatDistribution.length > 0 ? (
-              <DonutChart data={charts.formatDistribution} centerLabel="開催数" />
+              <DonutChart
+                data={charts.formatDistribution}
+                centerLabel="開催数"
+              />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 データがありません
@@ -328,7 +413,10 @@ export function ShittokuPage() {
         </SectionCard>
       </div>
       <div className="grid grid-cols-1 gap-6">
-        <SectionCard title="月別 集計データ一覧" description="各月の開催数、参加者数、平均満足度の詳細データ">
+        <SectionCard
+          title="月別 集計データ一覧"
+          description="各月の開催数、参加者数、平均満足度の詳細データ"
+        >
           <ScrollableTable
             columns={[
               { key: "month", label: "月", align: "left" },
@@ -341,6 +429,14 @@ export function ShittokuPage() {
           />
         </SectionCard>
       </div>
+
+      <GrowthProjectionSection
+        title="累計参加者数の成長予測"
+        description="月別の参加者数の伸びから、今月末〜1年後までの想定累計参加者数を算出します。"
+        unit="人"
+        history={growthHistory}
+        color="#8B5CF6"
+      />
     </div>
   );
 }

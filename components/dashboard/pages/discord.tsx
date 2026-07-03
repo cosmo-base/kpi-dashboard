@@ -20,6 +20,7 @@ import { LinearChartComponent } from "../charts/linear-chart";
 import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
+import { GrowthProjectionSection } from "../growth-projection-section";
 
 const getJSTDate = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -385,6 +386,10 @@ export function Discord() {
             sourceDistribution,
             monthlyRateTrend,
             weeklyRateTrend,
+            growthHistory: monthlyTableRaw.map((item) => ({
+              month: item.month,
+              cumulative: item.cumulative,
+            })),
           },
           tables: {
             monthlyTable: [...monthlyTable].reverse(),
@@ -629,6 +634,12 @@ export function Discord() {
           )}
         </ChartContainer>
       </SectionCard>
+      <GrowthProjectionSection
+        title="Discord 人数の成長予測"
+        description="直近の月次増加ペースから、今月末〜1年後までの想定参加人数を算出します。"
+        history={charts.growthHistory}
+        color="#38BDF8"
+      />
     </div>
   );
 }
