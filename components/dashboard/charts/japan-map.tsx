@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 
-// publicフォルダに配置した日本地図データへのパス
-const geoUrl = "/japan.json";
+// publicフォルダに配置した日本地図データへのパス。
+// GitHub Pagesのプロジェクトサイトなどサブパス配信の場合、root-absoluteなパスは
+// basePath分ズレて404になるため、next.config側でbasePathを設定する場合は
+// NEXT_PUBLIC_BASE_PATH も合わせて設定するとここに反映される。
+const geoUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/japan.json`;
 
 interface JapanMapProps {
   data: { name: string; value: number }[];
@@ -13,6 +16,7 @@ interface JapanMapProps {
 
 export function JapanMap({ data, colorMax = "#38BDF8" }: JapanMapProps) {
   const [tooltipContent, setTooltipContent] = useState<{ pref: string; count: number } | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "ok" | "error">("loading");
 
   // データをMap化し、最大値を取得する
   const { dataMap, maxValue } = useMemo(() => {
@@ -26,6 +30,23 @@ export function JapanMap({ data, colorMax = "#38BDF8" }: JapanMapProps) {
     });
     return { dataMap: map, maxValue: max };
   }, [data]);
+
+  // geoUrl が正しく取得できるかを事前に確認する（basePath設定漏れ等で404になっていないか、
+  // react-simple-maps の内部フェッチが失敗して地図が無言で空表示になるのを防ぐため）
+  useEffect(() => {
+    let cancelled = false;
+    fetch(geoUrl)
+      .then((res) => {
+        if (cancelled) return;
+        setLoadState(res.ok ? "ok" : "error");
+      })
+      .catch(() => {
+        if (!cancelled) setLoadState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 値に応じて色の濃さ（不透明度）を計算する関数
   const getFillColor = (value: number) => {
@@ -44,9 +65,22 @@ export function JapanMap({ data, colorMax = "#38BDF8" }: JapanMapProps) {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
+  if (loadState === "error") {
+    return (
+      <div className="relative w-full h-full min-h-[350px] flex flex-col items-center justify-center gap-2 bg-secondary/10 rounded-xl overflow-hidden border border-border/30 text-center px-4">
+        <p className="text-sm font-semibold text-danger">
+          地図データ ({geoUrl}) を読み込めませんでした
+        </p>
+        <p className="text-xs text-muted-foreground">
+          デプロイ先でこのパスが404になっていないか（basePath設定など）確認してください
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full min-h-[350px] flex items-center justify-center bg-secondary/10 rounded-xl overflow-hidden border border-border/30">
-      
+
       {/* react-simple-maps による地図描画 */}
       <ComposableMap
         projection="geoMercator"
