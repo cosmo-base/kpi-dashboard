@@ -36,16 +36,29 @@ import { LinearChartComponent } from "../charts/linear-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { GrowthProjectionSection } from "../growth-projection-section";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { GrowthProjectionSection } from "../growth-projection-section";
 
 const getJSTDate = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+
+// ★ 巨大なuseEffect内のクロージャに変数を増やすとTurbopackの圧縮時に
+// 別スコープの変数名（1文字）と衝突しTDZエラーになることがあったため、
+// 独立した関数として切り出している。
+const buildGrowthHistory = (monthlyMap: Map<string, { ans: number }>) => {
+  let cumulative = 0;
+  return Array.from(monthlyMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([month, v]) => {
+      cumulative += v.ans;
+      return { month, cumulative };
+    });
+};
 
 type SortMode = "date_desc" | "answers_desc" | "accuracy_desc" | "accuracy_asc";
 
@@ -714,7 +727,7 @@ export function SpaceQuizPage() {
                 : 0,
             qCount: v.qCount,
             aveNun:
-              v.qCount > 0 ? Math.round((v.ans / v.qCount) * 100) / 100 : 0,
+              v.ans > 0 ? Math.round((v.qCount / v.ans) * 100 * 100) / 100 : 0,
           }));
 
         const quizWeeklyTrend = Array.from(quizWeeklyMap.entries())
@@ -730,11 +743,13 @@ export function SpaceQuizPage() {
                 : 0,
             qCount: v.qCount,
             aveNun:
-              v.qCount > 0 ? Math.round((v.ans / v.qCount) * 100) / 100 : 0,
+              v.ans > 0 ? Math.round((v.qCount / v.ans) * 100 * 100) / 100 : 0,
           }));
 
         const quizMonthlyTable = [...quizMonthlyTrend].reverse();
         const quizWeeklyTable = [...quizWeeklyTrend].reverse();
+
+        const growthHistory = buildGrowthHistory(quizMonthlyMap);
 
         // --- 種別パフォーマンス表のデータ生成 ---
         const buildTypeTable = (aggMap: Map<string, any>) => {
@@ -1863,6 +1878,7 @@ export function SpaceQuizPage() {
           }))}
         />
       </SectionCard>
+
       <GrowthProjectionSection
         title="累計回答数の成長予測"
         description="月別の回答数の伸びから、今月末〜1年後までの想定累計回答数を算出します。"
@@ -1870,6 +1886,7 @@ export function SpaceQuizPage() {
         history={growthHistory}
         color="#38BDF8"
       />
+
       <Dialog
         open={!!selectedDot}
         onOpenChange={(open) => !open && setSelectedDot(null)}
