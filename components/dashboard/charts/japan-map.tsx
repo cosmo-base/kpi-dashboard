@@ -7,7 +7,7 @@ import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 // GitHub Pagesのプロジェクトサイトなどサブパス配信の場合、root-absoluteなパスは
 // basePath分ズレて404になるため、next.config側でbasePathを設定する場合は
 // NEXT_PUBLIC_BASE_PATH も合わせて設定するとここに反映される。
-const geoUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/japan.json`;
+const geoUrl = `/kpi-dashboard/japan.json`;
 
 interface JapanMapProps {
   data: { name: string; value: number }[];
