@@ -170,7 +170,7 @@ export function AutomationPage() {
     const needsImprovement =
       c.targetLevel != null && (c.currentLevel == null || c.currentLevel < c.targetLevel);
     return {
-     name: needsImprovement ? (
+      name: needsImprovement ? (
         <span className="inline-flex items-center gap-1.5 rounded-md bg-danger/15 px-2 py-1 text-danger font-semibold">
           <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
           {c.name}
@@ -245,8 +245,7 @@ export function AutomationPage() {
           unit="pt"
           icon={TrendingUp}
           accentColor="accent"
-          trendValue={totals ? `現状比 ${formatSigned(totals.target - totals.current)}pt` : undefined}
-          trendType="up"
+          description={totals ? `現状比 ${formatSigned(totals.target - totals.current)}pt` : undefined}
         />
         <KpiCard
           title="目標達成率"
