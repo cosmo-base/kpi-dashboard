@@ -3,10 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 
-// publicフォルダに配置した日本地図データへのパス。
-// GitHub Pagesのプロジェクトサイトなどサブパス配信の場合、root-absoluteなパスは
-// basePath分ズレて404になるため、next.config側でbasePathを設定する場合は
-// NEXT_PUBLIC_BASE_PATH も合わせて設定するとここに反映される。
 const geoUrl = `/kpi-dashboard/japan.json`;
 
 interface JapanMapProps {
