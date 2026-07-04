@@ -1181,7 +1181,7 @@ export function SpaceQuizPage() {
           unit="%"
           icon={HelpCircle}
           accentColor="danger"
-          description={`出題${summary.todayQuestions}件中`}
+          description={`出題${summary.todayQuestions}件中${summary.todayZeroAnswers}件`}
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
@@ -1221,7 +1221,7 @@ export function SpaceQuizPage() {
           unit="%"
           icon={HelpCircle}
           accentColor="danger"
-          description={`出題${summary.thisWeekQuestions}件中`}
+          description={`出題${summary.thisWeekQuestions}件中${summary.thisWeekZeroAnswers}件`}
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
@@ -1261,7 +1261,7 @@ export function SpaceQuizPage() {
           unit="%"
           icon={HelpCircle}
           accentColor="danger"
-          description={`出題${summary.thisMonthQuestions}件中`}
+          description={`出題${summary.thisMonthQuestions}件中${summary.thisMonthZeroAnswers}件`}
         />
       </div>
 
