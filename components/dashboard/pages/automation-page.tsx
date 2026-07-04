@@ -245,7 +245,7 @@ export function AutomationPage() {
           unit="pt"
           icon={TrendingUp}
           accentColor="accent"
-          description={totals ? `現状比 ${formatSigned(totals.target - totals.current)}pt` : undefined}
+          trendValue={totals ? `現状比 ${formatSigned(totals.target - totals.current)}pt` : undefined}
         />
         <KpiCard
           title="目標達成率"
