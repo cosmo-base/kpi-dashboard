@@ -727,7 +727,7 @@ export function SpaceQuizPage() {
                 : 0,
             qCount: v.qCount,
             aveNun:
-              v.ans > 0 ? Math.round((v.qCount / v.ans) * 100 * 100) / 100 : 0,
+              v.qCount > 0 ? Math.round((v.ans / v.qCount) * 100) / 100 : 0,
           }));
 
         const quizWeeklyTrend = Array.from(quizWeeklyMap.entries())
@@ -743,7 +743,7 @@ export function SpaceQuizPage() {
                 : 0,
             qCount: v.qCount,
             aveNun:
-              v.ans > 0 ? Math.round((v.qCount / v.ans) * 100 * 100) / 100 : 0,
+              v.qCount > 0 ? Math.round((v.ans / v.qCount) * 100) / 100 : 0,
           }));
 
         const quizMonthlyTable = [...quizMonthlyTrend].reverse();
