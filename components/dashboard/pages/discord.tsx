@@ -31,9 +31,18 @@ const formatDiff = (num: number) => {
   return "0";
 };
 
+const TREND_PERIOD_OPTIONS = [
+  { key: "30", label: "1ヶ月", days: 30 },
+  { key: "90", label: "3ヶ月", days: 90 },
+  { key: "180", label: "6ヶ月", days: 180 },
+  { key: "365", label: "1年", days: 365 },
+  { key: "all", label: "全期間", days: null },
+] as const;
+
 export function Discord() {
   const [data, setData] = useState<any>(null);
   const [showSns, setShowSns] = useState(false);
+  const [trendPeriod, setTrendPeriod] = useState<string>("90");
 
   useEffect(() => {
     const csvUrl =
@@ -362,6 +371,41 @@ export function Discord() {
           先週比: item.rateRaw,
         }));
 
+        // 日付補完: firstからtodayまで全日分のデータを生成
+        const membersTrendFilled: any[] = [];
+        if (recordsWithDateNum.length > 0) {
+          const firstNum = recordsWithDateNum[0].recordNum;
+          const recordNumMap = new Map<number, (typeof recordsWithDateNum)[0]>();
+          recordsWithDateNum.forEach((r) => recordNumMap.set(r.recordNum, r));
+
+          let lastTotal = recordsWithDateNum[0].total;
+          let lastSns = recordsWithDateNum[0].snsTotal;
+          const iterDate = new Date(
+            Math.floor(firstNum / 10000),
+            Math.floor((firstNum % 10000) / 100) - 1,
+            firstNum % 100,
+          );
+          const todayDate = new Date(currentY, currentM - 1, currentD);
+          while (iterDate <= todayDate) {
+            const iy = iterDate.getFullYear();
+            const im = iterDate.getMonth() + 1;
+            const id = iterDate.getDate();
+            const num = iy * 10000 + im * 100 + id;
+            const label = `${im}/${id}`;
+            const rec = recordNumMap.get(num);
+            if (rec) {
+              lastTotal = rec.total;
+              lastSns = rec.snsTotal;
+            }
+            membersTrendFilled.push({
+              name: label,
+              累計人数: lastTotal,
+              SNS総フォロワー数: lastSns > 0 ? lastSns : undefined,
+            });
+            iterDate.setDate(iterDate.getDate() + 1);
+          }
+        }
+
         // ★ ここで全て計算済みのデータを setData に登録します
         setData({
           summary: {
@@ -375,12 +419,7 @@ export function Discord() {
             consecutiveIncreaseDays, // 計算した値をセット
           },
           charts: {
-            membersTrend: dailyRecords.map((record) => ({
-              name: record.date,
-              累計人数: record.total,
-              SNS総フォロワー数:
-                record.snsTotal > 0 ? record.snsTotal : undefined,
-            })),
+            membersTrend: membersTrendFilled,
             monthlyByTotal,
             weeklyByTotal,
             sourceDistribution,
@@ -505,7 +544,24 @@ export function Discord() {
         title="全体の人数推移"
         description="Discord参加人数とSNSフォロワー数の比較"
       >
-        <div className="flex justify-end mb-4">
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+          <div className="flex gap-1 flex-wrap">
+            {TREND_PERIOD_OPTIONS.map((opt) => (
+              <Button
+                key={opt.key}
+                variant="outline"
+                size="sm"
+                onClick={() => setTrendPeriod(opt.key)}
+                className={
+                  trendPeriod === opt.key
+                    ? "bg-primary text-primary-foreground border-transparent"
+                    : "bg-secondary/30 text-foreground"
+                }
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -521,7 +577,11 @@ export function Discord() {
         </div>
         <ChartContainer height="h-[350px]">
           <LineChartComponent
-            data={charts.membersTrend.slice(-90)}
+            data={(() => {
+              const opt = TREND_PERIOD_OPTIONS.find((o) => o.key === trendPeriod);
+              const trend = charts.membersTrend || [];
+              return opt?.days ? trend.slice(-opt.days) : trend;
+            })()}
             lines={[
               {
                 dataKey: "累計人数",

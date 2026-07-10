@@ -323,6 +323,14 @@ interface VariantData {
   growthHistory: { month: string; cumulative: number }[];
 }
 
+const TREND_PERIOD_OPTIONS = [
+  { key: "30", label: "1ヶ月", days: 30 },
+  { key: "90", label: "3ヶ月", days: 90 },
+  { key: "180", label: "6ヶ月", days: 180 },
+  { key: "365", label: "1年", days: 365 },
+  { key: "all", label: "全期間", days: null },
+] as const;
+
 function parseVariantCsv(
   csvText: string,
   config: CosmoMatchVariantConfig,
@@ -414,15 +422,39 @@ function parseVariantCsv(
   let todayIncrease = 0;
   const participantsTrend: { name: string; 累計診断数: number }[] = [];
 
-  dailyEntries.forEach(([dateKey, d]) => {
+  // First pass: calculate KPI metrics from actual data days
+  dailyEntries.forEach(([, d]) => {
     cumulative += d.count;
-    participantsTrend.push({ name: dateKey, 累計診断数: cumulative });
     if (d.num >= startOfThisMonthNum) monthlyIncrease += d.count;
     if (d.num <= endOfPrevMonthNum) endOfPrevMonthCum = cumulative;
     if (d.num >= startOfWeekNum) weeklyIncrease += d.count;
     if (d.num <= endOfPrevWeekNum) endOfPrevWeekCum = cumulative;
     if (d.num === todayNum) todayIncrease += d.count;
   });
+
+  // 日付補完: firstからtodayまで全日分のトレンドデータを生成
+  if (dailyEntries.length > 0) {
+    const firstNum = dailyEntries[0][1].num;
+    const numToCount = new Map<number, number>();
+    dailyEntries.forEach(([, d]) => numToCount.set(d.num, d.count));
+    let cum = 0;
+    const iterDate = new Date(
+      Math.floor(firstNum / 10000),
+      Math.floor((firstNum % 10000) / 100) - 1,
+      firstNum % 100,
+    );
+    const todayDate = new Date(currentY, currentM - 1, currentD);
+    while (iterDate <= todayDate) {
+      const iy = iterDate.getFullYear();
+      const im = iterDate.getMonth() + 1;
+      const id = iterDate.getDate();
+      const num = iy * 10000 + im * 100 + id;
+      const dateLabel = `${iy}/${String(im).padStart(2, "0")}/${String(id).padStart(2, "0")}`;
+      cum += numToCount.get(num) ?? 0;
+      participantsTrend.push({ name: dateLabel, 累計診断数: cum });
+      iterDate.setDate(iterDate.getDate() + 1);
+    }
+  }
 
   const monthlyRate =
     endOfPrevMonthCum === 0 ? 100 : Math.round((cumulative / endOfPrevMonthCum) * 100);
@@ -668,6 +700,8 @@ function CosmoMatchVariantSection({
   config: CosmoMatchVariantConfig;
   data: VariantData | null;
 }) {
+  const [trendPeriod, setTrendPeriod] = useState<string>("90");
+
   if (!config.csvUrl) {
     return (
       <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
@@ -771,9 +805,30 @@ function CosmoMatchVariantSection({
       </div>
 
       <SectionCard title="累計診断数の推移" description="日ごとの累計診断数">
+        <div className="flex gap-1 flex-wrap mb-4">
+          {TREND_PERIOD_OPTIONS.map((opt) => (
+            <Button
+              key={opt.key}
+              variant="outline"
+              size="sm"
+              onClick={() => setTrendPeriod(opt.key)}
+              className={
+                trendPeriod === opt.key
+                  ? "bg-primary text-primary-foreground border-transparent"
+                  : "bg-secondary/30 text-foreground"
+              }
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
         <ChartContainer height="h-[320px]">
           <LineChartComponent
-            data={charts.participantsTrend.slice(-90)}
+            data={(() => {
+              const opt = TREND_PERIOD_OPTIONS.find((o) => o.key === trendPeriod);
+              const trend = charts.participantsTrend || [];
+              return opt?.days ? trend.slice(-opt.days) : trend;
+            })()}
             lines={[{ dataKey: "累計診断数", name: "累計診断数", color: config.color }]}
           />
         </ChartContainer>
