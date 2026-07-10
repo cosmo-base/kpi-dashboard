@@ -9,8 +9,8 @@ import { ScrollableTable } from "./scrollable-table";
 import { LineChartComponent } from "./charts/line-chart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { MonthlyCumulative } from "@/lib/growth-projection";
-import { computeGrowthProjection } from "@/lib/growth-projection";
+import type { MonthlyCumulative } from "@/data/growth-projection";
+import { computeGrowthProjection } from "@/data/growth-projection";
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
