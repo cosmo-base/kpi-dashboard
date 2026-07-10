@@ -9,8 +9,8 @@ import { ScrollableTable } from "./scrollable-table";
 import { LineChartComponent } from "./charts/line-chart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { MonthlyCumulative } from "@/data/growth-projection";
-import { computeGrowthProjection } from "@/data/growth-projection";
+import type { MonthlyCumulative } from "@/lib/growth-projection";
+import { computeGrowthProjection } from "@/lib/growth-projection";
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
@@ -48,12 +48,11 @@ export function GrowthProjectionSection({
   primarySeriesKey,
 }: GrowthProjectionSectionProps) {
   const [filterKey, setFilterKey] = useState<string>("all");
+
   const primarySeries = series
     ? (series.find((s) => s.key === (primarySeriesKey ?? "total")) ?? series[0])
     : null;
-  const primaryHistory = primarySeries
-    ? primarySeries.history
-    : (history ?? []);
+  const primaryHistory = primarySeries ? primarySeries.history : (history ?? []);
   const primaryColor = primarySeries ? primarySeries.color : color;
 
   const result = computeGrowthProjection(primaryHistory, { monthsAhead: 12 });
@@ -98,29 +97,53 @@ export function GrowthProjectionSection({
     );
   }
 
-  const { monthlyRatePercent, basedOnMonths, currentTotal, projections } =
-    result;
+  const { monthlyRatePercent, basedOnMonths, currentTotal, projections } = result;
   const thisMonth = projections[0];
   const nextMonth = projections[1];
   const oneYear = projections[12];
 
-  const tableData = projections
-    .filter((p) => [0, 1, 3, 6, 12].includes(p.monthsAhead))
-    .map((p) => ({
-      label: p.label,
-      value: p.value.toLocaleString(),
-      diff: formatDiff(p.diffFromNow),
-    }));
+  const periodMonthsAhead = [0, 1, 3, 6, 12];
+
+  // グラフに合わせて、複数系列表示時はテーブルも表示中の系列ぶんの列を並べる
+  const tableColumns = series
+    ? [
+        { key: "label", label: "時期", align: "left" as const },
+        ...visibleSeries.flatMap((s) => [
+          { key: `${s.key}_value`, label: `${s.label}`, align: "right" as const },
+          { key: `${s.key}_diff`, label: `${s.label} 増減`, align: "right" as const },
+        ]),
+      ]
+    : [
+        { key: "label", label: "時期", align: "left" as const },
+        { key: "value", label: "想定人数", align: "right" as const },
+        { key: "diff", label: "現在からの増減", align: "right" as const },
+      ];
+
+  const tableData = series
+    ? projections
+        .filter((p) => periodMonthsAhead.includes(p.monthsAhead))
+        .map((p) => {
+          const row: Record<string, string> = { label: p.label };
+          visibleSeries.forEach((s) => {
+            const sp = s.result?.projections.find((pp) => pp.monthsAhead === p.monthsAhead);
+            row[`${s.key}_value`] = sp ? sp.value.toLocaleString() : "-";
+            row[`${s.key}_diff`] = sp ? formatDiff(sp.diffFromNow) : "-";
+          });
+          return row;
+        })
+    : projections
+        .filter((p) => periodMonthsAhead.includes(p.monthsAhead))
+        .map((p) => ({
+          label: p.label,
+          value: p.value.toLocaleString(),
+          diff: formatDiff(p.diffFromNow),
+        }));
+
   const chartData = series ? combinedChartData : result.chartData;
   const chartLines = series
     ? visibleSeries.flatMap((s) => [
         { dataKey: `${s.label}_実績`, name: s.label, color: s.color },
-        {
-          dataKey: `${s.label}_予測`,
-          name: `${s.label} (予測)`,
-          color: s.color,
-          dashed: true,
-        },
+        { dataKey: `${s.label}_予測`, name: `${s.label} (予測)`, color: s.color, dashed: true },
       ])
     : [
         { dataKey: "実績", name: "実績", color: primaryColor },
@@ -202,18 +225,12 @@ export function GrowthProjectionSection({
             ))}
           </div>
         )}
+
         <ChartContainer height="h-[320px]">
           <LineChartComponent data={chartData} lines={chartLines} />
         </ChartContainer>
 
-        <ScrollableTable
-          columns={[
-            { key: "label", label: "時期", align: "left" },
-            { key: "value", label: `想定人数${primarySeries ? `（${primarySeries.label}）` : ""}`, align: "right" },
-            { key: "diff", label: "現在からの増減", align: "right" },
-          ]}
-          data={tableData}
-        />
+        <ScrollableTable columns={tableColumns} data={tableData} />
       </div>
     </SectionCard>
   );
