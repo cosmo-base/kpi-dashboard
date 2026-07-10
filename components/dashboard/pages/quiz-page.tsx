@@ -62,6 +62,14 @@ const buildGrowthHistory = (monthlyMap: Map<string, { ans: number }>) => {
 
 type SortMode = "date_desc" | "answers_desc" | "accuracy_desc" | "accuracy_asc";
 
+const TREND_PERIOD_OPTIONS = [
+  { key: "30", label: "1ヶ月", days: 30 },
+  { key: "90", label: "3ヶ月", days: 90 },
+  { key: "180", label: "6ヶ月", days: 180 },
+  { key: "365", label: "1年", days: 365 },
+  { key: "all", label: "全期間", days: null },
+] as const;
+
 // 平均回答数をフォーマットする関数 (100以上は整数、10-99.9は小数第1位、0-9.99は小数第2位)
 const formatAverage = (num: number) => {
   if (!num || isNaN(num) || num === 0) return "0";
@@ -191,6 +199,7 @@ export function SpaceQuizPage() {
   const [data, setData] = useState<any>(null);
   const [sortMode, setSortMode] = useState<SortMode>("date_desc");
   const [selectedDot, setSelectedDot] = useState<any>(null);
+  const [trendPeriod, setTrendPeriod] = useState<string>("90");
 
   // グラフ表示のON/OFFステート
   const [visibleLines, setVisibleLines] = useState<Record<string, boolean>>({
@@ -590,34 +599,13 @@ export function SpaceQuizPage() {
           endOfPrevWeekCum = 0,
           endOfPrevDayCum = 0;
 
+        // First pass: calculate time-series KPIs from actual data days
         dailyRecords.forEach((day) => {
           cumulativeAnswers += day.answers;
           cumDiscord += day.discord;
           cumX += day.x;
           cumInstagram += day.instagram;
           cumMyCom += day.MyCom;
-
-          trendData.push({
-            name: day.formattedDate,
-            累計_全体: cumulativeAnswers,
-            累計_Discord: cumDiscord,
-            累計_X: cumX,
-            累計_Instagram: cumInstagram,
-            累計_マイコミュ: cumMyCom,
-            日別_全体: day.answers,
-            日別_Discord: day.discord,
-            日別_X: day.x,
-            日別_Instagram: day.instagram,
-            日別_マイコミュ: day.MyCom,
-          });
-
-          accuracyData.push({
-            name: day.formattedDate,
-            正答率:
-              day.answers > 0
-                ? Math.round((day.corrects / day.answers) * 10) / 10
-                : 0,
-          });
 
           const num = day.num;
           if (num >= startOfThisMonthNum) {
@@ -636,6 +624,58 @@ export function SpaceQuizPage() {
           }
           if (num <= endOfPrevDayNum) endOfPrevDayCum = cumulativeAnswers;
         });
+
+        // 日付補完: firstからtodayまで全日分のトレンドデータを生成
+        if (dailyRecords.length > 0) {
+          const firstNum = dailyRecords[0].num;
+          const dailyMap2 = new Map<number, (typeof dailyRecords)[0]>();
+          dailyRecords.forEach((d) => dailyMap2.set(d.num, d));
+
+          let cumAll = 0, cumDis = 0, cumXv = 0, cumInst = 0, cumMy = 0;
+          const iterDate = new Date(
+            Math.floor(firstNum / 10000),
+            Math.floor((firstNum % 10000) / 100) - 1,
+            firstNum % 100,
+          );
+          const todayDate2 = new Date(currentY, currentM - 1, currentD);
+          while (iterDate <= todayDate2) {
+            const iy = iterDate.getFullYear();
+            const im = iterDate.getMonth() + 1;
+            const id = iterDate.getDate();
+            const num = iy * 10000 + im * 100 + id;
+            const label = `${im}/${id}`;
+            const day = dailyMap2.get(num);
+            const dayAns = day?.answers ?? 0;
+            const dayDis = day?.discord ?? 0;
+            const dayX = day?.x ?? 0;
+            const dayInst = day?.instagram ?? 0;
+            const dayMy = day?.MyCom ?? 0;
+            const dayCor = day?.corrects ?? 0;
+            cumAll += dayAns;
+            cumDis += dayDis;
+            cumXv += dayX;
+            cumInst += dayInst;
+            cumMy += dayMy;
+            trendData.push({
+              name: label,
+              累計_全体: cumAll,
+              累計_Discord: cumDis,
+              累計_X: cumXv,
+              累計_Instagram: cumInst,
+              累計_マイコミュ: cumMy,
+              日別_全体: dayAns,
+              日別_Discord: dayDis,
+              日別_X: dayX,
+              日別_Instagram: dayInst,
+              日別_マイコミュ: dayMy,
+            });
+            accuracyData.push({
+              name: label,
+              正答率: dayAns > 0 ? Math.round((dayCor / dayAns) * 10) / 10 : 0,
+            });
+            iterDate.setDate(iterDate.getDate() + 1);
+          }
+        }
 
         const monthlyRate =
           endOfPrevMonthCum === 0
@@ -1291,10 +1331,31 @@ export function SpaceQuizPage() {
       {/* 推移グラフ */}
       <div className="grid grid-cols-1 gap-6">
         <SectionCard title="宇宙クイズ 累計参加者数推移 (全体・媒体別)">
+          <div className="flex gap-1 flex-wrap mb-4">
+            {TREND_PERIOD_OPTIONS.map((opt) => (
+              <Button
+                key={opt.key}
+                variant="outline"
+                size="sm"
+                onClick={() => setTrendPeriod(opt.key)}
+                className={
+                  trendPeriod === opt.key
+                    ? "bg-primary text-primary-foreground border-transparent"
+                    : "bg-secondary/30 text-foreground"
+                }
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
           <ChartContainer height="h-[350px]">
             {getTrendLines("累計_").length > 0 ? (
               <LineChartComponent
-                data={charts.participantsTrend.slice(-90)}
+                data={(() => {
+                  const opt = TREND_PERIOD_OPTIONS.find((o) => o.key === trendPeriod);
+                  const trend = charts.participantsTrend || [];
+                  return opt?.days ? trend.slice(-opt.days) : trend;
+                })()}
                 lines={getTrendLines("累計_")}
               />
             ) : (
@@ -1340,10 +1401,31 @@ export function SpaceQuizPage() {
           title="日別 回答数推移 (全体・媒体別)"
           description="日ごとの回答増減の推移"
         >
+          <div className="flex gap-1 flex-wrap mb-4">
+            {TREND_PERIOD_OPTIONS.map((opt) => (
+              <Button
+                key={opt.key}
+                variant="outline"
+                size="sm"
+                onClick={() => setTrendPeriod(opt.key)}
+                className={
+                  trendPeriod === opt.key
+                    ? "bg-primary text-primary-foreground border-transparent"
+                    : "bg-secondary/30 text-foreground"
+                }
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
           <ChartContainer height="h-[350px]">
             {getTrendLines("日別_").length > 0 ? (
               <LinearChartComponent
-                data={charts.participantsTrend.slice(-90)}
+                data={(() => {
+                  const opt = TREND_PERIOD_OPTIONS.find((o) => o.key === trendPeriod);
+                  const trend = charts.participantsTrend || [];
+                  return opt?.days ? trend.slice(-opt.days) : trend;
+                })()}
                 lines={getTrendLines("日別_")}
               />
             ) : (

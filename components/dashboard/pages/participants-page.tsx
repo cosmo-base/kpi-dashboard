@@ -149,10 +149,19 @@ const translateRegion = (enRegion: string) => {
 
 type SortMode = "views_desc" | "cvr_desc" | "events_desc";
 
+const TREND_PERIOD_OPTIONS = [
+  { key: "30", label: "1ヶ月", days: 30 },
+  { key: "90", label: "3ヶ月", days: 90 },
+  { key: "180", label: "6ヶ月", days: 180 },
+  { key: "365", label: "1年", days: 365 },
+  { key: "all", label: "全期間", days: null },
+] as const;
+
 export function ParticipantsPage() {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("views_desc");
+  const [trendPeriod, setTrendPeriod] = useState<string>("90");
 
   useEffect(() => {
     Promise.all([
@@ -565,9 +574,30 @@ export function ParticipantsPage() {
       </div>
 
       <SectionCard title="アクセス推移 (全期間)">
+        <div className="flex gap-1 flex-wrap mb-4">
+          {TREND_PERIOD_OPTIONS.map((opt) => (
+            <Button
+              key={opt.key}
+              variant="outline"
+              size="sm"
+              onClick={() => setTrendPeriod(opt.key)}
+              className={
+                trendPeriod === opt.key
+                  ? "bg-primary text-primary-foreground border-transparent"
+                  : "bg-secondary/30 text-foreground"
+              }
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
         <ChartContainer height="h-[350px]">
           <LineChartComponent
-            data={charts.trendData}
+            data={(() => {
+              const opt = TREND_PERIOD_OPTIONS.find((o) => o.key === trendPeriod);
+              const trend = charts.trendData || [];
+              return opt?.days ? trend.slice(-opt.days) : trend;
+            })()}
             lines={[
               { dataKey: "PV数", name: "PV数", color: "#38BDF8" },
               { dataKey: "ユーザー数", name: "ユーザー数", color: "#8B5CF6" },

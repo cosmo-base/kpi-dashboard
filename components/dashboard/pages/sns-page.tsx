@@ -46,9 +46,18 @@ function NoteIcon({ className }: { className?: string }) {
 type FilterMode = "all" | "x" | "instagram" | "note";
 type ChartFilterMode = "total" | "x" | "instagram" | "note";
 
+const TREND_PERIOD_OPTIONS = [
+  { key: "30", label: "1ヶ月", days: 30 },
+  { key: "90", label: "3ヶ月", days: 90 },
+  { key: "180", label: "6ヶ月", days: 180 },
+  { key: "365", label: "1年", days: 365 },
+  { key: "all", label: "全期間", days: null },
+] as const;
+
 export function SNSPage() {
   const [data, setData] = useState<any>(null);
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const [trendPeriod, setTrendPeriod] = useState<string>("90");
   const [monthlyFilterMode, setMonthlyFilterMode] =
     useState<ChartFilterMode>("total");
   const [weeklyFilterMode, setWeeklyFilterMode] =
@@ -329,6 +338,44 @@ export function SNSPage() {
           note: item.note,
         }));
 
+        // 日付補完: firstからtodayまで全日分のフォロワーデータを生成
+        const followersTrendFilled: any[] = [];
+        if (recordsWithDateNum.length > 0) {
+          const firstNum = recordsWithDateNum[0].recordNum;
+          const recordNumMap = new Map<number, (typeof recordsWithDateNum)[0]>();
+          recordsWithDateNum.forEach((r) => recordNumMap.set(r.recordNum, r));
+          let lastX = recordsWithDateNum[0].x;
+          let lastInsta = recordsWithDateNum[0].instagram;
+          let lastNote = recordsWithDateNum[0].note;
+          const iterDate = new Date(
+            Math.floor(firstNum / 10000),
+            Math.floor((firstNum % 10000) / 100) - 1,
+            firstNum % 100,
+          );
+          const todayDate = new Date(currentY, currentM - 1, currentD);
+          while (iterDate <= todayDate) {
+            const iy = iterDate.getFullYear();
+            const im = iterDate.getMonth() + 1;
+            const id = iterDate.getDate();
+            const num = iy * 10000 + im * 100 + id;
+            const label = `${im}/${id}`;
+            const rec = recordNumMap.get(num);
+            if (rec) {
+              lastX = rec.x;
+              lastInsta = rec.instagram;
+              lastNote = rec.note;
+            }
+            followersTrendFilled.push({
+              name: label,
+              X: lastX,
+              Instagram: lastInsta,
+              note: lastNote,
+              総数: lastX + lastInsta + lastNote,
+            });
+            iterDate.setDate(iterDate.getDate() + 1);
+          }
+        }
+
         setData({
           platforms: {
             x: calculateMetrics("x"),
@@ -336,13 +383,7 @@ export function SNSPage() {
             note: calculateMetrics("note"),
           },
           charts: {
-            followersTrend: dailyRecords.map((record) => ({
-              name: record.date,
-              X: record.x,
-              Instagram: record.instagram,
-              note: record.note,
-              総数: record.x + record.instagram + record.note,
-            })),
+            followersTrend: followersTrendFilled,
             monthlyByPlatform,
             weeklyByPlatform,
             platformDistribution: [
@@ -686,40 +727,63 @@ export function SNSPage() {
         title="SNSフォロワー推移"
         description="フォロワー数推移（媒体別切替可能）"
       >
-        <div className="flex flex-wrap gap-2 mb-4">
-          {[
-            { mode: "all" as FilterMode, label: "全媒体", color: "bg-primary" },
-            { mode: "x" as FilterMode, label: "Xのみ", color: "bg-[#1DA1F2]" },
-            {
-              mode: "instagram" as FilterMode,
-              label: "Instagramのみ",
-              color: "bg-[#d640e4]",
-            },
-            {
-              mode: "note" as FilterMode,
-              label: "noteのみ",
-              color: "bg-[#41C9B4]",
-            },
-          ].map((btn) => (
-            <Button
-              key={btn.mode}
-              variant="outline"
-              size="sm"
-              onClick={() => setFilterMode(btn.mode)}
-              className={cn(
-                "transition-all duration-200",
-                filterMode === btn.mode
-                  ? `${btn.color} text-white border-transparent`
-                  : "bg-secondary/30 hover:bg-secondary/50 border-border/50",
-              )}
-            >
-              {btn.label}
-            </Button>
-          ))}
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+          <div className="flex gap-1 flex-wrap">
+            {TREND_PERIOD_OPTIONS.map((opt) => (
+              <Button
+                key={opt.key}
+                variant="outline"
+                size="sm"
+                onClick={() => setTrendPeriod(opt.key)}
+                className={
+                  trendPeriod === opt.key
+                    ? "bg-primary text-primary-foreground border-transparent"
+                    : "bg-secondary/30 text-foreground"
+                }
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { mode: "all" as FilterMode, label: "全媒体", color: "bg-primary" },
+              { mode: "x" as FilterMode, label: "Xのみ", color: "bg-[#1DA1F2]" },
+              {
+                mode: "instagram" as FilterMode,
+                label: "Instagramのみ",
+                color: "bg-[#d640e4]",
+              },
+              {
+                mode: "note" as FilterMode,
+                label: "noteのみ",
+                color: "bg-[#41C9B4]",
+              },
+            ].map((btn) => (
+              <Button
+                key={btn.mode}
+                variant="outline"
+                size="sm"
+                onClick={() => setFilterMode(btn.mode)}
+                className={cn(
+                  "transition-all duration-200",
+                  filterMode === btn.mode
+                    ? `${btn.color} text-white border-transparent`
+                    : "bg-secondary/30 hover:bg-secondary/50 border-border/50",
+                )}
+              >
+                {btn.label}
+              </Button>
+            ))}
+          </div>
         </div>
         <div className="h-[350px]">
           <LineChartComponent
-            data={charts.followersTrend.slice(-90)}
+            data={(() => {
+              const opt = TREND_PERIOD_OPTIONS.find((o) => o.key === trendPeriod);
+              const trend = charts.followersTrend || [];
+              return opt?.days ? trend.slice(-opt.days) : trend;
+            })()}
             lines={getTrendLines()}
           />
         </div>
