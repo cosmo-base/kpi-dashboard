@@ -420,8 +420,17 @@ const DistributionBar = ({ item }: { item: any }) => {
   }
 };
 
+const TREND_PERIOD_OPTIONS = [
+  { key: "30", label: "1ヶ月", days: 30 },
+  { key: "90", label: "3ヶ月", days: 90 },
+  { key: "180", label: "6ヶ月", days: 180 },
+  { key: "365", label: "1年", days: 365 },
+  { key: "all", label: "全期間", days: null },
+] as const;
+
 export function SpaceDiagnosisPage() {
   const [data, setData] = useState<any>(null);
+  const [trendPeriod, setTrendPeriod] = useState<string>("90");
   useEffect(() => {
     const urlSimpleCbhp =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vReKqSJGubls2ixij5n6FbAi37wzshzZ09Q10a0uzJO1kuk8dSuw9c_yjm4XmsJelkiCLBubKAUFgky/pub?gid=0&single=true&output=csv";
@@ -771,7 +780,15 @@ export function SpaceDiagnosisPage() {
           const last = sortedMapRecords[sortedMapRecords.length - 1];
 
           let currentDateObj = new Date(first.y, first.m - 1, first.d);
-          const endDateObj = new Date(last.y, last.m - 1, last.d);
+          // 最新の回答日ではなく「今日」まで日付を均等に埋める（直近に回答が無い日も0件として表示するため）
+          const todayForFill = getJSTDate();
+          const todayObj = new Date(
+            todayForFill.getFullYear(),
+            todayForFill.getMonth(),
+            todayForFill.getDate(),
+          );
+          const lastDataObj = new Date(last.y, last.m - 1, last.d);
+          const endDateObj = todayObj.getTime() > lastDataObj.getTime() ? todayObj : lastDataObj;
 
           let cumTotal = 0,
             cumSimple = 0,
@@ -1254,9 +1271,33 @@ export function SpaceDiagnosisPage() {
       </div>
 
       <SectionCard title="診断参加者数推移 (累計)">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-sm font-bold text-foreground mr-1">期間:</span>
+          {TREND_PERIOD_OPTIONS.map((opt) => (
+            <Button
+              key={opt.key}
+              variant="outline"
+              size="sm"
+              onClick={() => setTrendPeriod(opt.key)}
+              className={
+                trendPeriod === opt.key
+                  ? "bg-primary text-primary-foreground border-transparent"
+                  : "bg-secondary/30"
+              }
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
         <ChartContainer height="h-[320px]">
           <LineChartComponent
-            data={charts.participantsTrend?.slice(-90) || []}
+            data={
+              (() => {
+                const opt = TREND_PERIOD_OPTIONS.find((o) => o.key === trendPeriod);
+                const trend = charts.participantsTrend || [];
+                return opt?.days ? trend.slice(-opt.days) : trend;
+              })()
+            }
             lines={[
               { dataKey: "全体", name: "全体", color: "#38BDF8" },
               { dataKey: "完全版", name: "完全版", color: "#22C55E" },
@@ -1556,6 +1597,7 @@ export function SpaceDiagnosisPage() {
           </table>
         </div>
       </SectionCard>
+
       <GrowthProjectionSection
         title="診断参加者数の成長予測"
         description="全体・簡易版・完全版それぞれの直近の月次増加ペースから、今月末〜1年後までの想定参加者数を算出します。「全体を重ねて表示」で比較、各ボタンで単体表示に切り替えられます。"
