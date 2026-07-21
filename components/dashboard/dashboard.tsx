@@ -18,6 +18,8 @@ import { ShittokuPage } from "./pages/shittoku-page";
 import { MatchPage } from "./pages/match-page";
 import { AutomationPage } from "./pages/automation-page";
 import { ParticipantsPage } from "./pages/participants-page";
+import { OverviewPage } from "./pages/overview-page";
+import { RealtimePage } from "./pages/realtime-page";
 
 const dashboardTabs = [
   { id: 'community', label: 'Discord' },
@@ -42,6 +44,8 @@ const tabGroups = [
     id: "general",
     name: "全体",
     tabs: [
+      { id: "overview", label: "概要" },
+      { id: "realtime", label: "リアルタイム" },
       { id: "discord", label: "Discord" },
       { id: "sns", label: "SNS" },
       { id: "cbhp", label: "CBHP" },
@@ -72,7 +76,7 @@ const tabGroups = [
 
 export function Dashboard() {
   const [activeCategory, setActiveCategory] = useState("general"); // 1段目のステート
-  const [activeTab, setActiveTab] = useState("community"); // 2段目のステート
+  const [activeTab, setActiveTab] = useState("overview"); // 2段目のステート
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(
     new Date().toISOString(),
@@ -119,6 +123,10 @@ export function Dashboard() {
     }
 
     switch (activeTab) {
+      case "overview":
+        return <OverviewPage />;
+      case "realtime":
+        return <RealtimePage />;
       case "discord":
         return <Discord />;
       case "sns":
