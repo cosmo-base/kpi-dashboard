@@ -19,7 +19,6 @@ import { MatchPage } from "./pages/match-page";
 import { AutomationPage } from "./pages/automation-page";
 import { ParticipantsPage } from "./pages/participants-page";
 import { OverviewPage } from "./pages/overview-page";
-import { RealtimePage } from "./pages/realtime-page";
 
 const dashboardTabs = [
   { id: 'community', label: 'Discord' },
@@ -45,7 +44,6 @@ const tabGroups = [
     name: "全体",
     tabs: [
       { id: "overview", label: "概要" },
-      { id: "realtime", label: "リアルタイム" },
       { id: "discord", label: "Discord" },
       { id: "sns", label: "SNS" },
       { id: "cbhp", label: "CBHP" },
@@ -125,8 +123,6 @@ export function Dashboard() {
     switch (activeTab) {
       case "overview":
         return <OverviewPage />;
-      case "realtime":
-        return <RealtimePage />;
       case "discord":
         return <Discord />;
       case "sns":
