@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Papa from "papaparse";
 import {
   Users,
@@ -969,6 +969,7 @@ function CosmoMatchVariantSection({
 export function MatchPage() {
   const [activeVariant, setActiveVariant] = useState(VARIANTS[0].key);
   const [dataMap, setDataMap] = useState<Record<string, VariantData | null>>({});
+  const [combinedTrendPeriod, setCombinedTrendPeriod] = useState<string>("90");
   const current = VARIANTS.find((v) => v.key === activeVariant) ?? VARIANTS[0];
 
   useEffect(() => {
@@ -1001,6 +1002,33 @@ export function MatchPage() {
     (sum, v) => sum + (dataMap[v.key]?.summary.todayIncrease || 0),
     0,
   );
+
+  // 全編合計の推移グラフ用データ: 各編の participantsTrend を日付でマージして合算
+  const combinedTrend = useMemo(() => {
+    const allTrends = loadedVariants.map((v) => dataMap[v.key]?.charts.participantsTrend ?? []);
+    if (allTrends.every((t) => t.length === 0)) return [];
+    const dateSet = new Set<string>();
+    allTrends.forEach((trend) => trend.forEach((d) => dateSet.add(d.name)));
+    const dates = Array.from(dateSet).sort();
+    const variantMaps = loadedVariants.map((v) => ({
+      label: v.label,
+      color: v.color,
+      map: new Map<string, number>(
+        (dataMap[v.key]?.charts.participantsTrend ?? []).map((d) => [d.name, d.累計診断数]),
+      ),
+    }));
+    return dates.map((date) => {
+      const res: any = { name: date };
+      let total = 0;
+      variantMaps.forEach(({ label, map }) => {
+        const val = map.get(date) ?? 0;
+        res[label] = val;
+        total += val;
+      });
+      res["全体"] = total;
+      return res;
+    });
+  }, [loadedVariants, dataMap]);
 
   const currentData: VariantData | null = dataMap[current.key] ?? null;
 
@@ -1046,6 +1074,44 @@ export function MatchPage() {
           accentColor="warning"
         />
       </div>
+
+      {combinedTrend.length > 0 && (
+        <SectionCard title="全編合計の推移グラフ" description="編ごとの累計診断数と全体合計の推移">
+          <div className="flex gap-1 flex-wrap mb-4">
+            {TREND_PERIOD_OPTIONS.map((opt) => (
+              <Button
+                key={opt.key}
+                variant="outline"
+                size="sm"
+                onClick={() => setCombinedTrendPeriod(opt.key)}
+                className={
+                  combinedTrendPeriod === opt.key
+                    ? "bg-primary text-primary-foreground border-transparent"
+                    : "bg-secondary/30 text-foreground"
+                }
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+          <ChartContainer height="h-[320px]">
+            <LineChartComponent
+              data={(() => {
+                const opt = TREND_PERIOD_OPTIONS.find((o) => o.key === combinedTrendPeriod);
+                return opt?.days ? combinedTrend.slice(-opt.days) : combinedTrend;
+              })()}
+              lines={[
+                ...loadedVariants.map((v) => ({
+                  dataKey: v.label,
+                  name: v.label,
+                  color: v.color,
+                })),
+                { dataKey: "全体", name: "全体", color: "#e879f9" },
+              ]}
+            />
+          </ChartContainer>
+        </SectionCard>
+      )}
 
       <div className="flex flex-wrap gap-2 border-b border-border/50 pb-4">
         {VARIANTS.map((v) => (
