@@ -712,16 +712,18 @@ export function SpaceQuizPage() {
             : (thisMonthCorrects / thisMonthAnswers) * 100;
 
         // --- 種別グラフ用のデータ生成 ---
-        const activeTypes = Array.from(typeCounts.keys()).filter(
+        const activeTypesRaw = Array.from(typeCounts.keys()).filter(
           (t) => t !== "未分類",
         );
+        // "全体" を先頭に追加して集計用の特別ラインとして扱う
+        const activeTypes = ["全体", ...activeTypesRaw];
 
         const monthlyTypeTrend = Array.from(typeStatsMonthly.keys())
           .sort()
           .map((monthKey) => {
             const mAgg = typeStatsMonthly.get(monthKey)!;
             const res: any = { name: monthKey };
-            activeTypes.forEach((type) => {
+            activeTypesRaw.forEach((type) => {
               const d = mAgg.get(type) || initAgg();
               res[`${type}_qCount`] = d.qCount;
               res[`${type}_ans`] = d.ans;
@@ -731,6 +733,13 @@ export function SpaceQuizPage() {
               res[`${type}_zeroRate`] =
                 d.qCount > 0 ? Math.round((d.zeroCount / d.qCount) * 100) : 0;
             });
+            // 全体集計を quizMonthlyMap から追加
+            const tot = quizMonthlyMap.get(monthKey) || { qCount: 0, zeroCount: 0, ans: 0, cor: 0 };
+            res["全体_qCount"] = tot.qCount;
+            res["全体_ans"] = tot.ans;
+            res["全体_avgAns"] = tot.qCount > 0 ? tot.ans / tot.qCount : 0;
+            res["全体_accuracy"] = tot.ans > 0 ? Math.round((tot.cor / tot.ans) * 100) : 0;
+            res["全体_zeroRate"] = tot.qCount > 0 ? Math.round((tot.zeroCount / tot.qCount) * 100) : 0;
             return res;
           });
 
@@ -740,7 +749,7 @@ export function SpaceQuizPage() {
             const wAgg = typeStatsWeekly.get(weekKey)!;
             const shortName = weekKey.substring(5); // MM/DD
             const res: any = { name: shortName };
-            activeTypes.forEach((type) => {
+            activeTypesRaw.forEach((type) => {
               const d = wAgg.get(type) || initAgg();
               res[`${type}_qCount`] = d.qCount;
               res[`${type}_ans`] = d.ans;
@@ -750,6 +759,13 @@ export function SpaceQuizPage() {
               res[`${type}_zeroRate`] =
                 d.qCount > 0 ? Math.round((d.zeroCount / d.qCount) * 100) : 0;
             });
+            // 全体集計を quizWeeklyMap から追加
+            const tot = quizWeeklyMap.get(weekKey) || { qCount: 0, zeroCount: 0, ans: 0, cor: 0 };
+            res["全体_qCount"] = tot.qCount;
+            res["全体_ans"] = tot.ans;
+            res["全体_avgAns"] = tot.qCount > 0 ? tot.ans / tot.qCount : 0;
+            res["全体_accuracy"] = tot.ans > 0 ? Math.round((tot.cor / tot.ans) * 100) : 0;
+            res["全体_zeroRate"] = tot.qCount > 0 ? Math.round((tot.zeroCount / tot.qCount) * 100) : 0;
             return res;
           });
 
@@ -1076,14 +1092,16 @@ export function SpaceQuizPage() {
 
   const getTypeTrendLines = () => {
     const lines: any[] = [];
-    charts.activeTypes.forEach((type: string, i: number) => {
+    let colorIdx = 0;
+    charts.activeTypes.forEach((type: string) => {
       if (visibleTypes[type]) {
         lines.push({
           dataKey: `${type}_${typeChartMetric}`,
           name: type,
-          color: TYPE_COLORS[i % TYPE_COLORS.length],
+          color: type === "全体" ? "#e879f9" : TYPE_COLORS[colorIdx % TYPE_COLORS.length],
         });
       }
+      if (type !== "全体") colorIdx++;
     });
     return lines;
   };
@@ -1733,28 +1751,33 @@ export function SpaceQuizPage() {
               <span className="text-sm font-bold text-foreground mt-1.5 mr-1">
                 種別の表示:
               </span>
-              {charts.activeTypes.map((type: string, i: number) => (
-                <Button
-                  key={type}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toggleTypeLine(type)}
-                  className={cn(
-                    "transition-all duration-200 border-border/50 flex items-center gap-2",
-                    visibleTypes[type]
-                      ? "bg-secondary/80 text-foreground"
-                      : "bg-background text-muted-foreground opacity-50",
-                  )}
-                >
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{
-                      backgroundColor: TYPE_COLORS[i % TYPE_COLORS.length],
-                    }}
-                  />
-                  {type}
-                </Button>
-              ))}
+              {(() => {
+                let colorIdx = 0;
+                return charts.activeTypes.map((type: string) => {
+                  const dotColor = type === "全体" ? "#e879f9" : TYPE_COLORS[colorIdx % TYPE_COLORS.length];
+                  if (type !== "全体") colorIdx++;
+                  return (
+                    <Button
+                      key={type}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleTypeLine(type)}
+                      className={cn(
+                        "transition-all duration-200 border-border/50 flex items-center gap-2",
+                        visibleTypes[type]
+                          ? "bg-secondary/80 text-foreground"
+                          : "bg-background text-muted-foreground opacity-50",
+                      )}
+                    >
+                      <div
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: dotColor }}
+                      />
+                      {type}
+                    </Button>
+                  );
+                });
+              })()}
             </div>
           </div>
 
