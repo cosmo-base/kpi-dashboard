@@ -35,7 +35,7 @@ export function PartnerPage() {
     // パートナー連絡リストのCSV URL
     const csvUrl =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEJHQIgKbrIVbjo1mlnEg2iN3Jl4MXit4ArDW9ISOumOEzjKvjhcckAka7zWSkPwihVlxdC0255Q0D/pub?gid=560621363&single=true&output=csv";
-
+    
     fetch(csvUrl)
       .then((response) => response.text())
       .then((csvText) => {
@@ -351,6 +351,21 @@ export function PartnerPage() {
           className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
         >
           <a
+            href="https://docs.google.com/spreadsheets/d/1PtyAO6VeBwgZcFsiiUhQseg6ugZJmMI_Di6N5StMQiA/edit" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>申請データ</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
             href="https://docs.google.com/spreadsheets/d/1Nbq6rD_PfF1-KdIXqlq4wCVPA6SWITvDroO5eKe42Q4/edit"
             target="_blank"
             rel="noopener noreferrer"
@@ -358,7 +373,7 @@ export function PartnerPage() {
             <span>元データ (スプシ)</span>
             <ArrowUpRight className="h-4 w-4 opacity-70" />
           </a>
-        </Button>
+        </Button>  
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
