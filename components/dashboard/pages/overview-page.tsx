@@ -9,10 +9,13 @@ import {
   Sparkles,
   Rocket,
   Star,
-  Calendar,
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
+import type { AccentColor } from "../kpi-card";
 import { SectionCard } from "../section-card";
+import { ChartContainer } from "../chart-container";
+import { LineChartComponent } from "../charts/line-chart";
+import { Button } from "@/components/ui/button";
 
 const getJSTDate = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -33,17 +36,45 @@ const CSV_URLS = {
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTbfWKxGFEmOkuaszkGJNUcX4FySkqmdxKJtaXG0esrjJoHSo5zmEoOGLTmzH09YJd9BZY1DyqNc7P/pub?gid=1977317423&single=true&output=csv",
 };
 
-interface OverviewData {
-  discordTotal: number;
-  discordThisMonth: number;
-  xFollowers: number;
-  instagramFollowers: number;
-  noteFollowers: number;
-  quizTotal: number;
-  typeTotal: number;
-  rocketTotal: number;
-  constellationTotal: number;
+type StatPeriod = "total" | "month" | "week" | "yesterday" | "today";
+
+const STAT_PERIODS: { key: StatPeriod; label: string }[] = [
+  { key: "total", label: "全体" },
+  { key: "month", label: "今月" },
+  { key: "week", label: "今週" },
+  { key: "yesterday", label: "昨日" },
+  { key: "today", label: "今日" },
+];
+
+const TREND_PERIODS = [
+  { key: "30", label: "1ヶ月", days: 30 as number | null },
+  { key: "90", label: "3ヶ月", days: 90 as number | null },
+  { key: "180", label: "6ヶ月", days: 180 as number | null },
+  { key: "365", label: "1年", days: 365 as number | null },
+  { key: "all", label: "全期間", days: null as number | null },
+];
+
+interface Metric {
+  total: number;
+  month: number;
+  week: number;
+  yesterday: number;
+  today: number;
 }
+
+interface OverviewData {
+  discord: Metric;
+  x: Metric;
+  instagram: Metric;
+  note: Metric;
+  quiz: Metric;
+  type: Metric;
+  matchRocket: Metric;
+  matchConstellation: Metric;
+  trend: { name: string; Discord: number; SNS合計: number }[];
+}
+
+const zeroMetric = (): Metric => ({ total: 0, month: 0, week: 0, yesterday: 0, today: 0 });
 
 function parseDiscordSnsRecords(rawData: string[][]) {
   const headerRowIndex = rawData.findIndex((row) => row.includes("参加数"));
@@ -72,7 +103,7 @@ function parseDiscordSnsRecords(rawData: string[][]) {
     .filter((r) => r.total > 0);
 }
 
-function addDateNums(records: ReturnType<typeof parseDiscordSnsRecords>) {
+function withDateNums(records: ReturnType<typeof parseDiscordSnsRecords>) {
   const nowJst = getJSTDate();
   const currentM = nowJst.getMonth() + 1;
   let yearForDate = nowJst.getFullYear();
@@ -85,8 +116,14 @@ function addDateNums(records: ReturnType<typeof parseDiscordSnsRecords>) {
   });
 }
 
+function dateToNum(d: Date) {
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
 export function OverviewPage() {
   const [data, setData] = useState<OverviewData | null>(null);
+  const [statPeriod, setStatPeriod] = useState<StatPeriod>("total");
+  const [trendPeriod, setTrendPeriod] = useState("90");
 
   useEffect(() => {
     Promise.all([
@@ -100,193 +137,346 @@ export function OverviewPage() {
     ])
       .then(([discordSnsCsv, quizCsv, type1Csv, type2Csv, type3Csv, rocketCsv, constellCsv]) => {
         const nowJst = getJSTDate();
-        const startOfMonthNum =
-          nowJst.getFullYear() * 10000 + (nowJst.getMonth() + 1) * 100 + 1;
+        const currentY = nowJst.getFullYear();
+        const currentM = nowJst.getMonth() + 1;
+        const currentD = nowJst.getDate();
+        const todayNum = dateToNum(nowJst);
 
-        // Discord / SNS
-        const rawData = Papa.parse(discordSnsCsv, { skipEmptyLines: true })
-          .data as string[][];
-        const dsRecords = addDateNums(parseDiscordSnsRecords(rawData));
-        const latest = dsRecords[dsRecords.length - 1];
-        let discordThisMonth = 0;
-        dsRecords.forEach((r) => {
-          if (r.num >= startOfMonthNum) discordThisMonth += r.increase;
-        });
+        const yesterdayDate = new Date(nowJst);
+        yesterdayDate.setDate(currentD - 1);
+        const yesterdayNum = dateToNum(yesterdayDate);
 
-        // Quiz: sum of "回答数" column
-        const quizRows = Papa.parse(quizCsv, {
-          header: true,
-          skipEmptyLines: true,
-        }).data as any[];
-        let quizTotal = 0;
-        quizRows.forEach((r) => {
-          if (r["問題"] && String(r["問題"]).trim() !== "") {
-            quizTotal += parseInt(String(r["回答数"] || "0").replace(/,/g, ""), 10) || 0;
+        const dayBeforeYesterday = new Date(yesterdayDate);
+        dayBeforeYesterday.setDate(yesterdayDate.getDate() - 1);
+        const dayBeforeYesterdayNum = dateToNum(dayBeforeYesterday);
+
+        const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
+        const startOfWeek = new Date(nowJst);
+        startOfWeek.setDate(currentD - dayOfWeek + 1);
+        const startOfWeekNum = dateToNum(startOfWeek);
+
+        const dayBeforeWeekStart = new Date(startOfWeek);
+        dayBeforeWeekStart.setDate(startOfWeek.getDate() - 1);
+        const dayBeforeWeekStartNum = dateToNum(dayBeforeWeekStart);
+
+        const startOfMonthNum = currentY * 10000 + currentM * 100 + 1;
+
+        const endOfPrevMonth = new Date(nowJst);
+        endOfPrevMonth.setDate(0);
+        const endOfPrevMonthNum = dateToNum(endOfPrevMonth);
+
+        // ---- Discord / SNS ----
+        const rawData = Papa.parse(discordSnsCsv, { skipEmptyLines: true }).data as string[][];
+        const dsRecords = withDateNums(parseDiscordSnsRecords(rawData));
+
+        const dsNumMap = new Map<number, (typeof dsRecords)[0]>();
+        dsRecords.forEach((r) => dsNumMap.set(r.num, r));
+
+        const findAtOrBefore = (targetNum: number) => {
+          let result = dsRecords[0];
+          for (const r of dsRecords) {
+            if (r.num <= targetNum) result = r;
+            else break;
           }
+          return result;
+        };
+
+        const latest = dsRecords[dsRecords.length - 1];
+        const latestIsToday = latest?.num === todayNum;
+
+        const discord: Metric = zeroMetric();
+        discord.total = latest?.total ?? 0;
+        dsRecords.forEach((r) => {
+          if (r.num >= startOfMonthNum) discord.month += r.increase;
+          if (r.num >= startOfWeekNum) discord.week += r.increase;
+          if (r.num === yesterdayNum) discord.yesterday += r.increase;
+          if (r.num === todayNum) discord.today += r.increase;
         });
 
-        // Type diagnosis: count valid rows across 3 CSVs
-        const parseTypeRows = (csv: string) =>
-          (Papa.parse(csv, { header: true, skipEmptyLines: true }).data as any[]).filter(
-            (r) => String(r.date || "").trim().length >= 8,
+        const computeSns = (field: "x" | "instagram" | "note"): Metric => {
+          const latestVal = latest?.[field] ?? 0;
+          return {
+            total: latestVal,
+            month: latestVal - (findAtOrBefore(endOfPrevMonthNum)?.[field] ?? 0),
+            week: latestVal - (findAtOrBefore(dayBeforeWeekStartNum)?.[field] ?? 0),
+            yesterday:
+              (findAtOrBefore(yesterdayNum)?.[field] ?? 0) -
+              (findAtOrBefore(dayBeforeYesterdayNum)?.[field] ?? 0),
+            today: latestIsToday
+              ? latestVal - (findAtOrBefore(yesterdayNum)?.[field] ?? 0)
+              : 0,
+          };
+        };
+        const x = computeSns("x");
+        const instagram = computeSns("instagram");
+        const note = computeSns("note");
+
+        // ---- Quiz ----
+        const quizRows = Papa.parse(quizCsv, { header: true, skipEmptyLines: true })
+          .data as any[];
+        const quiz: Metric = zeroMetric();
+        quizRows.forEach((r) => {
+          if (!r["問題"] || String(r["問題"]).trim() === "") return;
+          const parts = String(r["日時"] || "").trim().split(/[\/\- :]/);
+          if (parts.length < 3) return;
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10);
+          const d = parseInt(parts[2], 10);
+          if (!y || !m || !d) return;
+          const num = y * 10000 + m * 100 + d;
+          const ans = parseInt(String(r["回答数"] || "0").replace(/,/g, ""), 10) || 0;
+          quiz.total += ans;
+          if (num >= startOfMonthNum) quiz.month += ans;
+          if (num >= startOfWeekNum) quiz.week += ans;
+          if (num === yesterdayNum) quiz.yesterday += ans;
+          if (num === todayNum) quiz.today += ans;
+        });
+
+        // ---- Type diagnosis (3 CSVs) ----
+        const type: Metric = zeroMetric();
+        [type1Csv, type2Csv, type3Csv].forEach((csv) => {
+          (Papa.parse(csv, { header: true, skipEmptyLines: true }).data as any[]).forEach(
+            (r) => {
+              const dStr = String(r.date || "").trim().replace(/-/g, "/");
+              const parts = dStr.split("/");
+              if (parts.length < 3) return;
+              const y = parseInt(parts[0], 10);
+              const m = parseInt(parts[1], 10);
+              const d = parseInt(parts[2], 10);
+              if (!y || !m || !d) return;
+              const num = y * 10000 + m * 100 + d;
+              type.total++;
+              if (num >= startOfMonthNum) type.month++;
+              if (num >= startOfWeekNum) type.week++;
+              if (num === yesterdayNum) type.yesterday++;
+              if (num === todayNum) type.today++;
+            },
           );
-        const typeTotal =
-          parseTypeRows(type1Csv).length +
-          parseTypeRows(type2Csv).length +
-          parseTypeRows(type3Csv).length;
-
-        // Match: count rows with non-empty 日時 and result
-        const parseMatchCount = (csv: string, resultCol: string) =>
-          (Papa.parse(csv, { header: true, skipEmptyLines: true }).data as any[]).filter(
-            (r) =>
-              String(r["日時"] || "").trim() !== "" &&
-              String(r[resultCol] || "").trim() !== "",
-          ).length;
-        const rocketTotal = parseMatchCount(rocketCsv, "判定ロケット");
-        const constellationTotal = parseMatchCount(constellCsv, "判定");
-
-        setData({
-          discordTotal: latest?.total ?? 0,
-          discordThisMonth,
-          xFollowers: latest?.x ?? 0,
-          instagramFollowers: latest?.instagram ?? 0,
-          noteFollowers: latest?.note ?? 0,
-          quizTotal,
-          typeTotal,
-          rocketTotal,
-          constellationTotal,
         });
+
+        // ---- Cosmo Match ----
+        const parseMatch = (csv: string, resultCol: string): Metric => {
+          const metric: Metric = zeroMetric();
+          (Papa.parse(csv, { header: true, skipEmptyLines: true }).data as any[]).forEach(
+            (r) => {
+              if (!String(r["日時"] || "").trim() || !String(r[resultCol] || "").trim()) return;
+              const parts = String(r["日時"]).trim().split(/[\/\- :]/);
+              if (parts.length < 3) return;
+              const y = parseInt(parts[0], 10);
+              const m = parseInt(parts[1], 10);
+              const d = parseInt(parts[2], 10);
+              if (!y || !m || !d) return;
+              const num = y * 10000 + m * 100 + d;
+              metric.total++;
+              if (num >= startOfMonthNum) metric.month++;
+              if (num >= startOfWeekNum) metric.week++;
+              if (num === yesterdayNum) metric.yesterday++;
+              if (num === todayNum) metric.today++;
+            },
+          );
+          return metric;
+        };
+        const matchRocket = parseMatch(rocketCsv, "判定ロケット");
+        const matchConstellation = parseMatch(constellCsv, "判定");
+
+        // ---- Trend (date-filled from Discord/SNS CSV) ----
+        const trend: { name: string; Discord: number; SNS合計: number }[] = [];
+        if (dsRecords.length > 0) {
+          const firstNum = dsRecords[0].num;
+          let lastDiscord = 0, lastX = 0, lastInsta = 0, lastNote = 0;
+          const iterDate = new Date(
+            Math.floor(firstNum / 10000),
+            Math.floor((firstNum % 10000) / 100) - 1,
+            firstNum % 100,
+          );
+          const todayDate = new Date(currentY, currentM - 1, currentD);
+          while (iterDate <= todayDate) {
+            const iy = iterDate.getFullYear();
+            const im = iterDate.getMonth() + 1;
+            const id = iterDate.getDate();
+            const num = iy * 10000 + im * 100 + id;
+            const rec = dsNumMap.get(num);
+            if (rec) {
+              lastDiscord = rec.total;
+              lastX = rec.x;
+              lastInsta = rec.instagram;
+              lastNote = rec.note;
+            }
+            trend.push({
+              name: `${iy}/${String(im).padStart(2, "0")}/${String(id).padStart(2, "0")}`,
+              Discord: lastDiscord,
+              SNS合計: lastX + lastInsta + lastNote,
+            });
+            iterDate.setDate(iterDate.getDate() + 1);
+          }
+        }
+
+        setData({ discord, x, instagram, note, quiz, type, matchRocket, matchConstellation, trend });
       })
       .catch(console.error);
   }, []);
 
-  const v = (n: number | undefined) => (n !== undefined ? n.toLocaleString() : "...");
-  const loading = !data;
+  const getVal = (m: Metric | undefined): string => {
+    if (!m) return "...";
+    const v = m[statPeriod];
+    if (statPeriod === "total") return v.toLocaleString();
+    if (v > 0) return `+${v.toLocaleString()}`;
+    if (v < 0) return v.toLocaleString();
+    return "0";
+  };
+
+  const getAccent = (m: Metric | undefined, def: AccentColor): AccentColor => {
+    if (!m || statPeriod === "total") return def;
+    const v = m[statPeriod];
+    if (v > 0) return "success";
+    if (v < 0) return "danger";
+    return "primary";
+  };
+
+  const trendOpt = TREND_PERIODS.find((o) => o.key === trendPeriod);
+  const trendFiltered = trendOpt?.days
+    ? (data?.trend ?? []).slice(-trendOpt.days)
+    : (data?.trend ?? []);
+
+  const periodLabel =
+    statPeriod === "total"
+      ? "累計"
+      : statPeriod === "month"
+        ? "今月の増加数"
+        : statPeriod === "week"
+          ? "今週の増加数"
+          : statPeriod === "yesterday"
+            ? "昨日の増加数"
+            : "今日の増加数";
 
   return (
     <div className="space-y-8">
       <div className="border-b border-border/50 pb-4">
         <h2 className="text-2xl font-bold text-foreground">概要</h2>
         <p className="text-muted-foreground mt-1">
-          各ページの主要KPIを一覧で確認できます。
+          各指標の主要KPIと推移を一覧で確認できます。
         </p>
       </div>
 
+      {/* Period selector */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-muted-foreground mr-1">表示:</span>
+        {STAT_PERIODS.map((opt) => (
+          <Button
+            key={opt.key}
+            variant="outline"
+            size="sm"
+            onClick={() => setStatPeriod(opt.key)}
+            className={
+              statPeriod === opt.key
+                ? "bg-primary text-primary-foreground border-transparent"
+                : "bg-secondary/30 text-foreground"
+            }
+          >
+            {opt.label}
+          </Button>
+        ))}
+      </div>
+
       {/* 全体 */}
-      <SectionCard title="全体" description="Discord・SNSの最新フォロワー数">
+      <SectionCard title="全体" description={`Discord・SNS — ${periodLabel}`}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <KpiCard
-            title="Discord メンバー数"
-            value={loading ? "..." : v(data.discordTotal)}
+            title="Discord"
+            value={getVal(data?.discord)}
             unit="人"
             icon={Users}
-            accentColor="primary"
-            trendValue={
-              !loading
-                ? `今月 ${data.discordThisMonth >= 0 ? "+" : ""}${data.discordThisMonth}人`
-                : undefined
-            }
-            trendType="up"
+            accentColor={getAccent(data?.discord, "primary")}
           />
           <KpiCard
-            title="X フォロワー"
-            value={loading ? "..." : v(data.xFollowers)}
+            title="X"
+            value={getVal(data?.x)}
             unit="人"
             icon={TrendingUp}
-            accentColor="accent"
+            accentColor={getAccent(data?.x, "accent")}
           />
           <KpiCard
-            title="Instagram フォロワー"
-            value={loading ? "..." : v(data.instagramFollowers)}
+            title="Instagram"
+            value={getVal(data?.instagram)}
             unit="人"
             icon={TrendingUp}
-            accentColor="warning"
+            accentColor={getAccent(data?.instagram, "warning")}
           />
           <KpiCard
-            title="note フォロワー"
-            value={loading ? "..." : v(data.noteFollowers)}
+            title="note"
+            value={getVal(data?.note)}
             unit="人"
             icon={TrendingUp}
-            accentColor="success"
+            accentColor={getAccent(data?.note, "success")}
           />
         </div>
       </SectionCard>
 
       {/* コンテンツ */}
-      <SectionCard title="コンテンツ" description="各コンテンツの累計参加者数">
+      <SectionCard title="コンテンツ" description={`各コンテンツの参加者数 — ${periodLabel}`}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <KpiCard
-            title="宇宙クイズ 累計回答数"
-            value={loading ? "..." : v(data.quizTotal)}
+            title="宇宙クイズ"
+            value={getVal(data?.quiz)}
             unit="件"
             icon={HelpCircle}
-            accentColor="warning"
+            accentColor={getAccent(data?.quiz, "warning")}
           />
           <KpiCard
-            title="宇宙タイプ診断 累計"
-            value={loading ? "..." : v(data.typeTotal)}
+            title="宇宙タイプ診断"
+            value={getVal(data?.type)}
             unit="件"
             icon={Sparkles}
-            accentColor="primary"
+            accentColor={getAccent(data?.type, "primary")}
           />
           <KpiCard
-            title="Cosmo Match ロケット編"
-            value={loading ? "..." : v(data.rocketTotal)}
+            title="Cosmo Match ロケット"
+            value={getVal(data?.matchRocket)}
             unit="件"
             icon={Rocket}
-            accentColor="accent"
+            accentColor={getAccent(data?.matchRocket, "accent")}
           />
           <KpiCard
-            title="Cosmo Match 星座編"
-            value={loading ? "..." : v(data.constellationTotal)}
+            title="Cosmo Match 星座"
+            value={getVal(data?.matchConstellation)}
             unit="件"
             icon={Star}
-            accentColor="success"
+            accentColor={getAccent(data?.matchConstellation, "success")}
           />
         </div>
       </SectionCard>
 
-      {/* 合計まとめ */}
-      <SectionCard title="コンテンツ合計" description="全コンテンツ累計の合算">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <KpiCard
-            title="SNS 総フォロワー"
-            value={
-              loading
-                ? "..."
-                : v(data.xFollowers + data.instagramFollowers + data.noteFollowers)
-            }
-            unit="人"
-            icon={TrendingUp}
-            accentColor="accent"
-            description="X + Instagram + note"
-          />
-          <KpiCard
-            title="Cosmo Match 全編合計"
-            value={loading ? "..." : v(data.rocketTotal + data.constellationTotal)}
-            unit="件"
-            icon={Rocket}
-            accentColor="primary"
-            description="ロケット編 + 星座編"
-          />
-          <KpiCard
-            title="コンテンツ参加者 総計"
-            value={
-              loading
-                ? "..."
-                : v(
-                    data.quizTotal +
-                      data.typeTotal +
-                      data.rocketTotal +
-                      data.constellationTotal,
-                  )
-            }
-            unit="件"
-            icon={Calendar}
-            accentColor="success"
-            description="クイズ + タイプ診断 + Cosmo Match"
-          />
+      {/* Trend chart */}
+      <SectionCard
+        title="推移グラフ"
+        description="Discordメンバー数・SNS総フォロワー数の推移"
+      >
+        <div className="flex gap-1 flex-wrap mb-4">
+          {TREND_PERIODS.map((opt) => (
+            <Button
+              key={opt.key}
+              variant="outline"
+              size="sm"
+              onClick={() => setTrendPeriod(opt.key)}
+              className={
+                trendPeriod === opt.key
+                  ? "bg-primary text-primary-foreground border-transparent"
+                  : "bg-secondary/30 text-foreground"
+              }
+            >
+              {opt.label}
+            </Button>
+          ))}
         </div>
+        <ChartContainer height="h-[320px]">
+          <LineChartComponent
+            data={trendFiltered}
+            lines={[
+              { dataKey: "Discord", name: "Discordメンバー", color: "#38BDF8" },
+              { dataKey: "SNS合計", name: "SNS総フォロワー", color: "#8B5CF6" },
+            ]}
+          />
+        </ChartContainer>
       </SectionCard>
     </div>
   );
