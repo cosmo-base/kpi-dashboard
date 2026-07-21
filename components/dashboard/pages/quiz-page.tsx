@@ -995,6 +995,9 @@ export function SpaceQuizPage() {
             todayQuestions,
             thisWeekQuestions,
             thisMonthQuestions,
+            todayZeroAnswers,
+            thisWeekZeroAnswers,
+            thisMonthZeroAnswers,
           },
           charts: {
             participantsTrend: trendData,
