@@ -9,6 +9,8 @@ import {
   Sparkles,
   Rocket,
   Star,
+  BarChart2,
+  Hash,
 } from "lucide-react";
 import { KpiCard } from "../kpi-card";
 import type { AccentColor } from "../kpi-card";
@@ -62,19 +64,45 @@ interface Metric {
   today: number;
 }
 
+type TrendRow = {
+  name: string;
+  Discord: number;
+  SNS合計: number;
+  X: number;
+  Instagram: number;
+  note: number;
+  コンテンツ合計: number;
+  宇宙クイズ: number;
+  宇宙タイプ診断: number;
+  "Cosmo Matchロケット": number;
+  "Cosmo Match星座": number;
+};
+
 interface OverviewData {
   discord: Metric;
+  snsTotal: Metric;
   x: Metric;
   instagram: Metric;
   note: Metric;
+  contentTotal: Metric;
   quiz: Metric;
   type: Metric;
   matchRocket: Metric;
   matchConstellation: Metric;
-  trend: { name: string; Discord: number; SNS合計: number }[];
+  trend: TrendRow[];
 }
 
 const zeroMetric = (): Metric => ({ total: 0, month: 0, week: 0, yesterday: 0, today: 0 });
+
+function addMetrics(a: Metric, b: Metric): Metric {
+  return {
+    total: a.total + b.total,
+    month: a.month + b.month,
+    week: a.week + b.week,
+    yesterday: a.yesterday + b.yesterday,
+    today: a.today + b.today,
+  };
+}
 
 function parseDiscordSnsRecords(rawData: string[][]) {
   const headerRowIndex = rawData.findIndex((row) => row.includes("参加数"));
@@ -118,6 +146,17 @@ function withDateNums(records: ReturnType<typeof parseDiscordSnsRecords>) {
 
 function dateToNum(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
+function parseDateNum(dateStr: string): number {
+  const s = String(dateStr || "").trim().replace(/-/g, "/").split(" ")[0];
+  const parts = s.split("/");
+  if (parts.length < 3) return 0;
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+  if (!y || !m || !d) return 0;
+  return y * 10000 + m * 100 + d;
 }
 
 export function OverviewPage() {
@@ -189,8 +228,8 @@ export function OverviewPage() {
         dsRecords.forEach((r) => {
           if (r.num >= startOfMonthNum) discord.month += r.increase;
           if (r.num >= startOfWeekNum) discord.week += r.increase;
-          if (r.num === yesterdayNum) discord.yesterday += r.increase;
-          if (r.num === todayNum) discord.today += r.increase;
+          if (r.num === yesterdayNum) discord.yesterday = r.increase;
+          if (r.num === todayNum) discord.today = r.increase;
         });
 
         const computeSns = (field: "x" | "instagram" | "note"): Metric => {
@@ -211,79 +250,82 @@ export function OverviewPage() {
         const instagram = computeSns("instagram");
         const note = computeSns("note");
 
+        const snsTotal: Metric = {
+          total: x.total + instagram.total + note.total,
+          month: x.month + instagram.month + note.month,
+          week: x.week + instagram.week + note.week,
+          yesterday: x.yesterday + instagram.yesterday + note.yesterday,
+          today: x.today + instagram.today + note.today,
+        };
+
         // ---- Quiz ----
-        const quizRows = Papa.parse(quizCsv, { header: true, skipEmptyLines: true })
-          .data as any[];
+        // Uses "出題日" as date column, "回答数" as answer count
+        const quizRows = Papa.parse(quizCsv, { header: true, skipEmptyLines: true }).data as any[];
         const quiz: Metric = zeroMetric();
+        const quizDailyMap = new Map<number, number>(); // dateNum -> cumulative daily answers
         quizRows.forEach((r) => {
           if (!r["問題"] || String(r["問題"]).trim() === "") return;
-          const parts = String(r["日時"] || "").trim().split(/[\/\- :]/);
-          if (parts.length < 3) return;
-          const y = parseInt(parts[0], 10);
-          const m = parseInt(parts[1], 10);
-          const d = parseInt(parts[2], 10);
-          if (!y || !m || !d) return;
-          const num = y * 10000 + m * 100 + d;
+          const num = parseDateNum(String(r["出題日"] || ""));
+          if (!num) return;
           const ans = parseInt(String(r["回答数"] || "0").replace(/,/g, ""), 10) || 0;
           quiz.total += ans;
           if (num >= startOfMonthNum) quiz.month += ans;
           if (num >= startOfWeekNum) quiz.week += ans;
           if (num === yesterdayNum) quiz.yesterday += ans;
           if (num === todayNum) quiz.today += ans;
+          quizDailyMap.set(num, (quizDailyMap.get(num) ?? 0) + ans);
         });
 
         // ---- Type diagnosis (3 CSVs) ----
         const type: Metric = zeroMetric();
+        const typeDailyMap = new Map<number, number>();
         [type1Csv, type2Csv, type3Csv].forEach((csv) => {
-          (Papa.parse(csv, { header: true, skipEmptyLines: true }).data as any[]).forEach(
-            (r) => {
-              const dStr = String(r.date || "").trim().replace(/-/g, "/");
-              const parts = dStr.split("/");
-              if (parts.length < 3) return;
-              const y = parseInt(parts[0], 10);
-              const m = parseInt(parts[1], 10);
-              const d = parseInt(parts[2], 10);
-              if (!y || !m || !d) return;
-              const num = y * 10000 + m * 100 + d;
-              type.total++;
-              if (num >= startOfMonthNum) type.month++;
-              if (num >= startOfWeekNum) type.week++;
-              if (num === yesterdayNum) type.yesterday++;
-              if (num === todayNum) type.today++;
-            },
-          );
+          (Papa.parse(csv, { header: true, skipEmptyLines: true }).data as any[]).forEach((r) => {
+            const num = parseDateNum(String(r.date || ""));
+            if (!num) return;
+            type.total++;
+            if (num >= startOfMonthNum) type.month++;
+            if (num >= startOfWeekNum) type.week++;
+            if (num === yesterdayNum) type.yesterday++;
+            if (num === todayNum) type.today++;
+            typeDailyMap.set(num, (typeDailyMap.get(num) ?? 0) + 1);
+          });
         });
 
         // ---- Cosmo Match ----
-        const parseMatch = (csv: string, resultCol: string): Metric => {
+        const parseMatch = (
+          csv: string,
+          resultCol: string,
+          dailyMap: Map<number, number>,
+        ): Metric => {
           const metric: Metric = zeroMetric();
-          (Papa.parse(csv, { header: true, skipEmptyLines: true }).data as any[]).forEach(
-            (r) => {
-              if (!String(r["日時"] || "").trim() || !String(r[resultCol] || "").trim()) return;
-              const parts = String(r["日時"]).trim().split(/[\/\- :]/);
-              if (parts.length < 3) return;
-              const y = parseInt(parts[0], 10);
-              const m = parseInt(parts[1], 10);
-              const d = parseInt(parts[2], 10);
-              if (!y || !m || !d) return;
-              const num = y * 10000 + m * 100 + d;
-              metric.total++;
-              if (num >= startOfMonthNum) metric.month++;
-              if (num >= startOfWeekNum) metric.week++;
-              if (num === yesterdayNum) metric.yesterday++;
-              if (num === todayNum) metric.today++;
-            },
-          );
+          (Papa.parse(csv, { header: true, skipEmptyLines: true }).data as any[]).forEach((r) => {
+            if (!String(r["日時"] || "").trim() || !String(r[resultCol] || "").trim()) return;
+            const num = parseDateNum(String(r["日時"]));
+            if (!num) return;
+            metric.total++;
+            if (num >= startOfMonthNum) metric.month++;
+            if (num >= startOfWeekNum) metric.week++;
+            if (num === yesterdayNum) metric.yesterday++;
+            if (num === todayNum) metric.today++;
+            dailyMap.set(num, (dailyMap.get(num) ?? 0) + 1);
+          });
           return metric;
         };
-        const matchRocket = parseMatch(rocketCsv, "判定ロケット");
-        const matchConstellation = parseMatch(constellCsv, "判定");
+        const rocketDailyMap = new Map<number, number>();
+        const constellDailyMap = new Map<number, number>();
+        const matchRocket = parseMatch(rocketCsv, "判定ロケット", rocketDailyMap);
+        const matchConstellation = parseMatch(constellCsv, "判定", constellDailyMap);
 
-        // ---- Trend (date-filled from Discord/SNS CSV) ----
-        const trend: { name: string; Discord: number; SNS合計: number }[] = [];
+        const contentTotal = [quiz, type, matchRocket, matchConstellation].reduce(addMetrics, zeroMetric());
+
+        // ---- Trend (date-filled) ----
+        const trend: TrendRow[] = [];
         if (dsRecords.length > 0) {
           const firstNum = dsRecords[0].num;
           let lastDiscord = 0, lastX = 0, lastInsta = 0, lastNote = 0;
+          let cumQuiz = 0, cumType = 0, cumRocket = 0, cumConstell = 0;
+
           const iterDate = new Date(
             Math.floor(firstNum / 10000),
             Math.floor((firstNum % 10000) / 100) - 1,
@@ -302,16 +344,28 @@ export function OverviewPage() {
               lastInsta = rec.instagram;
               lastNote = rec.note;
             }
+            cumQuiz += quizDailyMap.get(num) ?? 0;
+            cumType += typeDailyMap.get(num) ?? 0;
+            cumRocket += rocketDailyMap.get(num) ?? 0;
+            cumConstell += constellDailyMap.get(num) ?? 0;
             trend.push({
               name: `${iy}/${String(im).padStart(2, "0")}/${String(id).padStart(2, "0")}`,
               Discord: lastDiscord,
               SNS合計: lastX + lastInsta + lastNote,
+              X: lastX,
+              Instagram: lastInsta,
+              note: lastNote,
+              コンテンツ合計: cumQuiz + cumType + cumRocket + cumConstell,
+              宇宙クイズ: cumQuiz,
+              宇宙タイプ診断: cumType,
+              "Cosmo Matchロケット": cumRocket,
+              "Cosmo Match星座": cumConstell,
             });
             iterDate.setDate(iterDate.getDate() + 1);
           }
         }
 
-        setData({ discord, x, instagram, note, quiz, type, matchRocket, matchConstellation, trend });
+        setData({ discord, snsTotal, x, instagram, note, contentTotal, quiz, type, matchRocket, matchConstellation, trend });
       })
       .catch(console.error);
   }, []);
@@ -380,7 +434,7 @@ export function OverviewPage() {
 
       {/* 全体 */}
       <SectionCard title="全体" description={`Discord・SNS — ${periodLabel}`}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <KpiCard
             title="Discord"
             value={getVal(data?.discord)}
@@ -389,10 +443,17 @@ export function OverviewPage() {
             accentColor={getAccent(data?.discord, "primary")}
           />
           <KpiCard
+            title="SNS合計"
+            value={getVal(data?.snsTotal)}
+            unit="人"
+            icon={TrendingUp}
+            accentColor={getAccent(data?.snsTotal, "accent")}
+          />
+          <KpiCard
             title="X"
             value={getVal(data?.x)}
             unit="人"
-            icon={TrendingUp}
+            icon={Hash}
             accentColor={getAccent(data?.x, "accent")}
           />
           <KpiCard
@@ -414,7 +475,14 @@ export function OverviewPage() {
 
       {/* コンテンツ */}
       <SectionCard title="コンテンツ" description={`各コンテンツの参加者数 — ${periodLabel}`}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <KpiCard
+            title="合計"
+            value={getVal(data?.contentTotal)}
+            unit="件"
+            icon={BarChart2}
+            accentColor={getAccent(data?.contentTotal, "primary")}
+          />
           <KpiCard
             title="宇宙クイズ"
             value={getVal(data?.quiz)}
@@ -427,14 +495,14 @@ export function OverviewPage() {
             value={getVal(data?.type)}
             unit="件"
             icon={Sparkles}
-            accentColor={getAccent(data?.type, "primary")}
+            accentColor={getAccent(data?.type, "accent")}
           />
           <KpiCard
             title="Cosmo Match ロケット"
             value={getVal(data?.matchRocket)}
             unit="件"
             icon={Rocket}
-            accentColor={getAccent(data?.matchRocket, "accent")}
+            accentColor={getAccent(data?.matchRocket, "success")}
           />
           <KpiCard
             title="Cosmo Match 星座"
@@ -449,7 +517,7 @@ export function OverviewPage() {
       {/* Trend chart */}
       <SectionCard
         title="推移グラフ"
-        description="Discordメンバー数・SNS総フォロワー数の推移"
+        description="Discord・SNS・コンテンツ各指標の推移（コンテンツは累計参加数）"
       >
         <div className="flex gap-1 flex-wrap mb-4">
           {TREND_PERIODS.map((opt) => (
@@ -468,12 +536,20 @@ export function OverviewPage() {
             </Button>
           ))}
         </div>
-        <ChartContainer height="h-[320px]">
+        <ChartContainer height="h-[360px]">
           <LineChartComponent
             data={trendFiltered}
             lines={[
-              { dataKey: "Discord", name: "Discordメンバー", color: "#38BDF8" },
-              { dataKey: "SNS合計", name: "SNS総フォロワー", color: "#8B5CF6" },
+              { dataKey: "Discord", name: "Discord", color: "#38BDF8" },
+              { dataKey: "SNS合計", name: "SNS合計", color: "#8B5CF6" },
+              { dataKey: "X", name: "X", color: "#60A5FA" },
+              { dataKey: "Instagram", name: "Instagram", color: "#F472B6" },
+              { dataKey: "note", name: "note", color: "#34D399" },
+              { dataKey: "コンテンツ合計", name: "コンテンツ合計", color: "#FBBF24" },
+              { dataKey: "宇宙クイズ", name: "宇宙クイズ", color: "#FB923C" },
+              { dataKey: "宇宙タイプ診断", name: "宇宙タイプ診断", color: "#A78BFA" },
+              { dataKey: "Cosmo Matchロケット", name: "Cosmo Matchロケット", color: "#F87171" },
+              { dataKey: "Cosmo Match星座", name: "Cosmo Match星座", color: "#E879F9" },
             ]}
           />
         </ChartContainer>
