@@ -90,7 +90,21 @@ interface OverviewData {
   matchRocket: Metric;
   matchConstellation: Metric;
   trend: TrendRow[];
+  todayUpdated: { discord: boolean; sns: boolean; quiz: boolean };
 }
+
+const TREND_LINES = [
+  { dataKey: "Discord", name: "Discord", color: "#38BDF8" },
+  { dataKey: "SNS合計", name: "SNS合計", color: "#8B5CF6" },
+  { dataKey: "X", name: "X", color: "#60A5FA" },
+  { dataKey: "Instagram", name: "Instagram", color: "#F472B6" },
+  { dataKey: "note", name: "note", color: "#34D399" },
+  { dataKey: "コンテンツ合計", name: "コンテンツ合計", color: "#FBBF24" },
+  { dataKey: "宇宙クイズ", name: "宇宙クイズ", color: "#FB923C" },
+  { dataKey: "宇宙タイプ診断", name: "宇宙タイプ診断", color: "#A78BFA" },
+  { dataKey: "Cosmo Matchロケット", name: "Cosmo Matchロケット", color: "#F87171" },
+  { dataKey: "Cosmo Match星座", name: "Cosmo Match星座", color: "#E879F9" },
+] as const;
 
 const zeroMetric = (): Metric => ({ total: 0, month: 0, week: 0, yesterday: 0, today: 0 });
 
@@ -163,6 +177,17 @@ export function OverviewPage() {
   const [data, setData] = useState<OverviewData | null>(null);
   const [statPeriod, setStatPeriod] = useState<StatPeriod>("total");
   const [trendPeriod, setTrendPeriod] = useState("90");
+  const [visibleLines, setVisibleLines] = useState<Set<string>>(
+    () => new Set(TREND_LINES.map((l) => l.dataKey)),
+  );
+
+  const toggleLine = (key: string) => {
+    setVisibleLines((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
 
   useEffect(() => {
     Promise.all([
@@ -263,6 +288,7 @@ export function OverviewPage() {
         const quizRows = Papa.parse(quizCsv, { header: true, skipEmptyLines: true }).data as any[];
         const quiz: Metric = zeroMetric();
         const quizDailyMap = new Map<number, number>(); // dateNum -> cumulative daily answers
+        let quizHasToday = false;
         quizRows.forEach((r) => {
           if (!r["問題"] || String(r["問題"]).trim() === "") return;
           const num = parseDateNum(String(r["出題日"] || ""));
@@ -272,7 +298,7 @@ export function OverviewPage() {
           if (num >= startOfMonthNum) quiz.month += ans;
           if (num >= startOfWeekNum) quiz.week += ans;
           if (num === yesterdayNum) quiz.yesterday += ans;
-          if (num === todayNum) quiz.today += ans;
+          if (num === todayNum) { quiz.today += ans; quizHasToday = true; }
           quizDailyMap.set(num, (quizDailyMap.get(num) ?? 0) + ans);
         });
 
@@ -365,7 +391,10 @@ export function OverviewPage() {
           }
         }
 
-        setData({ discord, snsTotal, x, instagram, note, contentTotal, quiz, type, matchRocket, matchConstellation, trend });
+        setData({
+          discord, snsTotal, x, instagram, note, contentTotal, quiz, type, matchRocket, matchConstellation, trend,
+          todayUpdated: { discord: latestIsToday, sns: latestIsToday, quiz: quizHasToday },
+        });
       })
       .catch(console.error);
   }, []);
@@ -435,82 +464,52 @@ export function OverviewPage() {
       {/* 全体 */}
       <SectionCard title="全体" description={`Discord・SNS — ${periodLabel}`}>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <KpiCard
-            title="Discord"
-            value={getVal(data?.discord)}
-            unit="人"
-            icon={Users}
-            accentColor={getAccent(data?.discord, "primary")}
-          />
-          <KpiCard
-            title="SNS合計"
-            value={getVal(data?.snsTotal)}
-            unit="人"
-            icon={TrendingUp}
-            accentColor={getAccent(data?.snsTotal, "accent")}
-          />
-          <KpiCard
-            title="X"
-            value={getVal(data?.x)}
-            unit="人"
-            icon={Hash}
-            accentColor={getAccent(data?.x, "accent")}
-          />
-          <KpiCard
-            title="Instagram"
-            value={getVal(data?.instagram)}
-            unit="人"
-            icon={TrendingUp}
-            accentColor={getAccent(data?.instagram, "warning")}
-          />
-          <KpiCard
-            title="note"
-            value={getVal(data?.note)}
-            unit="人"
-            icon={TrendingUp}
-            accentColor={getAccent(data?.note, "success")}
-          />
+          {[
+            { title: "Discord", metric: data?.discord, unit: "人", icon: Users, def: "primary" as AccentColor, notUpdated: statPeriod === "today" && data && !data.todayUpdated.discord },
+            { title: "SNS合計", metric: data?.snsTotal, unit: "人", icon: TrendingUp, def: "accent" as AccentColor, notUpdated: statPeriod === "today" && data && !data.todayUpdated.sns },
+            { title: "X", metric: data?.x, unit: "人", icon: Hash, def: "accent" as AccentColor, notUpdated: statPeriod === "today" && data && !data.todayUpdated.sns },
+            { title: "Instagram", metric: data?.instagram, unit: "人", icon: TrendingUp, def: "warning" as AccentColor, notUpdated: statPeriod === "today" && data && !data.todayUpdated.sns },
+            { title: "note", metric: data?.note, unit: "人", icon: TrendingUp, def: "success" as AccentColor, notUpdated: statPeriod === "today" && data && !data.todayUpdated.sns },
+          ].map((card) => (
+            <div key={card.title}>
+              <KpiCard
+                title={card.title}
+                value={getVal(card.metric)}
+                unit={card.unit}
+                icon={card.icon}
+                accentColor={getAccent(card.metric, card.def)}
+              />
+              {card.notUpdated && (
+                <p className="text-xs text-muted-foreground mt-1 text-center">本日未更新</p>
+              )}
+            </div>
+          ))}
         </div>
       </SectionCard>
 
       {/* コンテンツ */}
       <SectionCard title="コンテンツ" description={`各コンテンツの参加者数 — ${periodLabel}`}>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <KpiCard
-            title="合計"
-            value={getVal(data?.contentTotal)}
-            unit="件"
-            icon={BarChart2}
-            accentColor={getAccent(data?.contentTotal, "primary")}
-          />
-          <KpiCard
-            title="宇宙クイズ"
-            value={getVal(data?.quiz)}
-            unit="件"
-            icon={HelpCircle}
-            accentColor={getAccent(data?.quiz, "warning")}
-          />
-          <KpiCard
-            title="宇宙タイプ診断"
-            value={getVal(data?.type)}
-            unit="件"
-            icon={Sparkles}
-            accentColor={getAccent(data?.type, "accent")}
-          />
-          <KpiCard
-            title="Cosmo Match ロケット"
-            value={getVal(data?.matchRocket)}
-            unit="件"
-            icon={Rocket}
-            accentColor={getAccent(data?.matchRocket, "success")}
-          />
-          <KpiCard
-            title="Cosmo Match 星座"
-            value={getVal(data?.matchConstellation)}
-            unit="件"
-            icon={Star}
-            accentColor={getAccent(data?.matchConstellation, "success")}
-          />
+          {[
+            { title: "合計", metric: data?.contentTotal, unit: "件", icon: BarChart2, def: "primary" as AccentColor, notUpdated: false },
+            { title: "宇宙クイズ", metric: data?.quiz, unit: "件", icon: HelpCircle, def: "warning" as AccentColor, notUpdated: statPeriod === "today" && data && !data.todayUpdated.quiz },
+            { title: "宇宙タイプ診断", metric: data?.type, unit: "件", icon: Sparkles, def: "accent" as AccentColor, notUpdated: false },
+            { title: "Cosmo Match ロケット", metric: data?.matchRocket, unit: "件", icon: Rocket, def: "success" as AccentColor, notUpdated: false },
+            { title: "Cosmo Match 星座", metric: data?.matchConstellation, unit: "件", icon: Star, def: "success" as AccentColor, notUpdated: false },
+          ].map((card) => (
+            <div key={card.title}>
+              <KpiCard
+                title={card.title}
+                value={getVal(card.metric)}
+                unit={card.unit}
+                icon={card.icon}
+                accentColor={getAccent(card.metric, card.def)}
+              />
+              {card.notUpdated && (
+                <p className="text-xs text-muted-foreground mt-1 text-center">本日未更新</p>
+              )}
+            </div>
+          ))}
         </div>
       </SectionCard>
 
@@ -519,7 +518,8 @@ export function OverviewPage() {
         title="推移グラフ"
         description="Discord・SNS・コンテンツ各指標の推移（コンテンツは累計参加数）"
       >
-        <div className="flex gap-1 flex-wrap mb-4">
+        {/* Period filter */}
+        <div className="flex gap-1 flex-wrap mb-3">
           {TREND_PERIODS.map((opt) => (
             <Button
               key={opt.key}
@@ -536,21 +536,26 @@ export function OverviewPage() {
             </Button>
           ))}
         </div>
+        {/* Line toggles */}
+        <div className="flex gap-x-3 gap-y-1 flex-wrap mb-4 p-2 rounded-lg bg-secondary/20">
+          {TREND_LINES.map((line) => {
+            const active = visibleLines.has(line.dataKey);
+            return (
+              <button
+                key={line.dataKey}
+                onClick={() => toggleLine(line.dataKey)}
+                className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs transition-opacity ${active ? "opacity-100" : "opacity-30"}`}
+              >
+                <span className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: line.color }} />
+                <span className="text-foreground whitespace-nowrap">{line.name}</span>
+              </button>
+            );
+          })}
+        </div>
         <ChartContainer height="h-[360px]">
           <LineChartComponent
             data={trendFiltered}
-            lines={[
-              { dataKey: "Discord", name: "Discord", color: "#38BDF8" },
-              { dataKey: "SNS合計", name: "SNS合計", color: "#8B5CF6" },
-              { dataKey: "X", name: "X", color: "#60A5FA" },
-              { dataKey: "Instagram", name: "Instagram", color: "#F472B6" },
-              { dataKey: "note", name: "note", color: "#34D399" },
-              { dataKey: "コンテンツ合計", name: "コンテンツ合計", color: "#FBBF24" },
-              { dataKey: "宇宙クイズ", name: "宇宙クイズ", color: "#FB923C" },
-              { dataKey: "宇宙タイプ診断", name: "宇宙タイプ診断", color: "#A78BFA" },
-              { dataKey: "Cosmo Matchロケット", name: "Cosmo Matchロケット", color: "#F87171" },
-              { dataKey: "Cosmo Match星座", name: "Cosmo Match星座", color: "#E879F9" },
-            ]}
+            lines={TREND_LINES.filter((l) => visibleLines.has(l.dataKey)) as any}
           />
         </ChartContainer>
       </SectionCard>
