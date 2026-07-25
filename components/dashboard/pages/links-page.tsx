@@ -256,6 +256,14 @@ const initialLinkCategories: LinkCategory[] = [
         description:"",
         icon: Building,
         subCategory:"管理・運用シート"
+      },
+      {
+        id:"admin-14",
+        title:"STAT BOT",
+        url:"https://statbot.net/dashboard/1445774897115697224/overview?avg[]=21&guild=t",
+        description:"Discord分析BOT メンバー数カウント",
+        icon: Users,
+        subCategory:"Discord"
       }
     ],
   },
@@ -438,6 +446,22 @@ const initialLinkCategories: LinkCategory[] = [
         description: '',
         icon: Database,
         subCategory: 'Cosmo Match'
+      },
+      {
+        id: 'manage-16',
+        title: '宇宙用語集 スプレッドシート',
+        url: 'https://docs.google.com/spreadsheets/d/1WweINXSR4NtLUGnztYQIHAom_Y1Y3SztMHnigs7vM18/edit?gid=0#gid=0',
+        description: '',
+        icon: Database,
+        subCategory: '宇宙用語集'
+      },
+      {
+        id: 'manage-15',
+        title: '参加者ページGA4 スプレッドシート',
+        url: 'https://docs.google.com/spreadsheets/d/1LrCAcZQM3rM44Sm8k-l4U04KHao7sNHPrsMObqXSo20/edit?gid=1015522883#gid=1015522883',
+        description: '',
+        icon: Database,
+        subCategory: '参加者ページ'
       },
     ]
   }, 
