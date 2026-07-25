@@ -535,6 +535,21 @@ export function ParticipantsPage() {
           <p className="text-muted-foreground mt-1">
             参加者ページのアクセス状況・エンゲージメント・流入経路・イベント発生状況を確認できます。
           </p>
+          <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="bg-secondary/30 hover:bg-secondary/50 border-border/50 text-foreground w-fit flex items-center gap-2"
+        >
+          <a
+            href="https://docs.google.com/spreadsheets/d/1LrCAcZQM3rM44Sm8k-l4U04KHao7sNHPrsMObqXSo20/edit?gid=1015522883#gid=1015522883"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>元データ (スプシ)</span>
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </a>
+        </Button>
         </div>
       </div>
 
