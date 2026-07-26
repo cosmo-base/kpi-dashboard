@@ -350,7 +350,12 @@ export function OverviewPage() {
         if (dsRecords.length > 0) {
           const firstNum = dsRecords[0].num;
           let lastDiscord = 0, lastX = 0, lastInsta = 0, lastNote = 0;
+          // Pre-seed cumulative counts with data before the Discord trend start date
           let cumQuiz = 0, cumType = 0, cumRocket = 0, cumConstell = 0;
+          quizDailyMap.forEach((v, n) => { if (n < firstNum) cumQuiz += v; });
+          typeDailyMap.forEach((v, n) => { if (n < firstNum) cumType += v; });
+          rocketDailyMap.forEach((v, n) => { if (n < firstNum) cumRocket += v; });
+          constellDailyMap.forEach((v, n) => { if (n < firstNum) cumConstell += v; });
 
           const iterDate = new Date(
             Math.floor(firstNum / 10000),
