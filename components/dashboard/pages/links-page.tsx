@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link as LinkIcon,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,type LucideIcon} from 'lucide-react';
+import { Link as LinkIcon,ClipboardClock,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,type LucideIcon} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -264,6 +264,14 @@ const initialLinkCategories: LinkCategory[] = [
         description:"Discord分析BOT メンバー数カウント",
         icon: Users,
         subCategory:"Discord"
+      },
+      {
+        id:"admin-15",
+        title:"運営用イベントページ一覧",
+        url:"https://cosmo-base.github.io/event/list/",
+        description:"イベントページの運営用まとめページ",
+        icon: ClipboardClock,
+        subCategory:"イベント"
       }
     ],
   },
