@@ -18,10 +18,10 @@ interface RegressionProjectionSectionProps {
   title: string;
   description?: string;
   unit?: string;
-  /** 日次の累計値を古い順に並べたもの（欠損日なし、最後が現在日） */
+  /** 日次の累計値を古い順に並べたもの（欠損日なし、最後が現在日）。回帰の学習用。 */
   dailyCumulative: number[];
-  /** dailyCumulative と同じ長さの日付ラベル（グラフのx軸用） */
-  dailyLabels: string[];
+  /** 月末時点の累計値を古い順に並べたもの。グラフの実績線を既存グラフと同じ月次目盛りに揃えるために使う。 */
+  actualMonthly: { month: string; cumulative: number }[];
   color?: string;
 }
 
@@ -30,7 +30,7 @@ export function RegressionProjectionSection({
   description = "日次の累計推移をもとに、過去の伸び率が将来どれだけ実現したかを回帰分析で学習し、今月末〜1年後までの想定件数を算出します。上の予測（月次平均成長率ベース）とは別ロジックによる参考値です。",
   unit = "件",
   dailyCumulative,
-  dailyLabels,
+  actualMonthly,
   color = "#8B5CF6",
 }: RegressionProjectionSectionProps) {
   const result = computeRegressionProjection(dailyCumulative, { monthsAhead: 12 });
@@ -60,13 +60,18 @@ export function RegressionProjectionSection({
       note: p.h > hRange.max ? "学習範囲外の外挿（参考値）" : "",
     }));
 
-  const dailyChartData: Array<{ name: string; 実績?: number; 予測?: number }> =
-    dailyLabels.map((name, i) => ({ name, 実績: dailyCumulative[i] }));
-  if (dailyChartData.length > 0) {
-    dailyChartData[dailyChartData.length - 1].予測 = currentTotal;
-  }
-  const chartData = [
-    ...dailyChartData,
+  const chartData: Array<{ name: string; 実績?: number; 予測?: number }> = [
+    ...actualMonthly.slice(0, -1).map((m) => ({ name: m.month, 実績: m.cumulative })),
+    // 実績と予測をつなげるため、現在値を両方の系列に含める（既存グラフと同じ形式）
+    ...(actualMonthly.length > 0
+      ? [
+          {
+            name: actualMonthly[actualMonthly.length - 1].month,
+            実績: actualMonthly[actualMonthly.length - 1].cumulative,
+            予測: actualMonthly[actualMonthly.length - 1].cumulative,
+          },
+        ]
+      : []),
     ...projections.slice(1).map((p) => ({ name: p.shortLabel, 予測: p.value })),
   ];
 
