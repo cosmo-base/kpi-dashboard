@@ -3,6 +3,14 @@
 // g = β0 + β1・h + β2・r を最小二乗法で学習し、
 // 予測時は Ŷ(t+h) = Y_t + h・(β0 + β1・h + β2・r_t,k) を使う（k = min(h, 履歴日数)）。
 
+export interface RegressionFit {
+  beta0: number;
+  beta1: number;
+  beta2: number;
+  sampleCount: number;
+  hRange: { min: number; max: number };
+}
+
 export interface RegressionProjectionPoint {
   label: string;
   shortLabel: string;
@@ -12,12 +20,7 @@ export interface RegressionProjectionPoint {
   diffFromNow: number;
 }
 
-export interface RegressionProjectionResult {
-  beta0: number;
-  beta1: number;
-  beta2: number;
-  sampleCount: number;
-  hRange: { min: number; max: number };
+export interface RegressionProjectionResult extends RegressionFit {
   currentTotal: number;
   projections: RegressionProjectionPoint[];
 }
@@ -47,12 +50,10 @@ function solve3x3(A: number[][], b: number[]): [number, number, number] | null {
 }
 
 /**
- * dailyCumulative は日次の累計値を古い順に並べたもの（欠損日なし、最後の要素が現在日）。
+ * dailyCumulative は日次の累計値を古い順に並べたもの（欠損日なし）。
+ * 学習だけ行い、β0/β1/β2を返す。予測は predictFromAnchor で任意の起点から行う。
  */
-export function computeRegressionProjection(
-  dailyCumulative: number[],
-  opts?: { monthsAhead?: number; now?: Date },
-): RegressionProjectionResult | null {
+export function fitRegressionModel(dailyCumulative: number[]): RegressionFit | null {
   const N = dailyCumulative.length;
   if (N < MIN_HISTORY_DAYS) return null;
 
@@ -102,16 +103,40 @@ export function computeRegressionProjection(
   if (!beta) return null;
   const [beta0, beta1, beta2] = beta;
 
-  const currentTotal = dailyCumulative[N - 1];
+  return { beta0, beta1, beta2, sampleCount: count, hRange: { min: hMin, max: hMax } };
+}
 
-  const predict = (h: number) => {
-    if (h <= 0) return currentTotal;
-    const k = Math.min(h, N - 1);
-    const r = k > 0 ? (currentTotal - dailyCumulative[N - 1 - k]) / k : 0;
-    const raw = currentTotal + h * (beta0 + beta1 * h + beta2 * r);
-    // 学習データが未来ゼロ以上の伸びしか想定していない前提で、現在値を下回る予測は切り上げる
-    return Math.max(raw, currentTotal);
-  };
+/**
+ * fit済みモデルを使って、dailyCumulative中の任意の起点(anchorIndex)からh日後の累計値を予測する。
+ * anchorIndex は dailyCumulative のインデックス（現在日である必要はない）。
+ */
+export function predictFromAnchor(
+  dailyCumulative: number[],
+  fit: RegressionFit,
+  anchorIndex: number,
+  h: number,
+): number {
+  const anchorTotal = dailyCumulative[anchorIndex];
+  if (h <= 0) return anchorTotal;
+  const k = Math.min(h, anchorIndex);
+  const r = k > 0 ? (anchorTotal - dailyCumulative[anchorIndex - k]) / k : 0;
+  const raw = anchorTotal + h * (fit.beta0 + fit.beta1 * h + fit.beta2 * r);
+  // 学習データが未来ゼロ以上の伸びしか想定していない前提で、現在値を下回る予測は切り上げる
+  return Math.max(raw, anchorTotal);
+}
+
+/**
+ * dailyCumulative は日次の累計値を古い順に並べたもの（欠損日なし、最後の要素が現在日）。
+ */
+export function computeRegressionProjection(
+  dailyCumulative: number[],
+  opts?: { monthsAhead?: number; now?: Date },
+): RegressionProjectionResult | null {
+  const fit = fitRegressionModel(dailyCumulative);
+  if (!fit) return null;
+
+  const N = dailyCumulative.length;
+  const currentTotal = dailyCumulative[N - 1];
 
   const monthsAhead = opts?.monthsAhead ?? 12;
   const now = opts?.now ?? new Date();
@@ -131,7 +156,7 @@ export function computeRegressionProjection(
     else if (k === 1) label = `来月末 (${m}月末)`;
     else if (k === monthsAhead)
       label = `1年後 (${y}年${m}月${targetDate.getDate()}日)`;
-    const value = predict(h);
+    const value = predictFromAnchor(dailyCumulative, fit, N - 1, h);
     projections.push({
       label,
       shortLabel: `${y}/${m}`,
@@ -143,11 +168,7 @@ export function computeRegressionProjection(
   }
 
   return {
-    beta0,
-    beta1,
-    beta2,
-    sampleCount: count,
-    hRange: { min: hMin, max: hMax },
+    ...fit,
     currentTotal,
     projections,
   };
