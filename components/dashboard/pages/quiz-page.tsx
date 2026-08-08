@@ -224,10 +224,10 @@ export function SpaceQuizPage() {
 
   // ★ 新設：クイズ全体用の指標切り替えステート
   const [monthlyMetric, setMonthlyMetric] = useState<
-    "回答数" | "正答率" | "0件割合"
+    "回答数" | "正答率" | "0件割合" | "平均回答数"
   >("回答数");
   const [weeklyMetric, setWeeklyMetric] = useState<
-    "回答数" | "正答率" | "0件割合"
+    "回答数" | "正答率" | "0件割合" | "平均回答数"
   >("回答数");
 
   const toggleLine = (lineKey: string) =>
@@ -1124,9 +1124,21 @@ export function SpaceQuizPage() {
   // ★ 新設：トグルボタンの定義
   const quizMetricButtons = [
     { mode: "回答数", label: "回答数", color: "bg-primary", unit: "件" },
+    { mode: "平均回答数", label: "平均回答数", color: "bg-accent", unit: "件" },
     { mode: "正答率", label: "平均正答率", color: "bg-success", unit: "%" },
     { mode: "0件割合", label: "回答0件割合", color: "bg-danger", unit: "%" },
   ];
+
+  // ★ トグル選択中の指標名 → 集計データのフィールド名、色、単位への対応
+  const quizMetricFieldMap: Record<
+    string,
+    { dataKey: string; color: string; unit: string }
+  > = {
+    回答数: { dataKey: "回答数", color: "#38BDF8", unit: "件" },
+    平均回答数: { dataKey: "aveNun", color: "#F59E0B", unit: "件" },
+    正答率: { dataKey: "正答率", color: "#22C55E", unit: "%" },
+    "0件割合": { dataKey: "0件割合", color: "#EF4444", unit: "%" },
+  };
 
   const typeTableData =
     typeTablePeriod === "overall"
@@ -1487,17 +1499,12 @@ export function SpaceQuizPage() {
               data={charts.quizMonthlyTrend || []}
               lines={[
                 {
-                  dataKey: monthlyMetric,
+                  dataKey: quizMetricFieldMap[monthlyMetric].dataKey,
                   name: monthlyMetric,
-                  color:
-                    monthlyMetric === "回答数"
-                      ? "#38BDF8"
-                      : monthlyMetric === "正答率"
-                        ? "#22C55E"
-                        : "#EF4444",
+                  color: quizMetricFieldMap[monthlyMetric].color,
                 },
               ]}
-              yAxisUnit={monthlyMetric === "回答数" ? "件" : "%"}
+              yAxisUnit={quizMetricFieldMap[monthlyMetric].unit}
             />
           </ChartContainer>
         </SectionCard>
@@ -1529,17 +1536,12 @@ export function SpaceQuizPage() {
               data={charts.quizWeeklyTrend || []}
               lines={[
                 {
-                  dataKey: weeklyMetric,
+                  dataKey: quizMetricFieldMap[weeklyMetric].dataKey,
                   name: weeklyMetric,
-                  color:
-                    weeklyMetric === "回答数"
-                      ? "#38BDF8"
-                      : weeklyMetric === "正答率"
-                        ? "#22C55E"
-                        : "#EF4444",
+                  color: quizMetricFieldMap[weeklyMetric].color,
                 },
               ]}
-              yAxisUnit={weeklyMetric === "回答数" ? "件" : "%"}
+              yAxisUnit={quizMetricFieldMap[weeklyMetric].unit}
             />
           </ChartContainer>
         </SectionCard>
