@@ -1123,7 +1123,7 @@ export function SpaceQuizPage() {
 
   // ★ 新設：トグルボタンの定義
   const quizMetricButtons = [
-    { mode: "回答数", label: "回答数", color: "bg-primary", unit: "件" },
+    { mode: "回答数", label: "総回答数", color: "bg-primary", unit: "件" },
     { mode: "平均回答数", label: "平均回答数", color: "bg-accent", unit: "件" },
     { mode: "正答率", label: "平均正答率", color: "bg-success", unit: "%" },
     { mode: "0件割合", label: "回答0件割合", color: "bg-danger", unit: "%" },
@@ -1500,7 +1500,9 @@ export function SpaceQuizPage() {
               lines={[
                 {
                   dataKey: quizMetricFieldMap[monthlyMetric].dataKey,
-                  name: monthlyMetric,
+                  name:
+                    quizMetricButtons.find((b) => b.mode === monthlyMetric)
+                      ?.label ?? monthlyMetric,
                   color: quizMetricFieldMap[monthlyMetric].color,
                 },
               ]}
@@ -1537,7 +1539,9 @@ export function SpaceQuizPage() {
               lines={[
                 {
                   dataKey: quizMetricFieldMap[weeklyMetric].dataKey,
-                  name: weeklyMetric,
+                  name:
+                    quizMetricButtons.find((b) => b.mode === weeklyMetric)
+                      ?.label ?? weeklyMetric,
                   color: quizMetricFieldMap[weeklyMetric].color,
                 },
               ]}
