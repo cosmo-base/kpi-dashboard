@@ -2008,7 +2008,7 @@ export function SpaceQuizPage() {
         dailyCumulative={(charts.participantsTrend || []).map(
           (d: any) => d.累計_全体,
         )}
-        dailyLabels={(charts.participantsTrend || []).map((d: any) => d.name)}
+        actualMonthly={growthHistory}
         color="#8B5CF6"
       />
 
