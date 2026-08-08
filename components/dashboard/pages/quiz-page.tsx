@@ -16,6 +16,7 @@ import {
   ArrowUpRight,
   Activity,
   BarChart2,
+  Sparkles,
 } from "lucide-react";
 import {
   ScatterChart,
@@ -36,7 +37,6 @@ import { LinearChartComponent } from "../charts/linear-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { GrowthProjectionSection } from "../growth-projection-section";
 import { RegressionProjectionSection } from "../regression-projection-section";
 import {
   Dialog,
@@ -691,6 +691,22 @@ export function SpaceQuizPage() {
             ? 100
             : (cumulativeAnswers / endOfPrevDayCum) * 100;
 
+        // 先週日曜日・先月末時点までの直近30日平均ペースを、そのまま1週間・1か月延長した予測値
+        // （実績の「今週」「今月」カードと並べて、事前の想定とどれだけズレたかを見比べるための参考値）
+        const trailingAvgDailyRate = (cutoffNum: number, windowDays = 30) => {
+          const upTo = dailyRecords.filter((d) => d.num <= cutoffNum);
+          const window = upTo.slice(-windowDays);
+          if (window.length === 0) return 0;
+          return window.reduce((s, d) => s + d.answers, 0) / window.length;
+        };
+        const weeklyParticipantsPredicted = Math.round(
+          trailingAvgDailyRate(endOfPrevWeekNum) * 7,
+        );
+        const daysInThisMonth = new Date(currentY, currentM, 0).getDate();
+        const monthlyParticipantsPredicted = Math.round(
+          trailingAvgDailyRate(endOfPrevMonthNum) * daysInThisMonth,
+        );
+
         // 計算元の数値をそのまま格納（フォーマットはレンダリング時に行う）
         const averageParticipants =
           validRows.length <= 0 ? 0 : totalAnswers / validRows.length;
@@ -1002,8 +1018,10 @@ export function SpaceQuizPage() {
             totalZeroRate,
             monthlyParticipants: thisMonthAnswers,
             monthlyParticipantsRate: monthlyRate,
+            monthlyParticipantsPredicted,
             weeklyParticipants: thisWeekAnswers,
             weeklyParticipantsRate: weeklyRate,
+            weeklyParticipantsPredicted,
             todayParticipants: todayAnswers,
             todayParticipantsRate: todayRate,
             zeroRateDay,
@@ -1297,6 +1315,14 @@ export function SpaceQuizPage() {
           accentColor="danger"
           description={`出題${summary.thisWeekQuestions}件中${summary.thisWeekZeroAnswers}件`}
         />
+        <KpiCard
+          title="今週の予測"
+          value={`+${summary.weeklyParticipantsPredicted.toLocaleString()}`}
+          unit="件"
+          icon={Sparkles}
+          accentColor="accent"
+          description="先週日曜日までの直近30日平均ペースを1週間分延長した予測値"
+        />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
         <KpiCard
@@ -1336,6 +1362,14 @@ export function SpaceQuizPage() {
           icon={HelpCircle}
           accentColor="danger"
           description={`出題${summary.thisMonthQuestions}件中${summary.thisMonthZeroAnswers}件`}
+        />
+        <KpiCard
+          title="今月の予測"
+          value={`+${summary.monthlyParticipantsPredicted.toLocaleString()}`}
+          unit="件"
+          icon={Sparkles}
+          accentColor="accent"
+          description="先月末までの直近30日平均ペースを1か月分延長した予測値"
         />
       </div>
 
@@ -1993,14 +2027,6 @@ export function SpaceQuizPage() {
           }))}
         />
       </SectionCard>
-
-      <GrowthProjectionSection
-        title="累計回答数の成長予測"
-        description="月別の回答数の伸びから、今月末〜1年後までの想定累計回答数を算出します。"
-        unit="件"
-        history={growthHistory}
-        color="#38BDF8"
-      />
 
       <RegressionProjectionSection
         title="累計回答数の成長予測（回帰モデル）"
