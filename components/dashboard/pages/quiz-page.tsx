@@ -39,6 +39,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RegressionProjectionSection } from "../regression-projection-section";
 import {
+  fitRegressionModel,
+  predictFromAnchor,
+} from "@/data/regression-growth-projection";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -627,6 +631,8 @@ export function SpaceQuizPage() {
         });
 
         // 日付補完: firstからtodayまで全日分のトレンドデータを生成
+        let weekAnchorIndex = -1;
+        let monthAnchorIndex = -1;
         if (dailyRecords.length > 0) {
           const firstNum = dailyRecords[0].num;
           const dailyMap2 = new Map<number, (typeof dailyRecords)[0]>();
@@ -670,6 +676,8 @@ export function SpaceQuizPage() {
               日別_Instagram: dayInst,
               日別_マイコミュ: dayMy,
             });
+            if (num === endOfPrevWeekNum) weekAnchorIndex = trendData.length - 1;
+            if (num === endOfPrevMonthNum) monthAnchorIndex = trendData.length - 1;
             accuracyData.push({
               name: label,
               正答率: dayAns > 0 ? Math.round((dayCor / dayAns) * 10) / 10 : 0,
@@ -691,21 +699,47 @@ export function SpaceQuizPage() {
             ? 100
             : (cumulativeAnswers / endOfPrevDayCum) * 100;
 
-        // 先週日曜日・先月末時点までの直近30日平均ペースを、そのまま1週間・1か月延長した予測値
-        // （実績の「今週」「今月」カードと並べて、事前の想定とどれだけズレたかを見比べるための参考値）
+        // 先週日曜日・先月末を起点に、下の「累計回答数の成長予測（回帰モデル）」と同じ回帰式で
+        // 1週間・1か月分を予測（実績の「今週」「今月」カードと並べて事前想定とのズレを見比べるための参考値）
         const trailingAvgDailyRate = (cutoffNum: number, windowDays = 30) => {
           const upTo = dailyRecords.filter((d) => d.num <= cutoffNum);
           const window = upTo.slice(-windowDays);
           if (window.length === 0) return 0;
           return window.reduce((s, d) => s + d.answers, 0) / window.length;
         };
-        const weeklyParticipantsPredicted = Math.round(
-          trailingAvgDailyRate(endOfPrevWeekNum) * 7,
-        );
+        const dailyCumulativeForFit = trendData.map((d) => d.累計_全体);
+        const regressionFit = fitRegressionModel(dailyCumulativeForFit);
         const daysInThisMonth = new Date(currentY, currentM, 0).getDate();
-        const monthlyParticipantsPredicted = Math.round(
-          trailingAvgDailyRate(endOfPrevMonthNum) * daysInThisMonth,
-        );
+
+        let weeklyParticipantsPredicted: number;
+        if (regressionFit && weekAnchorIndex >= 0) {
+          const anchorTotal = dailyCumulativeForFit[weekAnchorIndex];
+          weeklyParticipantsPredicted = Math.round(
+            predictFromAnchor(dailyCumulativeForFit, regressionFit, weekAnchorIndex, 7) -
+              anchorTotal,
+          );
+        } else {
+          weeklyParticipantsPredicted = Math.round(
+            trailingAvgDailyRate(endOfPrevWeekNum) * 7,
+          );
+        }
+
+        let monthlyParticipantsPredicted: number;
+        if (regressionFit && monthAnchorIndex >= 0) {
+          const anchorTotal = dailyCumulativeForFit[monthAnchorIndex];
+          monthlyParticipantsPredicted = Math.round(
+            predictFromAnchor(
+              dailyCumulativeForFit,
+              regressionFit,
+              monthAnchorIndex,
+              daysInThisMonth,
+            ) - anchorTotal,
+          );
+        } else {
+          monthlyParticipantsPredicted = Math.round(
+            trailingAvgDailyRate(endOfPrevMonthNum) * daysInThisMonth,
+          );
+        }
 
         // 計算元の数値をそのまま格納（フォーマットはレンダリング時に行う）
         const averageParticipants =
@@ -1321,7 +1355,7 @@ export function SpaceQuizPage() {
           unit="件"
           icon={Sparkles}
           accentColor="accent"
-          description="先週日曜日までの直近30日平均ペースを1週間分延長した予測値"
+          description="先週日曜日を起点に、下の回帰モデルと同じ式で1週間分を予測した値"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
@@ -1369,7 +1403,7 @@ export function SpaceQuizPage() {
           unit="件"
           icon={Sparkles}
           accentColor="accent"
-          description="先月末までの直近30日平均ペースを1か月分延長した予測値"
+          description="先月末を起点に、下の回帰モデルと同じ式で1か月分を予測した値"
         />
       </div>
 
