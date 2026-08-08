@@ -37,6 +37,7 @@ import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { GrowthProjectionSection } from "../growth-projection-section";
+import { RegressionProjectionSection } from "../regression-projection-section";
 import {
   Dialog,
   DialogContent,
@@ -1999,6 +2000,16 @@ export function SpaceQuizPage() {
         unit="件"
         history={growthHistory}
         color="#38BDF8"
+      />
+
+      <RegressionProjectionSection
+        title="累計回答数の成長予測（回帰モデル）"
+        unit="件"
+        dailyCumulative={(charts.participantsTrend || []).map(
+          (d: any) => d.累計_全体,
+        )}
+        dailyLabels={(charts.participantsTrend || []).map((d: any) => d.name)}
+        color="#8B5CF6"
       />
 
       <Dialog
