@@ -821,10 +821,12 @@ export function SpaceQuizPage() {
           });
 
         // --- 全体クイズ分析グラフ・テーブル用のデータ生成 ---
+        const quizTrendCurrentMonthKey = `${currentY}/${String(currentM).padStart(2, "0")}`;
         const quizMonthlyTrend = Array.from(quizMonthlyMap.entries())
           .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([key, v]) => ({
-            name: key,
+            // 今月分はまだ月の途中で件数が少なく出るため、グラフ上で分かるように明示する
+            name: key === quizTrendCurrentMonthKey ? `${key} (途中)` : key,
             回答数: v.ans,
             正答率:
               v.ans > 0 ? Math.round((v.cor / v.ans) * 100 * 100) / 100 : 0,
@@ -837,10 +839,14 @@ export function SpaceQuizPage() {
               v.qCount > 0 ? Math.round((v.ans / v.qCount) * 100) / 100 : 0,
           }));
 
+        const quizTrendCurrentWeekEndJst = new Date(startOfWeekJst.getTime());
+        quizTrendCurrentWeekEndJst.setDate(startOfWeekJst.getDate() + 6);
+        const quizTrendCurrentWeekKey = `${quizTrendCurrentWeekEndJst.getFullYear()}/${String(quizTrendCurrentWeekEndJst.getMonth() + 1).padStart(2, "0")}/${String(quizTrendCurrentWeekEndJst.getDate()).padStart(2, "0")}`;
         const quizWeeklyTrend = Array.from(quizWeeklyMap.entries())
           .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([key, v]) => ({
-            name: v.label,
+            // 今週分はまだ週の途中で件数が少なく出るため、グラフ上で分かるように明示する
+            name: key === quizTrendCurrentWeekKey ? `${v.label} (途中)` : v.label,
             回答数: v.ans,
             正答率:
               v.ans > 0 ? Math.round((v.cor / v.ans) * 100 * 100) / 100 : 0,
