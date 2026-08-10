@@ -36,7 +36,7 @@ import { LineChartComponent } from "../charts/line-chart";
 import { LinearChartComponent } from "../charts/linear-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, getJSTDate } from "@/lib/utils";
 import { RegressionProjectionSection } from "../regression-projection-section";
 import {
   fitRegressionModel,
@@ -48,9 +48,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-const getJSTDate = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 
 // ★ 巨大なuseEffect内のクロージャに変数を増やすとTurbopackの圧縮時に
 // 別スコープの変数名（1文字）と衝突しTDZエラーになることがあったため、

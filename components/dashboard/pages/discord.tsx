@@ -21,9 +21,7 @@ import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { GrowthProjectionSection } from "../growth-projection-section";
-
-const getJSTDate = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+import { getJSTDate } from "@/lib/utils";
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;

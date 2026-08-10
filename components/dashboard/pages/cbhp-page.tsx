@@ -10,7 +10,7 @@ import { LineChartComponent } from "../charts/line-chart";
 import { DonutChart } from "../charts/donut-chart";
 import { ScrollableTable } from "../scrollable-table";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, getJSTDate } from "@/lib/utils";
 import { StackedBarChart } from "../charts/stacked-bar-chart";
 
 const CSV_URLS = {
@@ -46,9 +46,6 @@ const REGION_COLORS = [
   "#EF4444",
   "#6B7280",
 ];
-
-const getJSTDate = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 
 const formatSeconds = (sec: number) => {
   if (!sec || isNaN(sec)) return "0秒";
