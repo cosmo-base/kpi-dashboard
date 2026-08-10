@@ -14,11 +14,8 @@ import {
   Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, getJSTDate } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
-
-const getJSTDate = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 
 const CSV_URLS = {
   discordSns:

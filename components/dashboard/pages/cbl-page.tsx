@@ -11,8 +11,7 @@ import { DonutChart } from '../charts/donut-chart';
 import { StackedBarChart } from '../charts/stacked-bar-chart';
 import { RankingList } from '../ranking-list';
 import { Button } from '@/components/ui/button';
-
-const getJSTDate = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+import { getJSTDate } from '@/lib/utils';
 
 const CATEGORY_COLORS: string[] = ['#38BDF8', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444', '#EC4899', '#10B981', '#6B7280'];
 const TYPE_COLORS: string[] = ['#8B5CF6', '#38BDF8', '#F59E0B', '#22C55E', '#EC4899'];

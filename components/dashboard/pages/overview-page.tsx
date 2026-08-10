@@ -18,9 +18,7 @@ import { SectionCard } from "../section-card";
 import { ChartContainer } from "../chart-container";
 import { LineChartComponent } from "../charts/line-chart";
 import { Button } from "@/components/ui/button";
-
-const getJSTDate = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+import { getJSTDate } from "@/lib/utils";
 
 const CSV_URLS = {
   discordSns:

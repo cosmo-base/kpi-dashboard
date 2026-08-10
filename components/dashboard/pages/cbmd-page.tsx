@@ -9,11 +9,8 @@ import { ChartContainer } from "../chart-container";
 import { RankingList } from "../ranking-list";
 import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, getJSTDate } from "@/lib/utils";
 import { JapanMap } from "../charts/japan-map";
-
-const getJSTDate = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 
 const REGION_MAP: Record<string, string> = {
   北海道: "北海道",
