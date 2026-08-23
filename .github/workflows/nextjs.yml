@@ -91,6 +91,7 @@ jobs:
           NEXT_PUBLIC_KPI_CBED_CSV_URL: ${{ secrets.NEXT_PUBLIC_KPI_CBED_CSV_URL }}
           NEXT_PUBLIC_KPI_PARTNER_CSV_URL: ${{ secrets.NEXT_PUBLIC_KPI_PARTNER_CSV_URL }}
           NEXT_PUBLIC_KPI_SHITTOKU_CSV_URL: ${{ secrets.NEXT_PUBLIC_KPI_SHITTOKU_CSV_URL }}
+          NEXT_PUBLIC_KPI_LINK_URLS: ${{ secrets.NEXT_PUBLIC_KPI_LINK_URLS }}
 
       # ==========================================
       # ★ パスワード暗号化ステップ（最強の確実な上書き版）
