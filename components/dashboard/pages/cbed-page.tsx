@@ -165,8 +165,7 @@ export function CBEDPage() {
   >("total");
 
   useEffect(() => {
-    const csvUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTJU_Qq6TICMIAhDidiH2BYlBcZBvS_Uwy4wth9tT-02RYWkVP_AufdGo0PMAbAyrHKeZrE1x0laETY/pub?gid=0&single=true&output=csv";
+    const csvUrl = process.env.NEXT_PUBLIC_KPI_CBED_CSV_URL ?? "";
 
     fetch(csvUrl)
       .then((response) => response.text())

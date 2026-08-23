@@ -18,8 +18,7 @@ import { ScrollableTable } from "../scrollable-table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUAhEPxwv1Vw-8yN5A8MHaS0jW_7l0hkGc9e_AuXym9q-rSjbv2lrzaY2yzC_ybQONC52dBJTEp0WV/pub?gid=0&single=true&output=csv";
+const CSV_URL = process.env.NEXT_PUBLIC_KPI_AUTOMATION_CSV_URL ?? "";
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1E4jZU_L3FDT-1ZGlneUTu3Wbry9zJeZipk96p5NV7l8/edit?gid=0#gid=0";
 

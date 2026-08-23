@@ -21,19 +21,13 @@ import { Button } from "@/components/ui/button";
 import { getJSTDate } from "@/lib/utils";
 
 const CSV_URLS = {
-  discordSns:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRoX91AuTR9uVSNcCSqr0ir_SIP-6ZtNpOqBHaLEwXDMA99w1Rws-5L7crTpqBY_JqHa-n0Ie4PxWLq/pub?gid=0&single=true&output=csv",
-  quiz: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVq2TSYbOibnTUUyYqHJmrEfspQ1KQn8JpaTsvkrC8oekSogURY1N9yqocitnAbEXewzPIQVyj59rf/pub?gid=0&single=true&output=csv",
-  typeSimpleCbhp:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vReKqSJGubls2ixij5n6FbAi37wzshzZ09Q10a0uzJO1kuk8dSuw9c_yjm4XmsJelkiCLBubKAUFgky/pub?gid=0&single=true&output=csv",
-  typeSimpleParticipant:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQzLEbfZRlDsErUJ7hrEqtaXTpEym3kWXGyvpQDrAbLOFbJZ4_aoMdFn-BQM1GSeHiXsTo4L3kY86YC/pub?gid=0&single=true&output=csv",
-  typeDetailed:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTJvQVHHyL56_1xeVimkfbJCXCNN9MGtDt_ACebndkqhuqGbugvykZvRhkmajQ5fs6ug_Tas_rPXZUl/pub?gid=0&single=true&output=csv",
-  matchRocket:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQENBPEZ3ep1J54G09l7I-vPMaMC6wNxr55bXBsdAdj_xp6gy5ksoM27EyITCuGObi0Kzxbzu2HpLM1/pub?gid=1977317423&single=true&output=csv",
-  matchConstellation:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTbfWKxGFEmOkuaszkGJNUcX4FySkqmdxKJtaXG0esrjJoHSo5zmEoOGLTmzH09YJd9BZY1DyqNc7P/pub?gid=1977317423&single=true&output=csv",
+  discordSns: process.env.NEXT_PUBLIC_KPI_SNS_CSV_URL ?? "",
+  quiz: process.env.NEXT_PUBLIC_KPI_QUIZ_CSV_URL ?? "",
+  typeSimpleCbhp: process.env.NEXT_PUBLIC_KPI_TYPE1_CSV_URL ?? "",
+  typeSimpleParticipant: process.env.NEXT_PUBLIC_KPI_TYPE2_CSV_URL ?? "",
+  typeDetailed: process.env.NEXT_PUBLIC_KPI_TYPE3_CSV_URL ?? "",
+  matchRocket: process.env.NEXT_PUBLIC_KPI_ROCKETS_CSV_URL ?? "",
+  matchConstellation: process.env.NEXT_PUBLIC_KPI_CONSTELLATION_CSV_URL ?? "",
 };
 
 type StatPeriod = "total" | "month" | "week" | "yesterday" | "today";

@@ -243,7 +243,7 @@ const VARIANTS: CosmoMatchVariantConfig[] = [
   {
     key: "rocket",
     label: "日本のロケット編",
-    csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQENBPEZ3ep1J54G09l7I-vPMaMC6wNxr55bXBsdAdj_xp6gy5ksoM27EyITCuGObi0Kzxbzu2HpLM1/pub?gid=1977317423&single=true&output=csv",
+    csvUrl: process.env.NEXT_PUBLIC_KPI_ROCKETS_CSV_URL ?? "",
     sheetUrl: "https://docs.google.com/spreadsheets/d/1-Zpc-AbelO2orxbVMP2TzG9Bkqf0SI1MJ1nRbiy2B8M/edit?gid=1977317423#gid=1977317423",
     resultColumn: "判定ロケット",
     resultLabel: "判定ロケット",
@@ -263,7 +263,7 @@ const VARIANTS: CosmoMatchVariantConfig[] = [
   {
     key: "constellation",
     label: "88星座編",
-    csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTbfWKxGFEmOkuaszkGJNUcX4FySkqmdxKJtaXG0esrjJoHSo5zmEoOGLTmzH09YJd9BZY1DyqNc7P/pub?gid=1977317423&single=true&output=csv",
+    csvUrl: process.env.NEXT_PUBLIC_KPI_CONSTELLATION_CSV_URL ?? "",
     sheetUrl: "https://docs.google.com/spreadsheets/d/1XIVQ1ID91XG4AT7jBeAw1QGbu4EvGUYdnrjferIxN4M/edit?gid=1977317423#gid=1977317423",
     resultColumn: "判定",
     resultLabel: "判定星座",

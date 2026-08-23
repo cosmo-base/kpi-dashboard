@@ -72,8 +72,7 @@ export function CBMDPage() {
   const [mapViewMode, setMapViewMode] = useState<"total">("total");
 
   useEffect(() => {
-    const csvUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDvzMbN9CNa_PXwmre1IFid8fw7rD2yG0IlBnifsjtrtDN0cy3n-nQlEFvKQbE4w06TXTHoZ4edpzj/pub?gid=0&single=true&output=csv";
+    const csvUrl = process.env.NEXT_PUBLIC_KPI_CBMD_CSV_URL ?? "";
 
     fetch(csvUrl)
       .then((response) => response.text())

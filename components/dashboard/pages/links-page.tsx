@@ -22,6 +22,16 @@ interface LinkCategory {
   links: LinkItem[];
 }
 
+const LINK_URLS: Record<string, string> = (() => {
+  try {
+    return JSON.parse(process.env.NEXT_PUBLIC_KPI_LINK_URLS ?? '{}');
+  } catch {
+    return {};
+  }
+})();
+
+const L = (id: string) => LINK_URLS[id] ?? '';
+
 const initialLinkCategories: LinkCategory[] = [
   {
     id: 'general',
@@ -156,7 +166,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-1',
         title: 'コミュニティードライブ',
-        url: 'https://drive.google.com/drive/u/0/folders/1odqLTxdIc9T91aneRIdraf1YY44aeqcC',
+        url: L('admin-1'),
         description: '運営共有ドライブ',
         icon: FolderOpen,
         subCategory: 'ドライブ・資料'
@@ -164,7 +174,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-11',
         title: '初期のブランディング',
-        url: 'https://docs.google.com/spreadsheets/d/1BRjUW9K0S7OVqKs4oN4zEPPFnGQnF89KoqDq0a1CY-k/edit',
+        url: L('admin-11'),
         description: '',
         icon: Building,
         subCategory: 'ドライブ・資料'
@@ -172,7 +182,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-2',
         title: '招待リンク一覧',
-        url: 'https://docs.google.com/document/d/1hhsrqBj57j58JzkmIlQOgizK3zfGzm5_xUGK_kB-Rbk/edit?tab=t.0',
+        url: L('admin-2'),
         description: 'コミュニティ招待リンクの管理',
         icon: LinkIcon,
         subCategory: '管理・運用シート'
@@ -180,7 +190,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-5',
         title: 'パートナー営業',
-        url: 'https://docs.google.com/spreadsheets/d/1Nbq6rD_PfF1-KdIXqlq4wCVPA6SWITvDroO5eKe42Q4/edit',
+        url: L('admin-5'),
         description: '',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -188,7 +198,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-10',
         title: 'パートナー営業資料',
-        url: 'https://drive.google.com/drive/u/0/folders/1g-u-D4AWqQQeO7SheKx7m0bgiaGvQ326',
+        url: L('admin-10'),
         description: '',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -196,7 +206,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-6',
         title: 'パートナー公開チェックリスト',
-        url: 'https://docs.google.com/spreadsheets/d/1SoZ2O92aYnMXRBuFU7-vV7gX4vItVbxnIoKhGVxpo4s/edit?gid=1104332422#gid=1104332422',
+        url: L('admin-6'),
         description: '',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -204,7 +214,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-12',
         title: 'パートナー申請データ',
-        url: 'https://docs.google.com/spreadsheets/d/1PtyAO6VeBwgZcFsiiUhQseg6ugZJmMI_Di6N5StMQiA/edit',
+        url: L('admin-12'),
         description: 'パートナー申請の管理シート',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -212,7 +222,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-7',
         title: '宇宙知っトク進捗確認',
-        url: 'https://docs.google.com/spreadsheets/d/1Clqn3sHYbpthvFKzb2XAaQ8RLHwWSOYxgkvm4HxoJp0/edit',
+        url: L('admin-7'),
         description: '',
         icon: FileText,
         subCategory: '宇宙知っトク'
@@ -220,7 +230,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-3',
         title: 'SNS投稿テンプレート',
-        url: 'https://docs.google.com/spreadsheets/d/15F49NGpyEEjdRAEKAHAeBpkH4HWsiZXpEyMAiLCniPo/edit?gid=0#gid=0',
+        url: L('admin-3'),
         description: 'SNS投稿用のテンプレート集',
         icon: FileText,
         subCategory: 'SNS'
@@ -228,7 +238,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-8',
         title: 'Instagramビジネス投稿(Cosmo Base)',
-        url: 'https://business.facebook.com/latest/home?asset_id=922321694307649&business_id=2338074866656029',
+        url: L('admin-8'),
         description: '',
         icon: Focus,
         subCategory: 'SNS'
@@ -236,7 +246,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-9',
         title: 'Instagramビジネス投稿(FSIF)',
-        url: 'https://business.facebook.com/latest/home?asset_id=416684408195963&business_id=1693962128107258',
+        url: L('admin-9'),
         description: '',
         icon: Focus,
         subCategory: 'SNS'
@@ -244,7 +254,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'admin-4',
         title: 'Union',
-        url: 'https://campus-union-connect.base44.app/Home',
+        url: L('admin-4'),
         description: '',
         icon: Building,
         subCategory: ''
@@ -252,7 +262,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: "admin-13",
         title: "自動化率計算",
-        url:"https://docs.google.com/spreadsheets/d/1E4jZU_L3FDT-1ZGlneUTu3Wbry9zJeZipk96p5NV7l8/edit",
+        url: L('admin-13'),
         description:"",
         icon: Building,
         subCategory:"管理・運用シート"
@@ -260,7 +270,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id:"admin-14",
         title:"STAT BOT",
-        url:"https://statbot.net/dashboard/1445774897115697224/overview?avg[]=21&guild=t",
+        url: L('admin-14'),
         description:"Discord分析BOT メンバー数カウント",
         icon: Users,
         subCategory:"Discord"
@@ -268,7 +278,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id:"admin-15",
         title:"運営用イベントページ一覧",
-        url:"https://cosmo-base.github.io/event/list/",
+        url: L('admin-15'),
         description:"イベントページの運営用まとめページ",
         icon: ClipboardClock,
         subCategory:"イベント"
@@ -334,11 +344,11 @@ const initialLinkCategories: LinkCategory[] = [
     id: 'manage',
     label: '原本',
     icon: Wrench,
-    links: [      
+    links: [
       {
         id: 'manage-1',
         title: 'KPI',
-        url: 'https://docs.google.com/spreadsheets/d/1DVcnAj75n_Hokt74Q-SX_FI_J5PSbJiOzhvwJfHggFM/edit?gid=0#gid=0',
+        url: L('manage-1'),
         description: 'KPIデータの原本（Discord,SNS）',
         icon: BarChart3,
         subCategory: 'Discord, SNS'
@@ -346,7 +356,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-2',
         title: 'クイズ総回答数',
-        url: 'https://docs.google.com/spreadsheets/d/113XXwG9heW_Vv173SH_pp9w8cwRgWzC341jbXeaJ22w/edit',
+        url: L('manage-2'),
         description: '宇宙クイズの回答データ',
         icon: HelpCircle,
         subCategory: '毎日宇宙クイズ'
@@ -354,7 +364,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-3',
         title: 'CBL',
-        url: 'https://docs.google.com/spreadsheets/d/1QtgJJiX1dBq_jXtbEgD88v9ZgSCcZSr2cObcnglKsNQ/edit',
+        url: L('manage-3'),
         description: 'CBLの原本スプレッドシート',
         icon: FileText,
         subCategory: 'CBL'
@@ -362,7 +372,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-4',
         title: 'CBED原本',
-        url: 'https://docs.google.com/spreadsheets/d/1jl7DqMAcPN92p7RbMeLRE7RPuvea3j-lsAMSs8M1Xj4/edit',
+        url: L('manage-4'),
         description: 'CBEDの原本スプレッドシート、ロケット打ち上げ',
         icon: FileText,
         subCategory: 'CBED'
@@ -370,7 +380,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-5',
         title: 'CBMD原本',
-        url: 'https://docs.google.com/spreadsheets/d/1gdD3uqzvQWZMmn0UK6LZm_TIWS53Ar8tR80E8cz-ybY/edit',
+        url: L('manage-5'),
         description: 'CBMDの原本',
         icon: Database,
         subCategory: 'CBMD'
@@ -378,7 +388,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-6',
         title: 'パートナー一覧',
-        url: 'https://docs.google.com/spreadsheets/d/1FL6G_-IpL4Yck1tds7hqFL1pqJ85RDt1oyVE545WOZQ/edit',
+        url: L('manage-6'),
         description: 'CBHPパートナーデータ',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -386,7 +396,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-7',
         title: 'パートナー分析',
-        url: 'https://docs.google.com/spreadsheets/d/1Nbq6rD_PfF1-KdIXqlq4wCVPA6SWITvDroO5eKe42Q4/edit',
+        url: L('manage-7'),
         description: 'パートナーデータ',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -394,7 +404,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-11',
         title: 'CBHP分析',
-        url: 'https://docs.google.com/spreadsheets/d/1QwgyndR230Vtr2qiWAgw0FNQEaCfdA1VYagoRE2rxOQ/edit',
+        url: L('manage-11'),
         description: 'GA4からとってきたCBHPトラッキングデータ',
         icon: FileText,
         subCategory: 'CBHP'
@@ -402,7 +412,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-8',
         title: '宇宙タイプ診断簡易版データ(CBHP)',
-        url: 'https://docs.google.com/spreadsheets/d/1LcbLG6GYqNZXlx38ZXqgLZ0OlLBLavd8VSJZEayfXYs/edit',
+        url: L('manage-8'),
         description: '宇宙タイプ診断 簡易版診断データ',
         icon: Sparkles,
         subCategory: '宇宙タイプ診断'
@@ -410,7 +420,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-9',
         title: '宇宙タイプ診断簡易版データ(参加者)',
-        url: 'https://docs.google.com/spreadsheets/d/1LiOtm3NW4NGMQuchAjnSj_26rK3K9AaxSo4Autphi8Y/edit',
+        url: L('manage-9'),
         description: '宇宙タイプ診断 簡易版診断データ',
         icon: Sparkles,
         subCategory: '宇宙タイプ診断'
@@ -418,7 +428,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-10',
         title: '宇宙タイプ診断詳細版診断データ',
-        url: 'https://docs.google.com/spreadsheets/d/13yFYKDVm0g09Vw6cyHN9Hr4H2n66CL9SpPDJ-mytLb0/edit',
+        url: L('manage-10'),
         description: '宇宙タイプ診断 完全版診断データ',
         icon: Sparkles,
         subCategory: '宇宙タイプ診断'
@@ -426,7 +436,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-12',
         title: '行ってきた スプレッドシート',
-        url: 'https://docs.google.com/spreadsheets/d/1LfqPf4W1Cv2vPxa7FXC2Cx4WMWPN3i1L1qhUIuaFo4Y/edit',
+        url: L('manage-12'),
         description: '行ってきた管理リスト(参加者ページ反映)',
         icon: Database,
         subCategory: '行ってきた'
@@ -434,7 +444,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-13',
         title: '宇宙知っトク進捗確認 スプレッドシート',
-        url: 'https://docs.google.com/spreadsheets/d/1Clqn3sHYbpthvFKzb2XAaQ8RLHwWSOYxgkvm4HxoJp0/edit',
+        url: L('manage-13'),
         description: '知っトク管理リスト(参加者ページ反映)',
         icon: Database,
         subCategory: '宇宙知っトク'
@@ -442,7 +452,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-14',
         title: 'Cosmo Match 日本のロケット編 スプレッドシート',
-        url: 'https://docs.google.com/spreadsheets/d/1-Zpc-AbelO2orxbVMP2TzG9Bkqf0SI1MJ1nRbiy2B8M/edit?gid=0#gid=0',
+        url: L('manage-14'),
         description: '',
         icon: Database,
         subCategory: 'Cosmo Match'
@@ -450,7 +460,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-15',
         title: 'Cosmo Match 88星座編 スプレッドシート',
-        url: 'https://docs.google.com/spreadsheets/d/1XIVQ1ID91XG4AT7jBeAw1QGbu4EvGUYdnrjferIxN4M/edit?gid=0#gid=0',
+        url: L('manage-15'),
         description: '',
         icon: Database,
         subCategory: 'Cosmo Match'
@@ -458,21 +468,21 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'manage-16',
         title: '宇宙用語集 スプレッドシート',
-        url: 'https://docs.google.com/spreadsheets/d/1WweINXSR4NtLUGnztYQIHAom_Y1Y3SztMHnigs7vM18/edit?gid=0#gid=0',
+        url: L('manage-16'),
         description: '',
         icon: Database,
         subCategory: '宇宙用語集'
       },
       {
-        id: 'manage-15',
+        id: 'manage-17',
         title: '参加者ページGA4 スプレッドシート',
-        url: 'https://docs.google.com/spreadsheets/d/1LrCAcZQM3rM44Sm8k-l4U04KHao7sNHPrsMObqXSo20/edit?gid=1015522883#gid=1015522883',
+        url: L('manage-17'),
         description: '',
         icon: Database,
         subCategory: '参加者ページ'
       },
     ]
-  }, 
+  },
   {
     id: 'form',
     label: 'フォーム',
@@ -481,7 +491,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-1',
         title: 'CosmoBase お問い合わせ',
-        url: 'https://docs.google.com/forms/d/1TwH-_aVNWMhbxnjIEDwOu0nDnGJVzUoByAxKkgWwAgk/edit',
+        url: L('form-1'),
         description: 'CBHP お問い合わせ',
         icon: LayoutList,
         subCategory: 'お問い合わせ'
@@ -489,7 +499,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-2',
         title: 'Cosmo Base パートナー制度 お問い合わせ',
-        url: 'https://docs.google.com/forms/d/17CJ_KNtX5HUJj4G8PX1POWuJ1BCbu3kHI4uk_G-mq7k/edit',
+        url: L('form-2'),
         description: 'CBHP パートナーお問い合わせ',
         icon: LayoutList,
         subCategory: 'パートナー'
@@ -497,7 +507,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-3',
         title: 'パートナー申請データ',
-        url: 'https://docs.google.com/spreadsheets/d/1PtyAO6VeBwgZcFsiiUhQseg6ugZJmMI_Di6N5StMQiA/edit',
+        url: L('form-3'),
         description: 'パートナー申請の管理シート',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -505,7 +515,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-4',
         title: 'パートナー修正データ',
-        url: 'https://docs.google.com/spreadsheets/d/1kBId4mWEhDfoW3pjTAlbO7Cvyh-z7Y4CiQgtjkIbNdk/edit?gid=0#gid=0',
+        url: L('form-4'),
         description: 'パートナーページ 修正データ',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -513,7 +523,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-5',
         title: 'CBLパートナー資料格納',
-        url: 'https://docs.google.com/spreadsheets/d/1Jk8IJ3l__qBzjWuOPbWY6p8_863Fniz6uzDjiuYO6v4/edit?gid=0#gid=0',
+        url: L('form-5'),
         description: 'パートナーページ CBL資料格納申請フォーム',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -521,7 +531,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-8',
         title: 'アンケート確認',
-        url: 'https://docs.google.com/forms/d/1q-zSXsQMkC69FnN85awN7aq4qSVZPLFaEuW7anYCRDU/edit',
+        url: L('form-8'),
         description: 'パートナーページ アンケート確認フォーム',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -529,7 +539,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-6',
         title: 'イベント登壇申請データ',
-        url: 'https://docs.google.com/spreadsheets/d/1Yq6BzFS4iZi4IL4bh9AQyTwXn5ZNjUUFJ1yrXULU0fA/edit?gid=0#gid=0',
+        url: L('form-6'),
         description: 'パートナーページ 知っトク登壇申請フォーム',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -537,7 +547,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-7',
         title: 'メンバー申請',
-        url: 'https://docs.google.com/forms/d/1aeTY1RA-LENst3fB7N0sawSngwqZg6Fhro6o3dCXQnM/edit',
+        url: L('form-7'),
         description: 'パートナーページ メンバー申請フォーム',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -545,7 +555,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-9',
         title: 'Cosmo Base 匿名質問フォーム',
-        url: 'https://docs.google.com/forms/d/1LEBog2v-TAOpL28RgmJNzteWHrXNPm-wM9dbPl4wbNY/edit',
+        url: L('form-9'),
         description: '参加者ページ 宇宙教えて 匿名質問フォーム',
         icon: LayoutList,
         subCategory: '宇宙教えて'
@@ -553,7 +563,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-10',
         title: 'イベント登録',
-        url: 'https://docs.google.com/forms/d/1m-6FLHRjzG5MDQL5Xix4ms2JVeMS8cXTSygVBsjGoh4/edit',
+        url: L('form-10'),
         description: '参加者ページ CBED イベント追加フォーム',
         icon: LayoutList,
         subCategory: 'CBED'
@@ -561,7 +571,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-11',
         title: 'イベントテーマ希望フォーム',
-        url: 'https://docs.google.com/forms/d/1hAQvD1RB_aMA8sSDXnfsfKFfj_SnWtLH3RJhXfZEpoY/edit',
+        url: L('form-11'),
         description: '参加者ページ 宇宙知っトク リクエストフォーム',
         icon: LayoutList,
         subCategory: '宇宙知っトク'
@@ -569,15 +579,15 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'form-12',
         title: '宇宙知っトク 参加後アンケート',
-        url: 'https://docs.google.com/forms/d/14Gy8dIBSOwT69dqiBsCIEhq0Az4j9wCJ9_itZwsjR2Q/edit',
+        url: L('form-12'),
         description: '',
         icon: LayoutList,
         subCategory: '宇宙知っトク'
       },
       {
-        id: 'form-12',
+        id: 'form-13',
         title: 'CBMDお問い合わせ',
-        url: 'https://docs.google.com/forms/d/1F2rcnOkK1R7oMBL4HrEle4yLU58ON108NKjUMVhp9Os/edit',
+        url: L('form-13'),
         description: '参加者ページ CBMD お問い合わせフォーム',
         icon: LayoutList,
         subCategory: 'CBMD'
@@ -592,7 +602,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-3',
         title: 'Instagram_汎用投稿_デザイン',
-        url: 'https://canva.link/ac3ep7ya04p7ff0',
+        url: L('design-3'),
         description: '',
         icon: Image,
         subCategory: 'SNS投稿用'
@@ -600,7 +610,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-4',
         title: 'Instagram_クイズ投稿_デザイン',
-        url: 'https://canva.link/k9rtx04myz9upf5',
+        url: L('design-4'),
         description: '',
         icon: Image,
         subCategory: 'SNS投稿用'
@@ -608,7 +618,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-11',
         title: '宇宙クイズ_問題&回答_デザイン',
-        url: 'https://canva.link/v9q69e1cmw5xc8v',
+        url: L('design-11'),
         description: '',
         icon: Image,
         subCategory: 'SNS投稿用'
@@ -616,7 +626,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-14',
         title: 'パートナー締結_サブ(Instagram)デザイン',
-        url: 'https://canva.link/dcgka4ivmcz80tg',
+        url: L('design-14'),
         description: '',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -624,7 +634,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-1',
         title: 'Instagram_イベント投稿_デザイン',
-        url: 'https://canva.link/6ohgqrezzrde9dj',
+        url: L('design-1'),
         description: '',
         icon: Image,
         subCategory: 'SNS投稿用'
@@ -632,7 +642,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-2',
         title: '宇宙知っトク_座談会用当日_資料',
-        url: 'https://canva.link/sygrarpb5f0osz4',
+        url: L('design-2'),
         description: '',
         icon: Image,
         subCategory: '資料・カバー画像'
@@ -640,7 +650,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-6',
         title: 'FSIF&CB_新歓_資料',
-        url: 'https://canva.link/lyl255ilb5p40mm',
+        url: L('design-6'),
         description: '',
         icon: Image,
         subCategory: '資料・カバー画像'
@@ -648,7 +658,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-9',
         title: '週間宇宙ニュース_表紙デザイン',
-        url: 'https://canva.link/wyjmvia38dzv2cu',
+        url: L('design-9'),
         description: '',
         icon: Image,
         subCategory: '資料・カバー画像'
@@ -656,7 +666,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-10',
         title: 'note_コンテンツ紹介_デザイン',
-        url: 'https://canva.link/h8fsg4d8ielshsv',
+        url: L('design-10'),
         description: '',
         icon: Image,
         subCategory: '資料・カバー画像'
@@ -664,7 +674,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-13',
         title: '宇宙知っトク_表紙_デザイン',
-        url: 'https://canva.link/3oqqw9yl2iqbew8',
+        url: L('design-13'),
         description: '',
         icon: Image,
         subCategory: '資料・カバー画像'
@@ -672,7 +682,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-5',
         title: 'CB_メイン背景_デザイン',
-        url: 'https://canva.link/t4cehf79ym5swmz',
+        url: L('design-5'),
         description: '',
         icon: Image,
         subCategory: 'ブランディング・宣伝'
@@ -680,7 +690,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-7',
         title: 'パートナー締結_メインデザイン',
-        url: 'https://canva.link/1aakw2t0bjl906i',
+        url: L('design-7'),
         description: '',
         icon: Handshake,
         subCategory: 'パートナー'
@@ -688,7 +698,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-8',
         title: 'CBMDコンテンツ紹介_投稿用デザイン',
-        url: 'https://canva.link/foa4xfbsrjn5lbp',
+        url: L('design-8'),
         description: '',
         icon: Image,
         subCategory: 'ブランディング・宣伝'
@@ -696,7 +706,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'design-12',
         title: 'プレスリリース_表紙_デザイン',
-        url: 'https://canva.link/ql3kf2fnhktw0l8',
+        url: L('design-12'),
         description: '',
         icon: Image,
         subCategory: 'ブランディング・宣伝'
@@ -752,11 +762,11 @@ const initialLinkCategories: LinkCategory[] = [
   },
 ];
 
-function LinkCard({ 
-  link, 
-  delay 
-}: { 
-  link: LinkItem; 
+function LinkCard({
+  link,
+  delay
+}: {
+  link: LinkItem;
   delay: number;
 }) {
   const [copied, setCopied] = useState(false);
@@ -818,7 +828,7 @@ function LinkCard({
           </p>
         </div>
       </div>
-      
+
       <div className="flex gap-2 mt-4 pt-4 border-t border-border/30">
         <Button
           variant="outline"
@@ -892,7 +902,7 @@ export function LinksPage() {
         {initialLinkCategories.map((category) => {
           const Icon = category.icon;
           const isActive = activeCategory === category.id;
-          
+
           return (
             <motion.button
               key={category.id}
@@ -944,12 +954,12 @@ export function LinksPage() {
                       {links.length}件
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {links.map((link, index) => (
-                      <LinkCard 
+                      <LinkCard
                         key={link.id}
-                        link={link} 
+                        link={link}
                         delay={index}
                       />
                     ))}

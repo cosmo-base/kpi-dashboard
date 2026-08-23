@@ -21,7 +21,7 @@ export function CBLPage() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTiWVQ_iCVoOVIzzsR28wnfaWqniBFolkDs3uOn_kMcquNmiVqg1ZVV_BGjlIfsyCQlRemOXeoL4Mhw/pub?gid=0&single=true&output=csv';
+    const csvUrl = process.env.NEXT_PUBLIC_KPI_CBL_CSV_URL ?? "";
 
     fetch(csvUrl)
       .then(response => response.text())

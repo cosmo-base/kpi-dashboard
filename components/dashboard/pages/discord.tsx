@@ -43,8 +43,7 @@ export function Discord() {
   const [trendPeriod, setTrendPeriod] = useState<string>("90");
 
   useEffect(() => {
-    const csvUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRoX91AuTR9uVSNcCSqr0ir_SIP-6ZtNpOqBHaLEwXDMA99w1Rws-5L7crTpqBY_JqHa-n0Ie4PxWLq/pub?gid=0&single=true&output=csv";
+    const csvUrl = process.env.NEXT_PUBLIC_KPI_SNS_CSV_URL ?? "";
 
     fetch(csvUrl)
       .then((response) => response.text())

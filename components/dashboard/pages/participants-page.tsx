@@ -22,18 +22,12 @@ import { cn, getJSTDate } from "@/lib/utils";
 import { StackedBarChart } from "../charts/stacked-bar-chart";
 
 const CSV_URLS = {
-  trend:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEI0LS0PR12MT59Iiiy3EFC9ja4bPjMMfn6F1IIYp4IhrQh_9s7gJKu5uRmVGeleXWWOn05V-VZ7RN/pub?gid=1015522883&single=true&output=csv",
-  source:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEI0LS0PR12MT59Iiiy3EFC9ja4bPjMMfn6F1IIYp4IhrQh_9s7gJKu5uRmVGeleXWWOn05V-VZ7RN/pub?gid=1037755345&single=true&output=csv",
-  pages:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEI0LS0PR12MT59Iiiy3EFC9ja4bPjMMfn6F1IIYp4IhrQh_9s7gJKu5uRmVGeleXWWOn05V-VZ7RN/pub?gid=1528131378&single=true&output=csv",
-  region:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEI0LS0PR12MT59Iiiy3EFC9ja4bPjMMfn6F1IIYp4IhrQh_9s7gJKu5uRmVGeleXWWOn05V-VZ7RN/pub?gid=2107194814&single=true&output=csv",
-  conversions:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEI0LS0PR12MT59Iiiy3EFC9ja4bPjMMfn6F1IIYp4IhrQh_9s7gJKu5uRmVGeleXWWOn05V-VZ7RN/pub?gid=1531874959&single=true&output=csv",
-  demographics:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEI0LS0PR12MT59Iiiy3EFC9ja4bPjMMfn6F1IIYp4IhrQh_9s7gJKu5uRmVGeleXWWOn05V-VZ7RN/pub?gid=1984427854&single=true&output=csv",
+  trend: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_TREND_CSV_URL ?? "",
+  source: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_SOURCE_CSV_URL ?? "",
+  pages: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_PAGES_CSV_URL ?? "",
+  region: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_REGION_CSV_URL ?? "",
+  conversions: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_CONVERSIONS_CSV_URL ?? "",
+  demographics: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_DEMOGRAPHICS_CSV_URL ?? "",
 };
 
 const SOURCE_COLORS = [

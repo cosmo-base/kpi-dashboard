@@ -25,8 +25,7 @@ export function ShittokuPage() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    const csvUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLLj6DB0iMVlhvHqUbfQhAhE7JEl5cps2zkE-WG-P2Vr-YiJWhdaOqO2QCzsXR-fjKFV1P44-0n7l3/pub?gid=0&single=true&output=csv";
+    const csvUrl = process.env.NEXT_PUBLIC_KPI_SHITTOKU_CSV_URL ?? "";
 
     fetch(csvUrl)
       .then((response) => response.text())
