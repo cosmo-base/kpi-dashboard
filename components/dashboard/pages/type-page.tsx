@@ -430,12 +430,9 @@ export function SpaceDiagnosisPage() {
   const [data, setData] = useState<any>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>("90");
   useEffect(() => {
-    const urlSimpleCbhp =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vReKqSJGubls2ixij5n6FbAi37wzshzZ09Q10a0uzJO1kuk8dSuw9c_yjm4XmsJelkiCLBubKAUFgky/pub?gid=0&single=true&output=csv";
-    const urlSimpleParticipant =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQzLEbfZRlDsErUJ7hrEqtaXTpEym3kWXGyvpQDrAbLOFbJZ4_aoMdFn-BQM1GSeHiXsTo4L3kY86YC/pub?gid=0&single=true&output=csv";
-    const urlDetailed =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTJvQVHHyL56_1xeVimkfbJCXCNN9MGtDt_ACebndkqhuqGbugvykZvRhkmajQ5fs6ug_Tas_rPXZUl/pub?gid=0&single=true&output=csv";
+    const urlSimpleCbhp = process.env.NEXT_PUBLIC_KPI_TYPE1_CSV_URL ?? "";
+    const urlSimpleParticipant = process.env.NEXT_PUBLIC_KPI_TYPE2_CSV_URL ?? "";
+    const urlDetailed = process.env.NEXT_PUBLIC_KPI_TYPE3_CSV_URL ?? "";
 
     Promise.all([
       fetch(urlSimpleCbhp).then((res) => res.text()),

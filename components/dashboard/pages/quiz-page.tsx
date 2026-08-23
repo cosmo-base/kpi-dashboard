@@ -247,8 +247,7 @@ export function SpaceQuizPage() {
   }, [data?.charts?.activeTypes]);
 
   useEffect(() => {
-    const csvUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVq2TSYbOibnTUUyYqHJmrEfspQ1KQn8JpaTsvkrC8oekSogURY1N9yqocitnAbEXewzPIQVyj59rf/pub?gid=0&single=true&output=csv";
+    const csvUrl = process.env.NEXT_PUBLIC_KPI_QUIZ_CSV_URL ?? "";
 
     fetch(csvUrl)
       .then((response) => response.text())

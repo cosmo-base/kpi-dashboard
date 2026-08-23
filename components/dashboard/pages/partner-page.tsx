@@ -33,8 +33,7 @@ export function PartnerPage() {
 
   useEffect(() => {
     // パートナー連絡リストのCSV URL
-    const csvUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEJHQIgKbrIVbjo1mlnEg2iN3Jl4MXit4ArDW9ISOumOEzjKvjhcckAka7zWSkPwihVlxdC0255Q0D/pub?gid=560621363&single=true&output=csv";
+    const csvUrl = process.env.NEXT_PUBLIC_KPI_PARTNER_CSV_URL ?? "";
     
     fetch(csvUrl)
       .then((response) => response.text())
