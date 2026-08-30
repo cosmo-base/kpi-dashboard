@@ -282,6 +282,14 @@ const initialLinkCategories: LinkCategory[] = [
         description:"イベントページの運営用まとめページ",
         icon: ClipboardClock,
         subCategory:"イベント"
+      },
+      {
+        id:"admin-16",
+        title:"Orbit",
+        url: L('admin-16'),
+        description:"タスク＆人材管理ツール",
+        icon: ClipboardClock,
+        subCategory:"管理"
       }
     ],
   },
