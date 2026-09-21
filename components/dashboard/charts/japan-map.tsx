@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 
-const geoUrl = `/kpi-dashboard/japan.json`;
+const geoUrl = `/japan.json`;
 
 interface JapanMapProps {
   data: { name: string; value: number }[];
