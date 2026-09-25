@@ -41,7 +41,13 @@ export function DashboardHeader({
         <div className="flex items-center justify-between h-16">
           {/* Title */}
           <div className="flex">
-            <Image src="/CB_icon.png" alt="CB" width={40} height={40} className="h-max"/>
+            <Image
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/CB_icon.png`}
+              alt="CB"
+              width={40}
+              height={40}
+              className="h-max"
+            />
             <div>
               <h1 className="text-lg font-bold gradient-text">
                 Cosmo Base Dashboard
