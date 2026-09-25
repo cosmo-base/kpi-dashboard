@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link as LinkIcon,ClipboardClock,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,type LucideIcon} from 'lucide-react';
+import { Link as LinkIcon,ClipboardClock,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,Search,type LucideIcon} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -787,10 +787,12 @@ const initialLinkCategories: LinkCategory[] = [
 
 function LinkCard({
   link,
-  delay
+  delay,
+  categoryLabel
 }: {
   link: LinkItem;
   delay: number;
+  categoryLabel?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -818,7 +820,7 @@ function LinkCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3, delay: delay * 0.05 }}
       className={cn(
-        "glass-card rounded-2xl p-5 cursor-pointer group transition-all duration-300",
+        "relative glass-card rounded-2xl p-5 cursor-pointer group transition-all duration-300",
         "hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1"
       )}
       onClick={handleOpen}
@@ -842,9 +844,17 @@ function LinkCard({
           <Icon className="h-5 w-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-            {link.title}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+              {link.title}
+            </h3>
+            {/* カテゴリタブを横断して検索した時、どのタブのリンクか分かるようにするバッジ */}
+            {categoryLabel && (
+              <span className="text-[10px] font-medium text-muted-foreground bg-secondary/60 px-2 py-0.5 rounded-full shrink-0">
+                {categoryLabel}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground mt-1">{link.description}</p>
           <p className="text-xs text-muted-foreground/60 mt-2 truncate font-mono">
             {link.url}
@@ -890,6 +900,9 @@ function LinkCard({
 
 export function LinksPage() {
   const [activeCategory, setActiveCategory] = useState('general');
+  const [searchQuery, setSearchQuery] = useState('');
+  const isSearching = searchQuery.trim().length > 0;
+
   const currentCategory = initialLinkCategories.find((cat) => cat.id === activeCategory);
 
   // 選択されたタブのリンクをサブカテゴリでグループ化
@@ -899,6 +912,22 @@ export function LinksPage() {
     acc[group].push(link);
     return acc;
   }, {} as Record<string, LinkItem[]>);
+
+  // タブを問わず全カテゴリのリンクからタイトル・説明・URLで検索
+  const searchResults = (() => {
+    if (!isSearching) return [];
+    const q = searchQuery.trim().toLowerCase();
+    return initialLinkCategories.flatMap((category) =>
+      category.links
+        .filter(
+          (link) =>
+            link.title.toLowerCase().includes(q) ||
+            link.description.toLowerCase().includes(q) ||
+            link.url.toLowerCase().includes(q)
+        )
+        .map((link) => ({ link, categoryLabel: category.label }))
+    );
+  })();
 
   return (
     <motion.div
@@ -918,10 +947,31 @@ export function LinksPage() {
             <p className="text-sm text-muted-foreground">Cosmo Base運営で利用するリンクを一元管理</p>
           </div>
         </div>
+
+        {/* タブを問わず全リンクから検索 */}
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="全タブからリンクを検索"
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl text-sm bg-secondary/30 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+          {isSearching && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="検索をクリア"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Sub-tabs (Main Categories) */}
-      <div className="flex gap-2 flex-wrap">
+      <div className={cn('flex gap-2 flex-wrap', isSearching && 'opacity-50 pointer-events-none')}>
         {initialLinkCategories.map((category) => {
           const Icon = category.icon;
           const isActive = activeCategory === category.id;
@@ -956,47 +1006,83 @@ export function LinksPage() {
         })}
       </div>
 
-      {/* Link Cards Grid Grouped by Subcategory */}
+      {/* Link Cards Grid: 検索中は全タブ横断のフラット表示、それ以外はタブ内をサブカテゴリでグループ表示 */}
       <AnimatePresence mode="wait">
-        <motion.div
-          key={activeCategory}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-        >
-          {groupedLinks && Object.keys(groupedLinks).length > 0 ? (
-            <div className="space-y-8">
-              {Object.entries(groupedLinks).map(([group, links]) => (
-                <div key={group} className="scroll-mt-6">
-                  {/* サブカテゴリの見出し */}
-                  <div className="flex items-center gap-3 mb-4 border-b border-border/50 pb-2">
-                    <div className="w-1.5 h-5 bg-primary rounded-full"></div>
-                    <h3 className="text-lg font-bold text-foreground tracking-tight">{group}</h3>
-                    <span className="text-xs font-medium text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">
-                      {links.length}件
-                    </span>
-                  </div>
+        {isSearching ? (
+          <motion.div
+            key="search"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex items-center gap-3 mb-4 border-b border-border/50 pb-2">
+              <div className="w-1.5 h-5 bg-primary rounded-full"></div>
+              <h3 className="text-lg font-bold text-foreground tracking-tight">検索結果</h3>
+              <span className="text-xs font-medium text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">
+                {searchResults.length}件
+              </span>
+            </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {links.map((link, index) => (
-                      <LinkCard
-                        key={link.id}
-                        link={link}
-                        delay={index}
-                      />
-                    ))}
+            {searchResults.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {searchResults.map(({ link, categoryLabel }, index) => (
+                  <LinkCard
+                    key={link.id}
+                    link={link}
+                    delay={index}
+                    categoryLabel={categoryLabel}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card rounded-2xl p-12 text-center">
+                <Search className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                <p className="text-muted-foreground">「{searchQuery}」に一致するリンクは見つかりませんでした</p>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            key={activeCategory}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            {groupedLinks && Object.keys(groupedLinks).length > 0 ? (
+              <div className="space-y-8">
+                {Object.entries(groupedLinks).map(([group, links]) => (
+                  <div key={group} className="scroll-mt-6">
+                    {/* サブカテゴリの見出し */}
+                    <div className="flex items-center gap-3 mb-4 border-b border-border/50 pb-2">
+                      <div className="w-1.5 h-5 bg-primary rounded-full"></div>
+                      <h3 className="text-lg font-bold text-foreground tracking-tight">{group}</h3>
+                      <span className="text-xs font-medium text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">
+                        {links.length}件
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {links.map((link, index) => (
+                        <LinkCard
+                          key={link.id}
+                          link={link}
+                          delay={index}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="glass-card rounded-2xl p-12 text-center">
-              <LinkIcon className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-              <p className="text-muted-foreground">このカテゴリにはまだリンクがありません</p>
-            </div>
-          )}
-        </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card rounded-2xl p-12 text-center">
+                <LinkIcon className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                <p className="text-muted-foreground">このカテゴリにはまだリンクがありません</p>
+              </div>
+            )}
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Quick Stats */}
