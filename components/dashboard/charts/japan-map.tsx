@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 
-const geoUrl = `/japan.json`;
+// react-simple-maps は生のURL文字列をfetchするため、next/imageと違ってbasePathが自動付与されない
+const geoUrl = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/japan.json`;
 
 interface JapanMapProps {
   data: { name: string; value: number }[];
