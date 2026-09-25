@@ -5,7 +5,10 @@ const basePath = '/kpi-dashboard';
 
 const nextConfig = {
   output: 'export',
-  basePath,
+  // GitHub Actions の actions/configure-pages@v5 が next.config.mjs 内の
+  // basePath 指定を文字列置換で書き換えようとするため、ショートハンド記法
+  // （`basePath,`）だとキー名ごと壊れてしまう。明示的な key: value で書く。
+  basePath: basePath,
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
