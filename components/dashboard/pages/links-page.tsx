@@ -300,9 +300,9 @@ const initialLinkCategories: LinkCategory[] = [
       },
       {
         id: 'selfdev-2',
-        title: 'kodama 発信物ジェネレーター',
+        title: 'kodama',
         url: L('selfdev-2'),
-        description: '',
+        description: '発信物ジェネレーター',
         icon: Sparkles,
         subCategory: ''
       },
