@@ -282,15 +282,30 @@ const initialLinkCategories: LinkCategory[] = [
         description:"イベントページの運営用まとめページ",
         icon: ClipboardClock,
         subCategory:"イベント"
+      }
+    ],
+  },
+  {
+    id: 'selfdev',
+    label: '自主開発ツール',
+    icon: Wrench,
+    links: [
+      {
+        id: 'selfdev-1',
+        title: 'Orbit',
+        url: L('selfdev-1'),
+        description: 'タスク＆人材管理ツール',
+        icon: ClipboardClock,
+        subCategory: ''
       },
       {
-        id:"admin-16",
-        title:"Orbit",
-        url: L('admin-16'),
-        description:"タスク＆人材管理ツール",
-        icon: ClipboardClock,
-        subCategory:"管理"
-      }
+        id: 'selfdev-2',
+        title: 'kodama 発信物ジェネレーター',
+        url: L('selfdev-2'),
+        description: '',
+        icon: Sparkles,
+        subCategory: ''
+      },
     ],
   },
   {
