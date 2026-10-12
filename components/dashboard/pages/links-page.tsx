@@ -41,7 +41,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'general-1',
         title: 'ホーム',
-        url: 'https://fsifofficial.github.io/CosmoBase/',
+        url: 'https://cosmobase.fsif.jp',
         description: 'CBホームページ',
         icon: Home,
         subCategory: 'Webサイト'
@@ -49,7 +49,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'general-7',
         title: 'FSIF HP',
-        url: 'https://fsifofficial.wixsite.com/future-space-industr',
+        url: 'https://www.fsif.jp',
         description: '',
         icon: Home,
         subCategory: 'Webサイト'
@@ -104,7 +104,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'member-1',
         title: '参加者ホーム',
-        url: 'https://cosmo-base.github.io/member_only/',
+        url: 'https://cb-member.fsif.jp',
         description: '参加者向けトップページ',
         icon: Home,
         subCategory: ''
@@ -112,7 +112,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'member-2',
         title: 'CBL',
-        url: 'https://cosmo-base.github.io/library/index.html',
+        url: 'https://cbl.fsif.jp',
         description: 'Cosmo Base Library',
         icon: BookOpen,
         subCategory: ''
@@ -120,7 +120,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'member-3',
         title: 'CBED',
-        url: 'https://cosmo-base.github.io/event_database/',
+        url: 'https://cbed.fsif.jp',
         description: 'Cosmo Base Event Database',
         icon: Calendar,
         subCategory: ''
