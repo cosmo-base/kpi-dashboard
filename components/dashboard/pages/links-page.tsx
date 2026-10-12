@@ -98,7 +98,7 @@ const initialLinkCategories: LinkCategory[] = [
         id: 'general-8',
         title: 'Ohsumi HP',
         url: 'https://ohsumi.fsif.jp',
-        description: '',
+        description: '仕事を進めるほど、組織が見えてくる。組織運営プラットフォーム',
         icon: Home,
         subCategory: 'Webサイト'
       },
@@ -318,7 +318,7 @@ const initialLinkCategories: LinkCategory[] = [
         id: 'selfdev-4',
         title: 'Ohsumiレジストリ',
         url: L('selfdev-4'),
-        description: '',
+        description: 'Ohsumiの団体管理用ページです。',
         icon: Database,
         subCategory: ''
       },
