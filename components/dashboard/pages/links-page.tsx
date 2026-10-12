@@ -318,7 +318,7 @@ const initialLinkCategories: LinkCategory[] = [
         id: 'selfdev-4',
         title: 'Ohsumiレジストリ',
         url: L('selfdev-4'),
-        description: '',
+        description: 'Ohsumiの団体管理用ページです。',
         icon: Database,
         subCategory: ''
       },
