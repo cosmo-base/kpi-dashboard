@@ -41,7 +41,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'general-1',
         title: 'ホーム',
-        url: 'https://fsifofficial.github.io/CosmoBase/',
+        url: 'https://cosmobase.fsif.jp',
         description: 'CBホームページ',
         icon: Home,
         subCategory: 'Webサイト'
@@ -49,7 +49,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'general-7',
         title: 'FSIF HP',
-        url: 'https://fsifofficial.wixsite.com/future-space-industr',
+        url: 'https://www.fsif.jp',
         description: '',
         icon: Home,
         subCategory: 'Webサイト'
@@ -94,6 +94,14 @@ const initialLinkCategories: LinkCategory[] = [
         icon: Users,
         subCategory: ''
       },
+      {
+        id: 'general-8',
+        title: 'Ohsumi HP',
+        url: 'https://ohsumi.fsif.jp',
+        description: '仕事を進めるほど、組織が見えてくる。組織運営プラットフォーム',
+        icon: Home,
+        subCategory: 'Webサイト'
+      },
     ],
   },
   {
@@ -104,7 +112,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'member-1',
         title: '参加者ホーム',
-        url: 'https://cosmo-base.github.io/member_only/',
+        url: 'https://cb-member.fsif.jp',
         description: '参加者向けトップページ',
         icon: Home,
         subCategory: ''
@@ -112,7 +120,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'member-2',
         title: 'CBL',
-        url: 'https://cosmo-base.github.io/library/index.html',
+        url: 'https://cbl.fsif.jp',
         description: 'Cosmo Base Library',
         icon: BookOpen,
         subCategory: ''
@@ -120,7 +128,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'member-3',
         title: 'CBED',
-        url: 'https://cosmo-base.github.io/event_database/',
+        url: 'https://cbed.fsif.jp',
         description: 'Cosmo Base Event Database',
         icon: Calendar,
         subCategory: ''
@@ -128,7 +136,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'member-4',
         title: 'CBMD',
-        url: 'https://cosmo-base.github.io/member_only/CBMD/',
+        url: 'https://cb-member.fsif.jp/CBMD/',
         description: 'Cosmo Base Museum Database',
         icon: Database,
         subCategory: ''
@@ -143,7 +151,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'partner-1',
         title: 'パートナーページ',
-        url: 'https://cosmo-base.github.io/member_only/partner/',
+        url: 'https://cb-member.fsif.jp/partner/',
         description: 'パートナー専用ページ',
         icon: Handshake,
         subCategory: ''
@@ -151,7 +159,7 @@ const initialLinkCategories: LinkCategory[] = [
       {
         id: 'partner-2',
         title: 'パートナー申請',
-        url: 'https://cosmo-base.github.io/member_only/partner/join/',
+        url: 'https://cb-member.fsif.jp/partner/join/',
         description: 'パートナー申請フォーム',
         icon: UserPlus,
         subCategory: ''
@@ -291,19 +299,27 @@ const initialLinkCategories: LinkCategory[] = [
     icon: Wrench,
     links: [
       {
-        id: 'selfdev-1',
-        title: 'Orbit',
-        url: L('selfdev-1'),
-        description: 'タスク＆人材管理ツール',
-        icon: ClipboardClock,
-        subCategory: ''
-      },
-      {
         id: 'selfdev-2',
         title: 'kodama',
         url: L('selfdev-2'),
         description: '発信物ジェネレーター',
         icon: Sparkles,
+        subCategory: ''
+      },
+      {
+        id: 'selfdev-3',
+        title: 'FSIFのOhsumi',
+        url: L('selfdev-3'),
+        description: '',
+        icon: Building,
+        subCategory: ''
+      },
+      {
+        id: 'selfdev-4',
+        title: 'Ohsumiレジストリ',
+        url: L('selfdev-4'),
+        description: 'Ohsumiの団体管理用ページです。',
+        icon: Database,
         subCategory: ''
       },
     ],
