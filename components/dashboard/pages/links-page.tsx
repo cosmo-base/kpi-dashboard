@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Papa from 'papaparse';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link as LinkIcon,ClipboardClock,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,Search,type LucideIcon} from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,783 +23,48 @@ interface LinkCategory {
   links: LinkItem[];
 }
 
-const LINK_URLS: Record<string, string> = (() => {
-  try {
-    return JSON.parse(process.env.NEXT_PUBLIC_KPI_LINK_URLS ?? '{}');
-  } catch {
-    return {};
-  }
-})();
+// スプレッドシートの icon 列の値 → 実際のアイコンコンポーネント。
+// 新しい値を使いたい場合はここに追加する（未登録の名前は LinkIcon にフォールバック）。
+const ICON_MAP: Record<string, LucideIcon> = {
+  Link: LinkIcon,
+  ClipboardClock,
+  LayoutList,
+  ChartSpline,
+  Building,
+  Users,
+  Handshake,
+  Settings,
+  Home,
+  Database,
+  Calendar,
+  BookOpen,
+  FileText,
+  UserPlus,
+  FolderOpen,
+  BarChart3,
+  HelpCircle,
+  Image,
+  Wrench,
+  X,
+  Focus,
+  Notebook,
+  SquarePlay,
+  FolderGit,
+  Sparkles,
+};
 
-const L = (id: string) => LINK_URLS[id] ?? '';
-
-const initialLinkCategories: LinkCategory[] = [
-  {
-    id: 'general',
-    label: '一般',
-    icon: Users,
-    links: [
-      {
-        id: 'general-1',
-        title: 'ホーム',
-        url: 'https://cosmobase.fsif.jp',
-        description: 'CBホームページ',
-        icon: Home,
-        subCategory: 'Webサイト'
-      },
-      {
-        id: 'general-7',
-        title: 'FSIF HP',
-        url: 'https://www.fsif.jp',
-        description: '',
-        icon: Home,
-        subCategory: 'Webサイト'
-      },
-      {
-        id: 'general-2',
-        title: 'X',
-        url: 'https://x.com/CosmoBase',
-        description: 'CB X',
-        icon: X,
-        subCategory: 'SNS'
-      },
-      {
-        id: 'general-3',
-        title: 'Instagram',
-        url: 'https://www.instagram.com/cosmobase.official',
-        description: 'CB Instagram',
-        icon: Focus,
-        subCategory: 'SNS'
-      },
-      {
-        id: 'general-4',
-        title: 'note',
-        url: 'https://note.com/cosmobase',
-        description: 'CB note',
-        icon: Notebook,
-        subCategory: 'SNS'
-      },
-      {
-        id: 'general-5',
-        title: 'YouTube',
-        url: 'https://www.youtube.com/channel/UC3bcWCM6ccvsyQyiXLIwhkQ',
-        description: 'CB YouTube',
-        icon: SquarePlay,
-        subCategory: 'SNS'
-      },
-      {
-        id: 'general-6',
-        title: 'Peatix',
-        url: 'https://peatix.com/user/29355410/dashboard',
-        description: '',
-        icon: Users,
-        subCategory: ''
-      },
-      {
-        id: 'general-8',
-        title: 'Ohsumi HP',
-        url: 'https://ohsumi.fsif.jp',
-        description: '仕事を進めるほど、組織が見えてくる。組織運営プラットフォーム',
-        icon: Home,
-        subCategory: 'Webサイト'
-      },
-    ],
-  },
-  {
-    id: 'member',
-    label: '参加者',
-    icon: Users,
-    links: [
-      {
-        id: 'member-1',
-        title: '参加者ホーム',
-        url: 'https://cb-member.fsif.jp',
-        description: '参加者向けトップページ',
-        icon: Home,
-        subCategory: ''
-      },
-      {
-        id: 'member-2',
-        title: 'CBL',
-        url: 'https://cbl.fsif.jp',
-        description: 'Cosmo Base Library',
-        icon: BookOpen,
-        subCategory: ''
-      },
-      {
-        id: 'member-3',
-        title: 'CBED',
-        url: 'https://cbed.fsif.jp',
-        description: 'Cosmo Base Event Database',
-        icon: Calendar,
-        subCategory: ''
-      },
-      {
-        id: 'member-4',
-        title: 'CBMD',
-        url: 'https://cb-member.fsif.jp/CBMD/',
-        description: 'Cosmo Base Museum Database',
-        icon: Database,
-        subCategory: ''
-      },
-    ],
-  },
-  {
-    id: 'partner',
-    label: 'パートナー',
-    icon: Handshake,
-    links: [
-      {
-        id: 'partner-1',
-        title: 'パートナーページ',
-        url: 'https://cb-member.fsif.jp/partner/',
-        description: 'パートナー専用ページ',
-        icon: Handshake,
-        subCategory: ''
-      },
-      {
-        id: 'partner-2',
-        title: 'パートナー申請',
-        url: 'https://cb-member.fsif.jp/partner/join/',
-        description: 'パートナー申請フォーム',
-        icon: UserPlus,
-        subCategory: ''
-      },
-    ],
-  },
-  {
-    id: 'admin',
-    label: '運営',
-    icon: Settings,
-    links: [
-      {
-        id: 'admin-1',
-        title: 'コミュニティードライブ',
-        url: L('admin-1'),
-        description: '運営共有ドライブ',
-        icon: FolderOpen,
-        subCategory: 'ドライブ・資料'
-      },
-      {
-        id: 'admin-11',
-        title: '初期のブランディング',
-        url: L('admin-11'),
-        description: '',
-        icon: Building,
-        subCategory: 'ドライブ・資料'
-      },
-      {
-        id: 'admin-2',
-        title: '招待リンク一覧',
-        url: L('admin-2'),
-        description: 'コミュニティ招待リンクの管理',
-        icon: LinkIcon,
-        subCategory: '管理・運用シート'
-      },
-      {
-        id: 'admin-5',
-        title: 'パートナー営業',
-        url: L('admin-5'),
-        description: '',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'admin-10',
-        title: 'パートナー営業資料',
-        url: L('admin-10'),
-        description: '',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'admin-6',
-        title: 'パートナー公開チェックリスト',
-        url: L('admin-6'),
-        description: '',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'admin-12',
-        title: 'パートナー申請データ',
-        url: L('admin-12'),
-        description: 'パートナー申請の管理シート',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'admin-7',
-        title: '宇宙知っトク進捗確認',
-        url: L('admin-7'),
-        description: '',
-        icon: FileText,
-        subCategory: '宇宙知っトク'
-      },
-      {
-        id: 'admin-3',
-        title: 'SNS投稿テンプレート',
-        url: L('admin-3'),
-        description: 'SNS投稿用のテンプレート集',
-        icon: FileText,
-        subCategory: 'SNS'
-      },
-      {
-        id: 'admin-8',
-        title: 'Instagramビジネス投稿(Cosmo Base)',
-        url: L('admin-8'),
-        description: '',
-        icon: Focus,
-        subCategory: 'SNS'
-      },
-      {
-        id: 'admin-9',
-        title: 'Instagramビジネス投稿(FSIF)',
-        url: L('admin-9'),
-        description: '',
-        icon: Focus,
-        subCategory: 'SNS'
-      },
-      {
-        id: 'admin-4',
-        title: 'Union',
-        url: L('admin-4'),
-        description: '',
-        icon: Building,
-        subCategory: ''
-      },
-      {
-        id: "admin-13",
-        title: "自動化率計算",
-        url: L('admin-13'),
-        description:"",
-        icon: Building,
-        subCategory:"管理・運用シート"
-      },
-      {
-        id:"admin-14",
-        title:"STAT BOT",
-        url: L('admin-14'),
-        description:"Discord分析BOT メンバー数カウント",
-        icon: Users,
-        subCategory:"Discord"
-      },
-      {
-        id:"admin-15",
-        title:"運営用イベントページ一覧",
-        url: L('admin-15'),
-        description:"イベントページの運営用まとめページ",
-        icon: ClipboardClock,
-        subCategory:"イベント"
-      }
-    ],
-  },
-  {
-    id: 'selfdev',
-    label: '自主開発ツール',
-    icon: Wrench,
-    links: [
-      {
-        id: 'selfdev-2',
-        title: 'kodama',
-        url: L('selfdev-2'),
-        description: '発信物ジェネレーター',
-        icon: Sparkles,
-        subCategory: ''
-      },
-      {
-        id: 'selfdev-3',
-        title: 'FSIFのOhsumi',
-        url: L('selfdev-3'),
-        description: '',
-        icon: Building,
-        subCategory: ''
-      },
-      {
-        id: 'selfdev-4',
-        title: 'Ohsumiレジストリ',
-        url: L('selfdev-4'),
-        description: 'Ohsumiの団体管理用ページです。',
-        icon: Database,
-        subCategory: ''
-      },
-    ],
-  },
-  {
-    id: 'admin2',
-    label: '開発',
-    icon: Settings,
-    links: [
-      {
-        id: 'admin2-1',
-        title: 'FSIF Github',
-        url: 'https://github.com/FSIFofficial',
-        description: 'CBHP,AIBot',
-        icon: FolderGit,
-        subCategory: ''
-      },
-      {
-        id: 'admin2-2',
-        title: 'CB Github',
-        url: 'https://github.com/cosmo-base/',
-        description: '参加者、CBL、KPI,CBBot',
-        icon: FolderGit,
-        subCategory: ''
-      },
-      {
-        id: 'admin2-3',
-        title: 'FSIF HP 編集',
-        url: 'https://manage.wix.com/dashboard/5676783d-ee0f-4707-a11d-e960efead3e1/setup?referralInfo=my-sites',
-        description: '',
-        icon: FolderGit,
-        subCategory: ''
-      },
-      {
-        id: 'admin2-4',
-        title: 'CBHP analytics',
-        url: 'https://analytics.google.com/analytics/web/?utm_source=marketingplatform.google.com&utm_medium=et&utm_campaign=marketingplatform.google.com%2Fabout%2Fanalytics%2F#/a385612556p525984972/reports/intelligenthome?params=_u..nav%3Dmaui',
-        description: 'GA4解析ツール',
-        icon: ChartSpline,
-        subCategory: ''
-      },
-      {
-        id: 'admin2-5',
-        title: 'CB参加者ページ analytics',
-        url: 'https://analytics.google.com/analytics/web/?utm_source=marketingplatform.google.com&utm_medium=et&utm_campaign=marketingplatform.google.com%2Fabout%2Fanalytics%2F#/a385612556p541593058/reports/intelligenthome?params=_u..nav%3Dmaui',
-        description: 'GA4解析ツール',
-        icon: ChartSpline,
-        subCategory: ''
-      },
-      {
-        id: 'admin2-6',
-        title: 'パートナーロゴ格納箱',
-        url: 'https://supabase.com/dashboard/project/oqomwuhrvqoozfujgtsj/storage/files/buckets/library',
-        description: '',
-        icon: FolderGit,
-        subCategory: ''
-      },
-    ],
-  },
-  {
-    id: 'manage',
-    label: '原本',
-    icon: Wrench,
-    links: [
-      {
-        id: 'manage-1',
-        title: 'KPI',
-        url: L('manage-1'),
-        description: 'KPIデータの原本（Discord,SNS）',
-        icon: BarChart3,
-        subCategory: 'Discord, SNS'
-      },
-      {
-        id: 'manage-2',
-        title: 'クイズ総回答数',
-        url: L('manage-2'),
-        description: '宇宙クイズの回答データ',
-        icon: HelpCircle,
-        subCategory: '毎日宇宙クイズ'
-      },
-      {
-        id: 'manage-3',
-        title: 'CBL',
-        url: L('manage-3'),
-        description: 'CBLの原本スプレッドシート',
-        icon: FileText,
-        subCategory: 'CBL'
-      },
-      {
-        id: 'manage-4',
-        title: 'CBED原本',
-        url: L('manage-4'),
-        description: 'CBEDの原本スプレッドシート、ロケット打ち上げ',
-        icon: FileText,
-        subCategory: 'CBED'
-      },
-      {
-        id: 'manage-5',
-        title: 'CBMD原本',
-        url: L('manage-5'),
-        description: 'CBMDの原本',
-        icon: Database,
-        subCategory: 'CBMD'
-      },
-      {
-        id: 'manage-6',
-        title: 'パートナー一覧',
-        url: L('manage-6'),
-        description: 'CBHPパートナーデータ',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'manage-7',
-        title: 'パートナー分析',
-        url: L('manage-7'),
-        description: 'パートナーデータ',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'manage-11',
-        title: 'CBHP分析',
-        url: L('manage-11'),
-        description: 'GA4からとってきたCBHPトラッキングデータ',
-        icon: FileText,
-        subCategory: 'CBHP'
-      },
-      {
-        id: 'manage-8',
-        title: '宇宙タイプ診断簡易版データ(CBHP)',
-        url: L('manage-8'),
-        description: '宇宙タイプ診断 簡易版診断データ',
-        icon: Sparkles,
-        subCategory: '宇宙タイプ診断'
-      },
-      {
-        id: 'manage-9',
-        title: '宇宙タイプ診断簡易版データ(参加者)',
-        url: L('manage-9'),
-        description: '宇宙タイプ診断 簡易版診断データ',
-        icon: Sparkles,
-        subCategory: '宇宙タイプ診断'
-      },
-      {
-        id: 'manage-10',
-        title: '宇宙タイプ診断詳細版診断データ',
-        url: L('manage-10'),
-        description: '宇宙タイプ診断 完全版診断データ',
-        icon: Sparkles,
-        subCategory: '宇宙タイプ診断'
-      },
-      {
-        id: 'manage-12',
-        title: '行ってきた スプレッドシート',
-        url: L('manage-12'),
-        description: '行ってきた管理リスト(参加者ページ反映)',
-        icon: Database,
-        subCategory: '行ってきた'
-      },
-      {
-        id: 'manage-13',
-        title: '宇宙知っトク進捗確認 スプレッドシート',
-        url: L('manage-13'),
-        description: '知っトク管理リスト(参加者ページ反映)',
-        icon: Database,
-        subCategory: '宇宙知っトク'
-      },
-      {
-        id: 'manage-14',
-        title: 'Cosmo Match 日本のロケット編 スプレッドシート',
-        url: L('manage-14'),
-        description: '',
-        icon: Database,
-        subCategory: 'Cosmo Match'
-      },
-      {
-        id: 'manage-15',
-        title: 'Cosmo Match 88星座編 スプレッドシート',
-        url: L('manage-15'),
-        description: '',
-        icon: Database,
-        subCategory: 'Cosmo Match'
-      },
-      {
-        id: 'manage-16',
-        title: '宇宙用語集 スプレッドシート',
-        url: L('manage-16'),
-        description: '',
-        icon: Database,
-        subCategory: '宇宙用語集'
-      },
-      {
-        id: 'manage-17',
-        title: '参加者ページGA4 スプレッドシート',
-        url: L('manage-17'),
-        description: '',
-        icon: Database,
-        subCategory: '参加者ページ'
-      },
-    ]
-  },
-  {
-    id: 'form',
-    label: 'フォーム',
-    icon: LayoutList,
-    links: [
-      {
-        id: 'form-1',
-        title: 'CosmoBase お問い合わせ',
-        url: L('form-1'),
-        description: 'CBHP お問い合わせ',
-        icon: LayoutList,
-        subCategory: 'お問い合わせ'
-      },
-      {
-        id: 'form-2',
-        title: 'Cosmo Base パートナー制度 お問い合わせ',
-        url: L('form-2'),
-        description: 'CBHP パートナーお問い合わせ',
-        icon: LayoutList,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'form-3',
-        title: 'パートナー申請データ',
-        url: L('form-3'),
-        description: 'パートナー申請の管理シート',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'form-4',
-        title: 'パートナー修正データ',
-        url: L('form-4'),
-        description: 'パートナーページ 修正データ',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'form-5',
-        title: 'CBLパートナー資料格納',
-        url: L('form-5'),
-        description: 'パートナーページ CBL資料格納申請フォーム',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'form-8',
-        title: 'アンケート確認',
-        url: L('form-8'),
-        description: 'パートナーページ アンケート確認フォーム',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'form-6',
-        title: 'イベント登壇申請データ',
-        url: L('form-6'),
-        description: 'パートナーページ 知っトク登壇申請フォーム',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'form-7',
-        title: 'メンバー申請',
-        url: L('form-7'),
-        description: 'パートナーページ メンバー申請フォーム',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'form-9',
-        title: 'Cosmo Base 匿名質問フォーム',
-        url: L('form-9'),
-        description: '参加者ページ 宇宙教えて 匿名質問フォーム',
-        icon: LayoutList,
-        subCategory: '宇宙教えて'
-      },
-      {
-        id: 'form-10',
-        title: 'イベント登録',
-        url: L('form-10'),
-        description: '参加者ページ CBED イベント追加フォーム',
-        icon: LayoutList,
-        subCategory: 'CBED'
-      },
-      {
-        id: 'form-11',
-        title: 'イベントテーマ希望フォーム',
-        url: L('form-11'),
-        description: '参加者ページ 宇宙知っトク リクエストフォーム',
-        icon: LayoutList,
-        subCategory: '宇宙知っトク'
-      },
-      {
-        id: 'form-12',
-        title: '宇宙知っトク 参加後アンケート',
-        url: L('form-12'),
-        description: '',
-        icon: LayoutList,
-        subCategory: '宇宙知っトク'
-      },
-      {
-        id: 'form-13',
-        title: 'CBMDお問い合わせ',
-        url: L('form-13'),
-        description: '参加者ページ CBMD お問い合わせフォーム',
-        icon: LayoutList,
-        subCategory: 'CBMD'
-      },
-    ]
-  },
-  {
-    id: 'design',
-    label: 'デザイン',
-    icon: Image,
-    links: [
-      {
-        id: 'design-3',
-        title: 'Instagram_汎用投稿_デザイン',
-        url: L('design-3'),
-        description: '',
-        icon: Image,
-        subCategory: 'SNS投稿用'
-      },
-      {
-        id: 'design-4',
-        title: 'Instagram_クイズ投稿_デザイン',
-        url: L('design-4'),
-        description: '',
-        icon: Image,
-        subCategory: 'SNS投稿用'
-      },
-      {
-        id: 'design-11',
-        title: '宇宙クイズ_問題&回答_デザイン',
-        url: L('design-11'),
-        description: '',
-        icon: Image,
-        subCategory: 'SNS投稿用'
-      },
-      {
-        id: 'design-14',
-        title: 'パートナー締結_サブ(Instagram)デザイン',
-        url: L('design-14'),
-        description: '',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'design-1',
-        title: 'Instagram_イベント投稿_デザイン',
-        url: L('design-1'),
-        description: '',
-        icon: Image,
-        subCategory: 'SNS投稿用'
-      },
-      {
-        id: 'design-2',
-        title: '宇宙知っトク_座談会用当日_資料',
-        url: L('design-2'),
-        description: '',
-        icon: Image,
-        subCategory: '資料・カバー画像'
-      },
-      {
-        id: 'design-6',
-        title: 'FSIF&CB_新歓_資料',
-        url: L('design-6'),
-        description: '',
-        icon: Image,
-        subCategory: '資料・カバー画像'
-      },
-      {
-        id: 'design-9',
-        title: '週間宇宙ニュース_表紙デザイン',
-        url: L('design-9'),
-        description: '',
-        icon: Image,
-        subCategory: '資料・カバー画像'
-      },
-      {
-        id: 'design-10',
-        title: 'note_コンテンツ紹介_デザイン',
-        url: L('design-10'),
-        description: '',
-        icon: Image,
-        subCategory: '資料・カバー画像'
-      },
-      {
-        id: 'design-13',
-        title: '宇宙知っトク_表紙_デザイン',
-        url: L('design-13'),
-        description: '',
-        icon: Image,
-        subCategory: '資料・カバー画像'
-      },
-      {
-        id: 'design-5',
-        title: 'CB_メイン背景_デザイン',
-        url: L('design-5'),
-        description: '',
-        icon: Image,
-        subCategory: 'ブランディング・宣伝'
-      },
-      {
-        id: 'design-7',
-        title: 'パートナー締結_メインデザイン',
-        url: L('design-7'),
-        description: '',
-        icon: Handshake,
-        subCategory: 'パートナー'
-      },
-      {
-        id: 'design-8',
-        title: 'CBMDコンテンツ紹介_投稿用デザイン',
-        url: L('design-8'),
-        description: '',
-        icon: Image,
-        subCategory: 'ブランディング・宣伝'
-      },
-      {
-        id: 'design-12',
-        title: 'プレスリリース_表紙_デザイン',
-        url: L('design-12'),
-        description: '',
-        icon: Image,
-        subCategory: 'ブランディング・宣伝'
-      },
-    ],
-  },
-  {
-    id: 'external',
-    label: '外部資料',
-    icon: Building,
-    links: [
-      {
-        id: 'external-1',
-        title: '宇宙システム株式会社_宇宙関連のイベント',
-        url: 'https://space-sd.co.jp/symposium/symposium.html',
-        description: '',
-        icon: Building,
-        subCategory: ''
-      },
-      {
-        id: 'external-2',
-        title: '空畑',
-        url: 'https://sorabatake.jp/',
-        description: '',
-        icon: Building,
-        subCategory: ''
-      },
-      {
-        id: 'external-3',
-        title: 'sorae',
-        url: 'https://sorae.info/',
-        description: '',
-        icon: Building,
-        subCategory: ''
-      },
-      {
-        id: 'external-4',
-        title: 'SpaceMedia',
-        url: 'https://spacemedia.jp/',
-        description: '',
-        icon: Building,
-        subCategory: ''
-      },
-      {
-        id: 'external-5',
-        title: 'SPACE CONNECT',
-        url: 'https://space-connect.jp/',
-        description: '',
-        icon: Building,
-        subCategory: ''
-      },
-    ],
-  },
+// タブ（カテゴリ）の並び順・ラベル・アイコンはここで固定。中身のリンク一覧はスプレッドシートから取得する。
+const CATEGORY_META: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: 'general', label: '一般', icon: Users },
+  { id: 'member', label: '参加者', icon: Users },
+  { id: 'partner', label: 'パートナー', icon: Handshake },
+  { id: 'admin', label: '運営', icon: Settings },
+  { id: 'selfdev', label: '自主開発ツール', icon: Wrench },
+  { id: 'admin2', label: '開発', icon: Settings },
+  { id: 'manage', label: '原本', icon: Wrench },
+  { id: 'form', label: 'フォーム', icon: LayoutList },
+  { id: 'design', label: 'デザイン', icon: Image },
+  { id: 'external', label: '外部資料', icon: Building },
 ];
 
 function LinkCard({
@@ -915,11 +181,52 @@ function LinkCard({
 }
 
 export function LinksPage() {
+  const [categories, setCategories] = useState<LinkCategory[] | null>(null);
   const [activeCategory, setActiveCategory] = useState('general');
   const [searchQuery, setSearchQuery] = useState('');
   const isSearching = searchQuery.trim().length > 0;
 
-  const currentCategory = initialLinkCategories.find((cat) => cat.id === activeCategory);
+  useEffect(() => {
+    const csvUrl = process.env.NEXT_PUBLIC_KPI_LINKS_CSV_URL ?? '';
+
+    fetch(csvUrl)
+      .then((res) => res.text())
+      .then((csvText) => {
+        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+        const rows = parsed.data as Record<string, string>[];
+
+        const linksByCategory = new Map<string, LinkItem[]>();
+        rows.forEach((row) => {
+          const categoryId = String(row.category || '').trim();
+          const id = String(row.id || '').trim();
+          const url = String(row.url || '').trim();
+          if (!categoryId || !id || !url) return;
+
+          if (!linksByCategory.has(categoryId)) linksByCategory.set(categoryId, []);
+          linksByCategory.get(categoryId)!.push({
+            id,
+            title: String(row.title || '').trim(),
+            url,
+            description: String(row.description || '').trim(),
+            icon: ICON_MAP[String(row.icon || '').trim()] ?? LinkIcon,
+            subCategory: String(row.subCategory || '').trim(),
+          });
+        });
+
+        setCategories(
+          CATEGORY_META.map((meta) => ({
+            ...meta,
+            links: linksByCategory.get(meta.id) ?? [],
+          }))
+        );
+      })
+      .catch((err) => {
+        console.error('Link Data Load Error:', err);
+        setCategories(CATEGORY_META.map((meta) => ({ ...meta, links: [] })));
+      });
+  }, []);
+
+  const currentCategory = categories?.find((cat) => cat.id === activeCategory);
 
   // 選択されたタブのリンクをサブカテゴリでグループ化
   const groupedLinks = currentCategory?.links.reduce((acc, link) => {
@@ -931,9 +238,9 @@ export function LinksPage() {
 
   // タブを問わず全カテゴリのリンクからタイトル・説明・URLで検索
   const searchResults = (() => {
-    if (!isSearching) return [];
+    if (!isSearching || !categories) return [];
     const q = searchQuery.trim().toLowerCase();
-    return initialLinkCategories.flatMap((category) =>
+    return categories.flatMap((category) =>
       category.links
         .filter(
           (link) =>
@@ -944,6 +251,17 @@ export function LinksPage() {
         .map((link) => ({ link, categoryLabel: category.label }))
     );
   })();
+
+  if (!categories) {
+    return (
+      <div className="flex h-[400px] items-center justify-center text-muted-foreground">
+        <div className="animate-pulse flex items-center gap-2">
+          <LinkIcon className="h-5 w-5" />
+          <span>リンクデータを読み込み中...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -988,7 +306,7 @@ export function LinksPage() {
 
       {/* Sub-tabs (Main Categories) */}
       <div className={cn('flex gap-2 flex-wrap', isSearching && 'opacity-50 pointer-events-none')}>
-        {initialLinkCategories.map((category) => {
+        {categories.map((category) => {
           const Icon = category.icon;
           const isActive = activeCategory === category.id;
 
@@ -1105,7 +423,7 @@ export function LinksPage() {
       <div className="glass-card rounded-2xl p-6">
         <h3 className="font-semibold text-foreground mb-4">リンク統計</h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          {initialLinkCategories.map((cat) => {
+          {categories.map((cat) => {
             const Icon = cat.icon;
             return (
               <div key={cat.id} className="flex items-center gap-3">
