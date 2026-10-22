@@ -19,6 +19,7 @@ import { MatchPage } from "./pages/match-page";
 import { AutomationPage } from "./pages/automation-page";
 import { ParticipantsPage } from "./pages/participants-page";
 import { OverviewPage } from "./pages/overview-page";
+import { SpacecraftPage } from "./pages/spacecraft-page";
 
 const dashboardTabs = [
   { id: 'community', label: 'Discord' },
@@ -34,6 +35,7 @@ const dashboardTabs = [
   { id: 'space-diagnosis', label: '宇宙タイプ診断' },
   { id: 'shittoku', label: '宇宙知っトク' },
   { id: 'match', label: 'Cosmo Match' },
+  { id: "spacecraft", label: "宇宙機シミュレーター" },
   { id: 'links', label: 'リンク' },
 ];
 
@@ -62,7 +64,8 @@ const tabGroups = [
       { id: "cbl", label: "CBL" },
       { id: "space-diagnosis", label: "宇宙タイプ診断" },
       { id: "shittoku", label: "宇宙知っトク" },
-      { id: "match", label: "Cosmo Match" }
+      { id: "match", label: "Cosmo Match" },
+      { id: "spacecraft", label: "宇宙機シミュレーター" },
     ],
   },
   {
@@ -151,6 +154,8 @@ export function Dashboard() {
         return <LinksPage />;
       case "match":
         return <MatchPage />;
+      case "spacecraft":
+        return <SpacecraftPage />;
       default:
         return <Discord />;
     }
