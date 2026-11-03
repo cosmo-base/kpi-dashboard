@@ -35,7 +35,6 @@ import { ScrollableTable } from "../scrollable-table";
 import { LineChartComponent } from "../charts/line-chart";
 import { LinearChartComponent } from "../charts/linear-chart";
 import { DonutChart } from "../charts/donut-chart";
-import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { Button } from "@/components/ui/button";
 import { cn, getJSTDate } from "@/lib/utils";
 import { RegressionProjectionSection } from "../regression-projection-section";
@@ -1502,9 +1501,9 @@ export function SpaceQuizPage() {
         >
           <ChartContainer height="h-[300px]">
             {charts.milestoneHistory && charts.milestoneHistory.length > 0 ? (
-              <StackedBarChart
+              <LinearChartComponent
                 data={charts.milestoneHistory}
-                bars={[
+                lines={[
                   { dataKey: "days", name: "到達までの日数", color: "#38BDF8" },
                 ]}
               />
