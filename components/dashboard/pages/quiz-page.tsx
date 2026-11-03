@@ -35,6 +35,7 @@ import { ScrollableTable } from "../scrollable-table";
 import { LineChartComponent } from "../charts/line-chart";
 import { LinearChartComponent } from "../charts/linear-chart";
 import { DonutChart } from "../charts/donut-chart";
+import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { Button } from "@/components/ui/button";
 import { cn, getJSTDate } from "@/lib/utils";
 import { RegressionProjectionSection } from "../regression-projection-section";
@@ -682,6 +683,28 @@ export function SpaceQuizPage() {
           }
         }
 
+        // ★ 新設：回答数が100件増えるごとにかかった日数の推移
+        const MILESTONE_SIZE = 100;
+        const milestoneHistory: { name: string; days: number; date: string }[] =
+          [];
+        {
+          let milestoneIdx = 1;
+          let prevDayIndex = -1;
+          trendData.forEach((day, i) => {
+            while (day.累計_全体 >= milestoneIdx * MILESTONE_SIZE) {
+              const rangeStart = (milestoneIdx - 1) * MILESTONE_SIZE + 1;
+              const rangeEnd = milestoneIdx * MILESTONE_SIZE;
+              milestoneHistory.push({
+                name: `${rangeStart}〜${rangeEnd}`,
+                days: i - prevDayIndex,
+                date: day.name,
+              });
+              prevDayIndex = i;
+              milestoneIdx++;
+            }
+          });
+        }
+
         const monthlyRate =
           endOfPrevMonthCum === 0
             ? 100
@@ -1081,6 +1104,7 @@ export function SpaceQuizPage() {
             weeklyTypeTrend,
             quizMonthlyTrend,
             quizWeeklyTrend,
+            milestoneHistory,
           },
           tables: {
             questionRanking: tableDataRaw,
@@ -1092,6 +1116,7 @@ export function SpaceQuizPage() {
             thisWeekTypeTable,
             quizMonthlyTable,
             quizWeeklyTable,
+            milestoneHistory,
           },
           growthHistory,
         });
@@ -1468,6 +1493,39 @@ export function SpaceQuizPage() {
               </div>
             )}
           </ChartContainer>
+        </SectionCard>
+
+        <SectionCard
+          title="100問回答ごとの到達日数推移"
+          description="累計回答数が100件増えるごとにかかった日数の推移(短くなっていれば加速、長くなっていれば減速)"
+          icon={BarChart2}
+        >
+          <ChartContainer height="h-[300px]">
+            {charts.milestoneHistory && charts.milestoneHistory.length > 0 ? (
+              <StackedBarChart
+                data={charts.milestoneHistory}
+                bars={[
+                  { dataKey: "days", name: "到達までの日数", color: "#38BDF8" },
+                ]}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                累計回答数がまだ100件に達していません
+              </div>
+            )}
+          </ChartContainer>
+          {tables.milestoneHistory && tables.milestoneHistory.length > 0 && (
+            <ScrollableTable
+              columns={[
+                { key: "name", label: "回答数の区間", align: "left" },
+                { key: "date", label: "到達日", align: "right" },
+                { key: "daysStr", label: "かかった日数", align: "right" },
+              ]}
+              data={[...tables.milestoneHistory]
+                .reverse()
+                .map((row: any) => ({ ...row, daysStr: `${row.days}日` }))}
+            />
+          )}
         </SectionCard>
 
         <div className="bg-secondary/20 p-4 rounded-2xl border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
