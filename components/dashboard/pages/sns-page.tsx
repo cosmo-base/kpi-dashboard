@@ -14,6 +14,7 @@ import { ScrollableTable } from "../scrollable-table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { GrowthProjectionSection } from "../growth-projection-section";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
@@ -64,9 +65,9 @@ export function SNSPage() {
     useState<ChartFilterMode>("total");
 
   useEffect(() => {
-    const csvUrl = process.env.NEXT_PUBLIC_KPI_SNS_CSV_URL ?? "";
+    const csvUrl = kpiSource("SNS");
 
-    fetch(csvUrl)
+    kpiFetch(csvUrl)
       .then((response) => response.text())
       .then((csvText) => {
         const parsed = Papa.parse(csvText, { skipEmptyLines: true });

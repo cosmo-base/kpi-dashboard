@@ -20,14 +20,15 @@ import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { ScrollableTable } from "../scrollable-table";
 import { GrowthProjectionSection } from "../growth-projection-section";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 export function ShittokuPage() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    const csvUrl = process.env.NEXT_PUBLIC_KPI_SHITTOKU_CSV_URL ?? "";
+    const csvUrl = kpiSource("SHITTOKU");
 
-    fetch(csvUrl)
+    kpiFetch(csvUrl)
       .then((response) => response.text())
       .then((csvText) => {
         const parsed = Papa.parse(csvText, { skipEmptyLines: true });

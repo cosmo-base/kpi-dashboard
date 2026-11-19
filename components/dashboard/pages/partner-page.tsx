@@ -19,6 +19,7 @@ import { ChartContainer } from "../chart-container";
 import { ScrollableTable } from "../scrollable-table";
 import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 // カテゴリ用カラーパレット
 const CATEGORY_COLORS: Record<string, string> = {
@@ -33,9 +34,9 @@ export function PartnerPage() {
 
   useEffect(() => {
     // パートナー連絡リストのCSV URL
-    const csvUrl = process.env.NEXT_PUBLIC_KPI_PARTNER_CSV_URL ?? "";
+    const csvUrl = kpiSource("PARTNER");
     
-    fetch(csvUrl)
+    kpiFetch(csvUrl)
       .then((response) => response.text())
       .then((csvText) => {
         const parsed = Papa.parse(csvText, {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RefreshCcw, Cloud } from "lucide-react";
+import { RefreshCcw, Cloud, LogOut } from "lucide-react";
+import { useAuth } from "@/components/auth-gate";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -18,6 +19,7 @@ export function DashboardHeader({
   onRefresh,
 }: DashboardHeaderProps) {
   const [formattedDate, setFormattedDate] = useState<string>("-");
+  const auth = useAuth();
 
   useEffect(() => {
     if (!lastUpdated) {
@@ -86,6 +88,25 @@ export function DashboardHeader({
               />
               <span className="hidden sm:inline">更新</span>
             </Button>
+
+            {/* ログインしている人 */}
+            {auth && (
+              <div className="flex items-center gap-2">
+                <span className="hidden lg:inline text-xs text-muted-foreground" title={auth.me.email}>
+                  {auth.me.name} さん
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={auth.logout}
+                  className="gap-2"
+                  aria-label="ログアウト"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">ログアウト</span>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

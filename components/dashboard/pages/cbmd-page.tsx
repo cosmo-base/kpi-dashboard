@@ -11,6 +11,7 @@ import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { Button } from "@/components/ui/button";
 import { cn, getJSTDate } from "@/lib/utils";
 import { JapanMap } from "../charts/japan-map";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 const REGION_MAP: Record<string, string> = {
   北海道: "北海道",
@@ -72,9 +73,9 @@ export function CBMDPage() {
   const [mapViewMode, setMapViewMode] = useState<"total">("total");
 
   useEffect(() => {
-    const csvUrl = process.env.NEXT_PUBLIC_KPI_CBMD_CSV_URL ?? "";
+    const csvUrl = kpiSource("CBMD");
 
-    fetch(csvUrl)
+    kpiFetch(csvUrl)
       .then((response) => response.text())
       .then((csvText) => {
         const parsed = Papa.parse(csvText, { skipEmptyLines: true });

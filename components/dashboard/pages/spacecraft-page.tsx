@@ -101,11 +101,12 @@ import {
   type Filter,
   type Play,
 } from "@/lib/spacecraft-analysis";
+import { ApiError, kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 // プレイデータ（スプレッドシート play シート）の公開CSV
-const CSV_URL = process.env.NEXT_PUBLIC_KPI_SPACECRAFT_CSV_URL ?? "";
-// 途中でやめたプレイの到達地点（progress シート）の公開CSV。未設定なら離脱の分析だけ表示しない
-const PROGRESS_CSV_URL = process.env.NEXT_PUBLIC_KPI_SPACECRAFT_PROGRESS_CSV_URL ?? "";
+const CSV_URL = kpiSource("SPACECRAFT");
+// 途中でやめたプレイの到達地点（progress シート）の公開CSV。GAS に未設定なら離脱の分析だけ表示しない
+const PROGRESS_CSV_URL = kpiSource("SPACECRAFT_PROGRESS");
 // 元データのスプレッドシート（閲覧権限のある人だけが開ける編集用URL）。空なら「元データ」ボタンを出さない
 const SHEET_URL = "";
 
@@ -139,14 +140,15 @@ export function SpacecraftPage() {
   const [onlyMissing, setOnlyMissing] = useState(false);
   const [trajKey, setTrajKey] = useState("budget");
   const [progress, setProgress] = useState<ProgressRow[] | null>(null);
+  const [progressMissing, setProgressMissing] = useState(false);
   const [weeklyDecision, setWeeklyDecision] = useState(KEY_DECISIONS[0].id);
 
   useEffect(() => {
     if (!CSV_URL) {
-      setError("NEXT_PUBLIC_KPI_SPACECRAFT_CSV_URL が設定されていません");
+      setError("SPACECRAFT（play シートの公開CSV）が設定されていません");
       return;
     }
-    fetch(CSV_URL)
+    kpiFetch(CSV_URL)
       .then((res) => res.text())
       .then((csvText) => {
         const parsed = Papa.parse<Record<string, string>>(csvText, { header: true, skipEmptyLines: true });
@@ -159,10 +161,13 @@ export function SpacecraftPage() {
         setError("データの読み込みに失敗しました");
       });
     if (PROGRESS_CSV_URL) {
-      fetch(PROGRESS_CSV_URL)
+      kpiFetch(PROGRESS_CSV_URL)
         .then((res) => res.text())
         .then((csvText) => setProgress(parseProgress(Papa.parse<Record<string, string>>(csvText, { header: true, skipEmptyLines: true }).data)))
-        .catch((err) => console.error("Progress CSV Fetch Error:", err));
+        .catch((err) => {
+          if (err instanceof ApiError && err.code === "NO_SOURCE") setProgressMissing(true);
+          else console.error("Progress CSV Fetch Error:", err);
+        });
     }
   }, []);
 
@@ -431,9 +436,9 @@ export function SpacecraftPage() {
         description="遊び始めたプレイのうち、各フェーズまで進んだ割合と、やめた場所（途中でページを閉じた・タブを切り替えたまま戻らなかったプレイ）"
         icon={LogOut}
       >
-        {!PROGRESS_CSV_URL ? (
+        {!PROGRESS_CSV_URL || progressMissing ? (
           <p className="text-sm text-muted-foreground py-6 text-center">
-            NEXT_PUBLIC_KPI_SPACECRAFT_PROGRESS_CSV_URL（progress シートの公開CSV）を設定すると表示されます
+            GitHub Secrets の NEXT_PUBLIC_KPI_SPACECRAFT_PROGRESS_CSV_URL（progress シートの公開CSV）を設定すると表示されます
           </p>
         ) : !a.dropoff ? (
           <p className="text-sm text-muted-foreground py-6 text-center">読み込み中...</p>

@@ -23,6 +23,7 @@ import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { cn, getJSTDate } from "@/lib/utils";
 import { GrowthProjectionSection } from "../growth-projection-section";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
@@ -243,7 +244,7 @@ const VARIANTS: CosmoMatchVariantConfig[] = [
   {
     key: "rocket",
     label: "日本のロケット編",
-    csvUrl: process.env.NEXT_PUBLIC_KPI_ROCKETS_CSV_URL ?? "",
+    csvUrl: kpiSource("ROCKETS"),
     sheetUrl: "https://docs.google.com/spreadsheets/d/1-Zpc-AbelO2orxbVMP2TzG9Bkqf0SI1MJ1nRbiy2B8M/edit?gid=1977317423#gid=1977317423",
     resultColumn: "判定ロケット",
     resultLabel: "判定ロケット",
@@ -263,7 +264,7 @@ const VARIANTS: CosmoMatchVariantConfig[] = [
   {
     key: "constellation",
     label: "88星座編",
-    csvUrl: process.env.NEXT_PUBLIC_KPI_CONSTELLATION_CSV_URL ?? "",
+    csvUrl: kpiSource("CONSTELLATION"),
     sheetUrl: "https://docs.google.com/spreadsheets/d/1XIVQ1ID91XG4AT7jBeAw1QGbu4EvGUYdnrjferIxN4M/edit?gid=1977317423#gid=1977317423",
     resultColumn: "判定",
     resultLabel: "判定星座",
@@ -972,7 +973,7 @@ export function MatchPage() {
   useEffect(() => {
     VARIANTS.forEach((config) => {
       if (!config.csvUrl) return;
-      fetch(config.csvUrl)
+      kpiFetch(config.csvUrl)
         .then((res) => res.text())
         .then((csvText) => {
           const parsedData = parseVariantCsv(csvText, config);

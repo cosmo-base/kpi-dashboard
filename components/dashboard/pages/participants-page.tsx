@@ -20,14 +20,15 @@ import { ScrollableTable } from "../scrollable-table";
 import { Button } from "@/components/ui/button";
 import { cn, getJSTDate } from "@/lib/utils";
 import { StackedBarChart } from "../charts/stacked-bar-chart";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 const CSV_URLS = {
-  trend: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_TREND_CSV_URL ?? "",
-  source: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_SOURCE_CSV_URL ?? "",
-  pages: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_PAGES_CSV_URL ?? "",
-  region: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_REGION_CSV_URL ?? "",
-  conversions: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_CONVERSIONS_CSV_URL ?? "",
-  demographics: process.env.NEXT_PUBLIC_KPI_PARTICIPANTS_DEMOGRAPHICS_CSV_URL ?? "",
+  trend: kpiSource("PARTICIPANTS_TREND"),
+  source: kpiSource("PARTICIPANTS_SOURCE"),
+  pages: kpiSource("PARTICIPANTS_PAGES"),
+  region: kpiSource("PARTICIPANTS_REGION"),
+  conversions: kpiSource("PARTICIPANTS_CONVERSIONS"),
+  demographics: kpiSource("PARTICIPANTS_DEMOGRAPHICS"),
 };
 
 const SOURCE_COLORS = [
@@ -156,12 +157,12 @@ export function ParticipantsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(CSV_URLS.trend).then((res) => res.text()),
-      fetch(CSV_URLS.source).then((res) => res.text()),
-      fetch(CSV_URLS.pages).then((res) => res.text()),
-      fetch(CSV_URLS.region).then((res) => res.text()),
-      fetch(CSV_URLS.conversions).then((res) => res.text()),
-      fetch(CSV_URLS.demographics).then((res) => res.text()),
+      kpiFetch(CSV_URLS.trend).then((res) => res.text()),
+      kpiFetch(CSV_URLS.source).then((res) => res.text()),
+      kpiFetch(CSV_URLS.pages).then((res) => res.text()),
+      kpiFetch(CSV_URLS.region).then((res) => res.text()),
+      kpiFetch(CSV_URLS.conversions).then((res) => res.text()),
+      kpiFetch(CSV_URLS.demographics).then((res) => res.text()),
     ])
       .then(([trendTxt, sourceTxt, pagesTxt, regionTxt, convTxt, demoTxt]) => {
         const nowJst = getJSTDate();
