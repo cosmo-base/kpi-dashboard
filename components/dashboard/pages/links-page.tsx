@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link as LinkIcon,ClipboardClock,LayoutList,ChartSpline,Building,ExternalLink,Copy,Check,Users,Handshake,Settings,Home,Database,Calendar,BookOpen,FileText,UserPlus,FolderOpen,BarChart3,HelpCircle,Image,Wrench,X,Focus,Notebook,SquarePlay,FolderGit,Sparkles,Search,type LucideIcon} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 interface LinkItem {
   id: string;
@@ -187,9 +188,9 @@ export function LinksPage() {
   const isSearching = searchQuery.trim().length > 0;
 
   useEffect(() => {
-    const csvUrl = process.env.NEXT_PUBLIC_KPI_LINKS_CSV_URL ?? '';
+    const csvUrl = kpiSource("LINKS");
 
-    fetch(csvUrl)
+    kpiFetch(csvUrl)
       .then((res) => res.text())
       .then((csvText) => {
         const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });

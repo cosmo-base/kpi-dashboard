@@ -20,6 +20,7 @@ import { AutomationPage } from "./pages/automation-page";
 import { ParticipantsPage } from "./pages/participants-page";
 import { OverviewPage } from "./pages/overview-page";
 import { SpacecraftPage } from "./pages/spacecraft-page";
+import { clearCsvCache } from "@/lib/kpi-api";
 
 const dashboardTabs = [
   { id: 'community', label: 'Discord' },
@@ -102,6 +103,8 @@ export function Dashboard() {
 
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);
+    // ページを開き直したときに GAS から最新の CSV を読み直す
+    clearCsvCache();
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setLastUpdated(new Date().toISOString());
     setIsLoading(false);

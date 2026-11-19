@@ -22,6 +22,7 @@ import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { GrowthProjectionSection } from "../growth-projection-section";
 import { getJSTDate } from "@/lib/utils";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
@@ -43,9 +44,9 @@ export function Discord() {
   const [trendPeriod, setTrendPeriod] = useState<string>("90");
 
   useEffect(() => {
-    const csvUrl = process.env.NEXT_PUBLIC_KPI_SNS_CSV_URL ?? "";
+    const csvUrl = kpiSource("SNS");
 
-    fetch(csvUrl)
+    kpiFetch(csvUrl)
       .then((response) => response.text())
       .then((csvText) => {
         const parsed = Papa.parse(csvText, { skipEmptyLines: true });

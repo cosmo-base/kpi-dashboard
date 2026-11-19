@@ -2,3 +2,7 @@ node_modules
 .next
 tsconfig.tsbuildinfo
 .env*.local
+
+# GAS（リポジトリには置かない）
+/gas/
+/out/

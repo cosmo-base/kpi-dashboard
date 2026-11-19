@@ -17,8 +17,9 @@ import { SectionCard } from "../section-card";
 import { ScrollableTable } from "../scrollable-table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
-const CSV_URL = process.env.NEXT_PUBLIC_KPI_AUTOMATION_CSV_URL ?? "";
+const CSV_URL = kpiSource("AUTOMATION");
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1E4jZU_L3FDT-1ZGlneUTu3Wbry9zJeZipk96p5NV7l8/edit?gid=0#gid=0";
 
@@ -140,7 +141,7 @@ export function AutomationPage() {
   const [data, setData] = useState<AutomationData | null>(null);
 
   useEffect(() => {
-    fetch(CSV_URL)
+    kpiFetch(CSV_URL)
       .then((res) => res.text())
       .then((csvText) => setData(parseAutomationCsv(csvText)))
       .catch((err) => console.error("CSV Fetch Error:", err));

@@ -48,6 +48,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 // ★ 巨大なuseEffect内のクロージャに変数を増やすとTurbopackの圧縮時に
 // 別スコープの変数名（1文字）と衝突しTDZエラーになることがあったため、
@@ -247,9 +248,9 @@ export function SpaceQuizPage() {
   }, [data?.charts?.activeTypes]);
 
   useEffect(() => {
-    const csvUrl = process.env.NEXT_PUBLIC_KPI_QUIZ_CSV_URL ?? "";
+    const csvUrl = kpiSource("QUIZ");
 
-    fetch(csvUrl)
+    kpiFetch(csvUrl)
       .then((response) => response.text())
       .then((csvText) => {
         const parsed = Papa.parse(csvText, {

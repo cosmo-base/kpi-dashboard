@@ -22,6 +22,7 @@ import { StackedBarChart } from "../charts/stacked-bar-chart";
 import { Button } from "@/components/ui/button";
 import { GrowthProjectionSection } from "../growth-projection-section";
 import { getJSTDate } from "@/lib/utils";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 const formatDiff = (num: number) => {
   if (num > 0) return `+${num.toLocaleString()}`;
@@ -430,14 +431,14 @@ export function SpaceDiagnosisPage() {
   const [data, setData] = useState<any>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>("90");
   useEffect(() => {
-    const urlSimpleCbhp = process.env.NEXT_PUBLIC_KPI_TYPE1_CSV_URL ?? "";
-    const urlSimpleParticipant = process.env.NEXT_PUBLIC_KPI_TYPE2_CSV_URL ?? "";
-    const urlDetailed = process.env.NEXT_PUBLIC_KPI_TYPE3_CSV_URL ?? "";
+    const urlSimpleCbhp = kpiSource("TYPE1");
+    const urlSimpleParticipant = kpiSource("TYPE2");
+    const urlDetailed = kpiSource("TYPE3");
 
     Promise.all([
-      fetch(urlSimpleCbhp).then((res) => res.text()),
-      fetch(urlSimpleParticipant).then((res) => res.text()),
-      fetch(urlDetailed).then((res) => res.text()),
+      kpiFetch(urlSimpleCbhp).then((res) => res.text()),
+      kpiFetch(urlSimpleParticipant).then((res) => res.text()),
+      kpiFetch(urlDetailed).then((res) => res.text()),
     ])
       .then(([csv1, csv2, csv3]) => {
         const parseCSV = (csv: string, source: string, version: string) => {

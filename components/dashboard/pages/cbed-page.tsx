@@ -21,6 +21,7 @@ import { DonutChart } from "../charts/donut-chart";
 import { Button } from "@/components/ui/button";
 import { cn, getJSTDate } from "@/lib/utils";
 import { JapanMap } from "../charts/japan-map";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 const REGION_MAP: Record<string, string> = {
   北海道: "北海道",
@@ -165,9 +166,9 @@ export function CBEDPage() {
   >("total");
 
   useEffect(() => {
-    const csvUrl = process.env.NEXT_PUBLIC_KPI_CBED_CSV_URL ?? "";
+    const csvUrl = kpiSource("CBED");
 
-    fetch(csvUrl)
+    kpiFetch(csvUrl)
       .then((response) => response.text())
       .then((csvText) => {
         const parsed = Papa.parse(csvText, { skipEmptyLines: true });

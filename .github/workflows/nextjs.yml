@@ -63,9 +63,12 @@ jobs:
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
         
-      - name: Build with Next.js
-        run: ${{ steps.detect-package-manager.outputs.runner }} next build
+      # CSV の URL は画面に埋め込まず、GAS に送る（GAS がログインした人にだけ CSV を返す）
+      - name: Send CSV sources to GAS
+        run: node scripts/sync-sources.mjs
         env:
+          KPI_GAS_URL: ${{ vars.KPI_GAS_URL }}
+          KPI_SYNC_KEY: ${{ secrets.KPI_SYNC_KEY }}
           NEXT_PUBLIC_KPI_SNS_CSV_URL: ${{ secrets.NEXT_PUBLIC_KPI_SNS_CSV_URL }}
           NEXT_PUBLIC_KPI_QUIZ_CSV_URL: ${{ secrets.NEXT_PUBLIC_KPI_QUIZ_CSV_URL }}
           NEXT_PUBLIC_KPI_TYPE1_CSV_URL: ${{ secrets.NEXT_PUBLIC_KPI_TYPE1_CSV_URL }}
@@ -95,51 +98,21 @@ jobs:
           NEXT_PUBLIC_KPI_SPACECRAFT_CSV_URL: ${{ secrets.NEXT_PUBLIC_KPI_SPACECRAFT_CSV_URL }}
           NEXT_PUBLIC_KPI_SPACECRAFT_PROGRESS_CSV_URL: ${{ secrets.NEXT_PUBLIC_KPI_SPACECRAFT_PROGRESS_CSV_URL }}
 
-      # ==========================================
-      # ★ パスワード暗号化ステップ（最強の確実な上書き版）
-      # ==========================================
-      - name: Encrypt HTML files with StatiCrypt
+      - name: Check settings
         env:
-          SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
         run: |
-          if [ -z "$SITE_PASSWORD" ]; then
-            echo "❌ エラー: GitHub Secrets に SITE_PASSWORD が設定されていません！"
+          if [ -z "$GOOGLE_CLIENT_ID" ]; then
+            echo "::error::リポジトリの Variables に GOOGLE_CLIENT_ID（FSIF Portal と同じ Google ログインのクライアントID）を設定してください"
             exit 1
           fi
 
-          # 出来上がったサイトデータのフォルダ(out)に移動
-          cd out
-          
-          # フォルダ内にあるHTMLを1つずつ見つけて暗号化
-          find . -type f -name "*.html" | while read -r file; do
-            echo "🔒 $file を暗号化しています..."
-            
-            # パスのズレを防ぐため、対象ファイルがあるフォルダまで移動して実行する
-            dir=$(dirname "$file")
-            base=$(basename "$file")
-            
-            (
-              cd "$dir"
-              # 1. ツールを実行 (勝手に encrypted/ フォルダに出力されます)
-              npx --yes staticrypt@latest "$base" -p "$SITE_PASSWORD" --short --template-title "Cosmo Base 運営ダッシュボード"
-              
-              # 2. 生成された暗号化ファイルを、元のHTMLファイルに強制的に上書き！
-              if [ -f "encrypted/$base" ]; then
-                cp "encrypted/$base" "$base"
-                rm -rf encrypted
-              else
-                exit 1 # ファイルが見つからなければエラーにする
-              fi
-            )
-            
-            # エラーが起きた場合はビルド全体を止める
-            if [ $? -ne 0 ]; then
-              echo "❌ 失敗: $file の暗号化に失敗しました"
-              exit 1
-            fi
-            
-            echo "✅ 成功: $file にパスワードをかけました"
-          done
+      # 画面に埋め込むのは GAS の URL と Google ログインのクライアントID だけ（どちらも秘密ではない）
+      - name: Build with Next.js
+        run: ${{ steps.detect-package-manager.outputs.runner }} next build
+        env:
+          NEXT_PUBLIC_KPI_GAS_URL: ${{ vars.KPI_GAS_URL }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

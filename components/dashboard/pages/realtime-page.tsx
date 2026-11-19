@@ -16,15 +16,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn, getJSTDate } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
+import { kpiFetch, kpiSource } from "@/lib/kpi-api";
 
 const CSV_URLS = {
-  discordSns: process.env.NEXT_PUBLIC_KPI_SNS_CSV_URL ?? "",
-  quiz: process.env.NEXT_PUBLIC_KPI_QUIZ_CSV_URL ?? "",
-  typeSimpleCbhp: process.env.NEXT_PUBLIC_KPI_TYPE1_CSV_URL ?? "",
-  typeSimpleParticipant: process.env.NEXT_PUBLIC_KPI_TYPE2_CSV_URL ?? "",
-  typeDetailed: process.env.NEXT_PUBLIC_KPI_TYPE3_CSV_URL ?? "",
-  matchRocket: process.env.NEXT_PUBLIC_KPI_ROCKETS_CSV_URL ?? "",
-  matchConstellation: process.env.NEXT_PUBLIC_KPI_CONSTELLATION_CSV_URL ?? "",
+  discordSns: kpiSource("SNS"),
+  quiz: kpiSource("QUIZ"),
+  typeSimpleCbhp: kpiSource("TYPE1"),
+  typeSimpleParticipant: kpiSource("TYPE2"),
+  typeDetailed: kpiSource("TYPE3"),
+  matchRocket: kpiSource("ROCKETS"),
+  matchConstellation: kpiSource("CONSTELLATION"),
 };
 
 interface RealtimeData {
@@ -210,13 +211,13 @@ export function RealtimePage() {
     const todayStr = `${currentY}/${String(currentM).padStart(2, "0")}/${String(currentD).padStart(2, "0")}`;
 
     Promise.all([
-      fetch(CSV_URLS.discordSns).then((r) => r.text()),
-      fetch(CSV_URLS.quiz).then((r) => r.text()),
-      fetch(CSV_URLS.typeSimpleCbhp).then((r) => r.text()),
-      fetch(CSV_URLS.typeSimpleParticipant).then((r) => r.text()),
-      fetch(CSV_URLS.typeDetailed).then((r) => r.text()),
-      fetch(CSV_URLS.matchRocket).then((r) => r.text()),
-      fetch(CSV_URLS.matchConstellation).then((r) => r.text()),
+      kpiFetch(CSV_URLS.discordSns).then((r) => r.text()),
+      kpiFetch(CSV_URLS.quiz).then((r) => r.text()),
+      kpiFetch(CSV_URLS.typeSimpleCbhp).then((r) => r.text()),
+      kpiFetch(CSV_URLS.typeSimpleParticipant).then((r) => r.text()),
+      kpiFetch(CSV_URLS.typeDetailed).then((r) => r.text()),
+      kpiFetch(CSV_URLS.matchRocket).then((r) => r.text()),
+      kpiFetch(CSV_URLS.matchConstellation).then((r) => r.text()),
     ])
       .then(([discordSnsCsv, quizCsv, type1Csv, type2Csv, type3Csv, rocketCsv, constellCsv]) => {
         // Discord / SNS
