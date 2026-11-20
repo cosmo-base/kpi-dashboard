@@ -111,6 +111,12 @@ const REPORT_STATUS_LABELS: Record<string, string> = {
   resolved: "対応済み",
   dismissed: "対応しない",
 };
+const DISPLAY_SOURCE_LABELS: Record<string, string> = {
+  site: "サイト",
+  inherited: "引き継ぎ",
+  sns: "SNS",
+  none: "なし",
+};
 
 const jp = (map: Record<string, string>, key: string) => map[key] || key || "不明";
 
@@ -589,12 +595,19 @@ export function ArchivePage() {
         unanswered: toNum(r.unanswered),
         reportsTotal: toNum(r.reports_total),
         reportsOpen: toNum(r.reports_open),
-        // 固定されていれば、サイトの表示・出題と同じくそちらを優先する
+        // display_difficulty（サイトに出している難易度）があればそれを使う。
+        // 古いCSV（この列がまだ無い）では、固定 → 判定値 → 引き継ぎ の順にフォールバックする
         difficulty: jp(
           DIFFICULTY_LABELS,
-          String(r.difficulty_override || r.judged_difficulty || r.inherited_difficulty || "unknown"),
+          String(r.display_difficulty || "").trim() ||
+            String(r.difficulty_override || r.judged_difficulty || r.inherited_difficulty || "unknown"),
         ),
         isDifficultyOverride: !!String(r.difficulty_override || "").trim(),
+        displayAccuracyStr:
+          String(r.display_accuracy || "").trim() === ""
+            ? "未集計"
+            : `${(toNum(r.display_accuracy) * 100).toFixed(1)}%`,
+        displaySourceLabel: jp(DISPLAY_SOURCE_LABELS, String(r.display_source || "none")),
       };
     });
 
@@ -1217,6 +1230,7 @@ export function ArchivePage() {
               { key: "id", label: "問題ID", align: "left" },
               { key: "field", label: "分野", align: "left" },
               { key: "difficulty", label: "難易度", align: "left" },
+              { key: "displayAccuracyCell", label: "サイトに出している正答率", align: "right" },
               { key: "siteAccuracyStr", label: "サイト正答率", align: "right" },
               { key: "snsAccuracyStr", label: "SNS正答率", align: "right" },
               { key: "gapStr", label: "差(サイト-SNS)", align: "right" },
@@ -1233,6 +1247,14 @@ export function ArchivePage() {
                 </span>
               ) : (
                 q.difficulty
+              ),
+              displayAccuracyCell: (
+                <span className="inline-flex flex-col items-end leading-tight">
+                  <span>{q.displayAccuracyStr}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    出どころ: {q.displaySourceLabel}
+                  </span>
+                </span>
               ),
               link: (
                 <a
