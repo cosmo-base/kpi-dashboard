@@ -20,6 +20,7 @@ import { AutomationPage } from "./pages/automation-page";
 import { ParticipantsPage } from "./pages/participants-page";
 import { OverviewPage } from "./pages/overview-page";
 import { SpacecraftPage } from "./pages/spacecraft-page";
+import { ArchivePage } from "./pages/archive-page";
 import { clearCsvCache } from "@/lib/kpi-api";
 
 const dashboardTabs = [
@@ -37,6 +38,7 @@ const dashboardTabs = [
   { id: 'shittoku', label: '宇宙知っトク' },
   { id: 'match', label: 'Cosmo Match' },
   { id: "spacecraft", label: "宇宙機シミュレーター" },
+  { id: 'archive', label: '過去問サイト' },
   { id: 'links', label: 'リンク' },
 ];
 
@@ -67,6 +69,7 @@ const tabGroups = [
       { id: "shittoku", label: "宇宙知っトク" },
       { id: "match", label: "Cosmo Match" },
       { id: "spacecraft", label: "宇宙機シミュレーター" },
+      { id: "archive", label: "過去問サイト" },
     ],
   },
   {
@@ -159,6 +162,8 @@ export function Dashboard() {
         return <MatchPage />;
       case "spacecraft":
         return <SpacecraftPage />;
+      case "archive":
+        return <ArchivePage />;
       default:
         return <Discord />;
     }
