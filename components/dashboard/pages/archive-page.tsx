@@ -16,6 +16,8 @@ import {
   BarChart2,
   Layers,
   Gauge,
+  Bug,
+  Lock,
   Database,
   ArrowUpDown,
   ExternalLink,
@@ -52,6 +54,7 @@ const CSV_SOURCES = {
   retention: kpiSource("ARCHIVE_RETENTION"),
   heatmap: kpiSource("ARCHIVE_HEATMAP"),
   reports: kpiSource("ARCHIVE_REPORTS"),
+  errors: kpiSource("ARCHIVE_ERRORS"),
   levels: kpiSource("ARCHIVE_LEVELS"),
   ops: kpiSource("ARCHIVE_OPS"),
   meta: kpiSource("ARCHIVE_META"),
@@ -258,25 +261,31 @@ export function ArchivePage() {
 
   useEffect(() => {
     const keys = Object.keys(CSV_SOURCES) as (keyof typeof CSV_SOURCES)[];
-    Promise.all(keys.map((k) => kpiFetch(CSV_SOURCES[k]).then((res) => res.text())))
-      .then((texts) => {
-        const result: Record<string, Record<string, string>[]> = {};
-        keys.forEach((k, i) => {
-          result[k] = parseCsv(texts[i]);
-        });
-        setRaw(result);
-        const metaRow = result.meta?.[0];
-        if (metaRow) {
-          setMeta({
-            generatedAt: String(metaRow.generated_at || ""),
-            version: String(metaRow.version || ""),
-          });
-        }
-      })
-      .catch((err) => {
-        console.error("Archive CSV Fetch Error:", err);
-        setError("データの読み込みに失敗しました。");
+    // タブがまだ無い（Secrets未登録・仕様追加直後など）場合でも、そのタブだけ
+    // 空として扱い、他のタブの表示を壊さない
+    Promise.all(
+      keys.map((k) =>
+        kpiFetch(CSV_SOURCES[k])
+          .then((res) => res.text())
+          .catch((err) => {
+            console.error(`Archive CSV Fetch Error (${k}):`, err);
+            return "";
+          }),
+      ),
+    ).then((texts) => {
+      const result: Record<string, Record<string, string>[]> = {};
+      keys.forEach((k, i) => {
+        result[k] = parseCsv(texts[i]);
       });
+      setRaw(result);
+      const metaRow = result.meta?.[0];
+      if (metaRow) {
+        setMeta({
+          generatedAt: String(metaRow.generated_at || ""),
+          version: String(metaRow.version || ""),
+        });
+      }
+    });
   }, []);
 
   // --- 集計 ---
@@ -315,6 +324,8 @@ export function ArchivePage() {
         promotions: 0,
         expertPasses: 0,
         reports: 0,
+        errorsInternal: 0,
+        errorsBusy: 0,
       };
       rows.forEach((r) => {
         agg.activeUsers += toNum(r.active_users);
@@ -345,6 +356,9 @@ export function ArchivePage() {
         agg.promotions += toNum(r.promotions);
         agg.expertPasses += toNum(r.expert_passes);
         agg.reports += toNum(r.reports);
+        // 古いCSV（列がまだ無い）では未定義になるが toNum が 0 扱いにする
+        agg.errorsInternal += toNum(r.errors_internal);
+        agg.errorsBusy += toNum(r.errors_busy);
       });
       return agg;
     };
@@ -575,7 +589,12 @@ export function ArchivePage() {
         unanswered: toNum(r.unanswered),
         reportsTotal: toNum(r.reports_total),
         reportsOpen: toNum(r.reports_open),
-        difficulty: jp(DIFFICULTY_LABELS, String(r.judged_difficulty || r.inherited_difficulty || "unknown")),
+        // 固定されていれば、サイトの表示・出題と同じくそちらを優先する
+        difficulty: jp(
+          DIFFICULTY_LABELS,
+          String(r.difficulty_override || r.judged_difficulty || r.inherited_difficulty || "unknown"),
+        ),
+        isDifficultyOverride: !!String(r.difficulty_override || "").trim(),
       };
     });
 
@@ -712,6 +731,34 @@ export function ArchivePage() {
     const opsRows = [...(raw.ops || [])].sort((a, b) => dateToNum(a.date) - dateToNum(b.date));
     const latestOps = opsRows[opsRows.length - 1];
 
+    // 13. kpi_errors（日 × 操作 × コード。直近90日。期間で直接絞る）
+    const errorsRows = (raw.errors || []).filter((r) => inRange(dateToNum(r.date), range.startNum, range.endNum));
+    const errorsByDate = new Map<string, { internal: number; busy: number }>();
+    const errorsByAction = new Map<string, { internal: number; busy: number }>();
+    errorsRows.forEach((r) => {
+      const date = String(r.date || "");
+      const action = String(r.action || "不明");
+      const count = toNum(r.count);
+      const isBusy = String(r.code || "").toUpperCase() === "BUSY";
+      if (!errorsByDate.has(date)) errorsByDate.set(date, { internal: 0, busy: 0 });
+      if (!errorsByAction.has(action)) errorsByAction.set(action, { internal: 0, busy: 0 });
+      const d = errorsByDate.get(date)!;
+      const a = errorsByAction.get(action)!;
+      if (isBusy) {
+        d.busy += count;
+        a.busy += count;
+      } else {
+        d.internal += count;
+        a.internal += count;
+      }
+    });
+    const errorsTrend = Array.from(errorsByDate.entries())
+      .sort((a, b) => dateToNum(a[0]) - dateToNum(b[0]))
+      .map(([date, v]) => ({ name: date.slice(5), 想定外エラー: v.internal, 混雑: v.busy }));
+    const errorsActionTable = Array.from(errorsByAction.entries())
+      .map(([action, v]) => ({ action, internal: v.internal, busy: v.busy, total: v.internal + v.busy }))
+      .sort((a, b) => b.total - a.total);
+
     return {
       summary: {
         current,
@@ -728,6 +775,8 @@ export function ArchivePage() {
         ),
         testPassRate: formatRate(current.testPassed, current.testFinished),
         reportsReceived,
+        errorsTotal: current.errorsInternal + current.errorsBusy,
+        prevErrorsTotal: prev.errorsInternal + prev.errorsBusy,
       },
       charts: {
         trendData,
@@ -744,6 +793,7 @@ export function ArchivePage() {
         heatmapAttempts,
         heatmapSingle,
         heatmapDays,
+        errorsTrend,
       },
       tables: {
         testTypeTable,
@@ -754,6 +804,7 @@ export function ArchivePage() {
         questionTable,
         promotionTable,
         retentionTable,
+        errorsActionTable,
       },
       scoreDistTestTypes,
       activeScoreTestType,
@@ -923,6 +974,16 @@ export function ArchivePage() {
           unit="件"
           icon={AlertTriangle}
           accentColor="danger"
+        />
+        <KpiCard
+          title="エラー・混雑(期間内)"
+          value={summary.errorsTotal.toLocaleString()}
+          unit="件"
+          icon={Bug}
+          accentColor="danger"
+          trendValue={compareBadge(summary.errorsTotal, summary.prevErrorsTotal)}
+          trendType={summary.errorsTotal <= summary.prevErrorsTotal ? "up" : "down"}
+          description={`想定外 ${summary.current.errorsInternal}・混雑 ${summary.current.errorsBusy}`}
         />
         <KpiCard
           title="最後の取り込み"
@@ -1165,6 +1226,14 @@ export function ArchivePage() {
             ]}
             data={sortedQuestions.map((q) => ({
               ...q,
+              difficulty: q.isDifficultyOverride ? (
+                <span className="inline-flex items-center gap-1">
+                  {q.difficulty}
+                  <Lock className="h-3 w-3 text-warning" aria-label="運営が固定" />
+                </span>
+              ) : (
+                q.difficulty
+              ),
               link: (
                 <a
                   href={questionManagerUrl(q.id)}
@@ -1362,6 +1431,38 @@ export function ArchivePage() {
         ) : (
           <EmptyState message="データがまだありません" />
         )}
+
+        <div className="mt-6">
+          <h4 className="text-sm font-bold text-foreground mb-3">
+            GASのエラー・混雑の推移(選択期間。直近90日分のみ記録)
+          </h4>
+          <ChartContainer height="h-[260px]" isEmpty={charts.errorsTrend.length === 0}>
+            <LineChartComponent
+              data={charts.errorsTrend}
+              lines={[
+                { dataKey: "想定外エラー", name: "想定外エラー", color: "#EF4444" },
+                { dataKey: "混雑", name: "混雑", color: "#F59E0B" },
+              ]}
+            />
+          </ChartContainer>
+        </div>
+
+        <div className="mt-6">
+          <h4 className="text-sm font-bold text-foreground mb-3">操作(action)ごとの内訳(選択期間)</h4>
+          {tables.errorsActionTable.length > 0 ? (
+            <ScrollableTable
+              columns={[
+                { key: "action", label: "操作", align: "left" },
+                { key: "internal", label: "想定外エラー", align: "right" },
+                { key: "busy", label: "混雑", align: "right" },
+                { key: "total", label: "合計", align: "right" },
+              ]}
+              data={tables.errorsActionTable}
+            />
+          ) : (
+            <EmptyState message="データがまだありません" />
+          )}
+        </div>
       </SectionCard>
     </div>
   );
