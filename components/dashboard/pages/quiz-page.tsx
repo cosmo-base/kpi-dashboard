@@ -303,6 +303,15 @@ export function SpaceQuizPage() {
         const currentD = nowJst.getDate();
         const todayNum = currentY * 10000 + currentM * 100 + currentD;
 
+        // ★ 「今日」の集計は実際の当日ではなく前日のデータを使う。
+        // 出題データの反映が翌日扱いになるため、当日分は必ず0件になってしまうため。
+        const effectiveTodayJst = new Date(nowJst.getTime());
+        effectiveTodayJst.setDate(nowJst.getDate() - 1);
+        const effectiveTodayNum =
+          effectiveTodayJst.getFullYear() * 10000 +
+          (effectiveTodayJst.getMonth() + 1) * 100 +
+          effectiveTodayJst.getDate();
+
         const startOfThisMonthNum = currentY * 10000 + currentM * 100 + 1;
         const dayOfWeek = nowJst.getDay() === 0 ? 7 : nowJst.getDay();
         const startOfWeekJst = new Date(nowJst.getTime());
@@ -540,7 +549,7 @@ export function SpaceQuizPage() {
             thisWeekQuestions++;
             if (answers === 0) thisWeekZeroAnswers++;
           }
-          if (num === todayNum) {
+          if (num === effectiveTodayNum) {
             todayQuestions++;
             if (answers === 0) todayZeroAnswers++;
           }
@@ -588,7 +597,7 @@ export function SpaceQuizPage() {
           endOfPrevWeekJst.getDate();
 
         const endOfPrevDayJst = new Date(nowJst.getTime());
-        endOfPrevDayJst.setDate(nowJst.getDate() - 1);
+        endOfPrevDayJst.setDate(nowJst.getDate() - 2);
         const endOfPrevDayNum =
           endOfPrevDayJst.getFullYear() * 10000 +
           (endOfPrevDayJst.getMonth() + 1) * 100 +
@@ -620,7 +629,7 @@ export function SpaceQuizPage() {
             thisWeekCorrects += day.corrects;
           }
           if (num <= endOfPrevWeekNum) endOfPrevWeekCum = cumulativeAnswers;
-          if (num === todayNum) {
+          if (num === effectiveTodayNum) {
             todayAnswers += day.answers;
             todayCorrects += day.corrects;
           }
