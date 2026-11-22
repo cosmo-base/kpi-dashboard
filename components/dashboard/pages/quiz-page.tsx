@@ -1308,7 +1308,7 @@ export function SpaceQuizPage() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
         <KpiCard
-          title="今日の参加者数"
+          title="昨日の参加者数"
           value={`+${summary.todayParticipants.toLocaleString()}`}
           unit="人"
           icon={Clock}
@@ -1324,21 +1324,21 @@ export function SpaceQuizPage() {
           trendType="up"
         />
         <KpiCard
-          title="今日の平均回答数"
+          title="昨日の平均回答数"
           value={formatAverage(summary.todayAverageParticipants)}
           unit="件"
           icon={Target}
           accentColor="primary"
         />
         <KpiCard
-          title="今日の平均正答率"
+          title="昨日の平均正答率"
           value={format(summary.todayAverageAccuracy)}
           unit="%"
           icon={Target}
           accentColor="primary"
         />
         <KpiCard
-          title="今日の回答0件割合"
+          title="昨日の回答0件割合"
           value={format(summary.zeroRateDay)}
           unit="%"
           icon={HelpCircle}
