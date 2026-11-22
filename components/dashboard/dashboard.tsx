@@ -38,7 +38,7 @@ const dashboardTabs = [
   { id: 'shittoku', label: '宇宙知っトク' },
   { id: 'match', label: 'Cosmo Match' },
   { id: "spacecraft", label: "宇宙機シミュレーター" },
-  { id: 'archive', label: '過去問サイト' },
+  { id: 'archive', label: 'quizArchive' },
   { id: 'links', label: 'リンク' },
 ];
 
@@ -69,7 +69,7 @@ const tabGroups = [
       { id: "shittoku", label: "宇宙知っトク" },
       { id: "match", label: "Cosmo Match" },
       { id: "spacecraft", label: "宇宙機シミュレーター" },
-      { id: "archive", label: "過去問サイト" },
+      { id: "archive", label: "quizArchive" },
     ],
   },
   {
