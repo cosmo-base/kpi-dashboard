@@ -6,8 +6,8 @@
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { ApiError, api, clearCsvCache } from "@/lib/kpi-api";
-import { getIdToken, mountGoogleButton, onTokenChange, signOut, startGoogleAuth } from "@/lib/google-auth";
+import { ApiError, api, clearCsvCache, startSession } from "@/lib/kpi-api";
+import { getToken, mountGoogleButton, onTokenChange, signOut, startGoogleAuth } from "@/lib/google-auth";
 
 export type Me = { name: string; email: string };
 
@@ -22,10 +22,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
+  const handled = useRef<string | null>(null);
 
   useEffect(() => {
-    // ID トークンが変わるたびに：無くなればログイン画面へ。新しく取れたら（未ログインなら）使えるかを確かめる
+    // ログイン状態が変わるたびに：無くなればログイン画面へ。新しくログインしたら（未ログインなら）使えるかを確かめる
     const handle = async (token: string | null) => {
+      // 同じログインを二度確かめない（開いたときに保存済みのセッションで呼ばれるため）
+      if (token && token === handled.current) return;
+      handled.current = token;
       if (!token) {
         setMe(null);
         clearCsvCache();
@@ -35,14 +39,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
       try {
         const r = await api<{ me: Me }>("whoami");
         // 確かめている間にログアウトや取り直しがあれば、古い結果は使わない
-        if (getIdToken() !== token) return;
+        if (getToken() !== token) return;
         setError("");
         setMe((cur) => cur ?? r.me);
       } catch (e) {
-        if (getIdToken() !== token) return;
+        if (getToken() !== token) return;
         setError((e as Error).message);
-        // 使えないアカウントのままにせず、別のアカウントを選べるようにする
-        if (e instanceof ApiError && e.code !== "ACCESS_UNAVAILABLE" && e.code !== "NETWORK") signOut();
+        // 使えないアカウントのままにせず、別のアカウントを選べるようにする（通信の失敗などではログアウトしない）
+        if (e instanceof ApiError && e.code === "NOT_ALLOWED") signOut();
       } finally {
         setChecking(false);
       }
@@ -50,9 +54,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
     const off = onTokenChange((t) => {
       void handle(t);
     });
-    startGoogleAuth().catch((e) => setError((e as Error).message));
-    const t = getIdToken();
-    if (t) void handle(t);
+    startGoogleAuth(startSession, (e) => setError(e.message)).catch((e) => setError((e as Error).message));
+    const t = getToken();
+    if (t) void handle(t); // すでにログインしていたとき（開き直しなど）
     return off;
   }, []);
 

@@ -10,6 +10,7 @@ Cosmo Base の KPI ダッシュボード（https://cosmo-base.github.io/kpi-dash
 GitHub Actions（デプロイのたび） ──Secrets の CSV の URL──> KPI の GAS
 ```
 
+- ログインすると GAS（`startSession`）が7日もつセッション（`FsifSession.gs`。秘密はスクリプトプロパティ `SESSION_SECRET`、自動で作る）を返し、画面は localStorage に置く（再読み込み・別のタブでもログインしたまま）。ポータルの「開く」から来たときは引換券（`#fsif_ticket=…`）で Google の画面を出さずに入る
 - ログインは FSIF Portal と同じ Google アカウント。使える人は FSIF の Access Manager（ポータルの `/access/`）で KPI ダッシュボードの役割が付いている人（役割の種類は問わない。全タブを見られる）
 - 画面には CSV の URL を埋め込まない。各ページは `kpiFetch(kpiSource("SNS"))` のように名前で頼み、GAS がログインした人にだけ CSV を返す（`lib/kpi-api.ts`）
 - CSV の URL はこれまでどおり GitHub Secrets の `NEXT_PUBLIC_KPI_◯◯_CSV_URL` で管理する。デプロイのたびに `scripts/sync-sources.mjs` が GAS に送る（◯◯ の部分がデータの名前）
@@ -19,7 +20,7 @@ GitHub Actions（デプロイのたび） ──Secrets の CSV の URL──> K
 
 ### 1. GAS
 
-1. https://script.google.com で新しいプロジェクトを作り、KPI の GAS のコード（`Code.gs`）を貼る
+1. https://script.google.com で新しいプロジェクトを作り、KPI の GAS のコード（`Code.gs` と `FsifSession.gs`）を貼る
 2. プロジェクトの設定 → スクリプト プロパティに追加
 
    | プロパティ | 値 |

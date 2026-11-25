@@ -1,7 +1,7 @@
 // KPI ダッシュボードの GAS（gas/Code.gs。リポジトリには置かない）との通信。
 // 各ページの CSV は、公開 URL を直接読まず、GAS に「この表をください」と頼んで受け取る。
-// GAS は Google ログインの ID トークンを確かめ、FSIF の Access Manager で使える人にだけ返す。
-import { expireToken, getIdToken } from './google-auth'
+// GAS はログインのセッション（7日。google-auth.ts）を確かめ、FSIF の Access Manager で使える人にだけ返す。
+import { credentialField, expireToken, type Credential, type SessionResult } from './google-auth'
 
 export const API_URL = process.env.NEXT_PUBLIC_KPI_GAS_URL ?? ''
 
@@ -23,7 +23,7 @@ export async function api<T = any>(action: string, payload: Record<string, unkno
     // Content-Type を付けない（text/plain）ことで CORS のプリフライトを回避する
     res = await fetch(API_URL, {
       method: 'POST',
-      body: JSON.stringify({ action, idToken: getIdToken() || '', payload }),
+      body: JSON.stringify({ action, ...credentialField(), payload }),
       redirect: 'follow',
     })
   } catch {
@@ -41,6 +41,24 @@ export async function api<T = any>(action: string, payload: Record<string, unkno
     throw new ApiError(data?.error || 'エラーが発生しました', data?.code)
   }
   return data.data as T
+}
+
+/**
+ * ログインを始める：Google の ID トークンかポータルの引換券を渡し、7日もつセッションをもらう。
+ * 古い GAS（startSession が無い）なら null（ID トークンをそのまま使う）
+ */
+export async function startSession(cred: Credential): Promise<SessionResult> {
+  if (!API_URL) throw new ApiError('GAS の URL（NEXT_PUBLIC_KPI_GAS_URL）が設定されていません', 'NOT_CONFIGURED')
+  let data: any
+  try {
+    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'startSession', ...cred, payload: {} }), redirect: 'follow' })
+    data = await res.json()
+  } catch {
+    throw new ApiError('サーバーに接続できませんでした。通信状況を確認してください', 'NETWORK')
+  }
+  if (data?.ok) return { session: String(data.data.session), expiresAt: String(data.data.expiresAt) }
+  if (data?.code === 'BAD_REQUEST' && String(data.error || '').startsWith('不明な操作です')) return null
+  throw new ApiError(data?.error || 'エラーが発生しました', data?.code)
 }
 
 /**
